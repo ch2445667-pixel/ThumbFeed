@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "ThumbVault - YouTube Thumbnail Grabber",
+  "version": "1.0.0",
+  "description": "1-Click HD YouTube Thumbnail grabber and inspiration collector for ThumbVault.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*.youtube.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Grab Thumbnail for ThumbVault"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

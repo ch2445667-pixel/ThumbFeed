@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email"]
+    },
+    "Thumbnail": {
+      "title": "Thumbnail",
+      "description": "Stored thumbnail item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "creator": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "niche": { "type": "string" },
+        "colors": {
+          "type": "array"
+        },
+        "tags": {
+          "type": "array"
+        },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "imageUrl"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile collection"
+    },
+    "/thumbnails/{thumbnailId}": {
+      "schema": "Thumbnail",
+      "description": "Public or user-contributed thumbnails collection"
+    }
+  }
+}

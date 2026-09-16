@@ -1,0 +1,8 @@
+.dockerignore
+.gcloudignore
+.git
+.gitignore
+node_modules
+.next
+*.log
+.DS_Store

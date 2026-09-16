@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --brand-blue: #009FDF;
+  --brand-orange: #f76d25;
+
+  /* Refined Dynamic Easing Curves */
+  --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-out: cubic-bezier(0.17, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.35, 1.55, 0.65, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+
+  /* Design Tokens */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --radius-xl: 18px;
+
+  --duration-fast: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 320ms;
+
+  /* Layered Shadow Stacks */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 12px 28px -6px rgba(0, 159, 223, 0.22), 0 4px 10px -2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 159, 223, 0.35);
+  --shadow-dock: 0 16px 36px -6px rgba(15, 23, 42, 0.35), 0 4px 12px -2px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  --shadow-elevated: 0 4px 8px rgba(0, 0, 0, 0.02), 0 8px 12px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.9), 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+  --shadow-card-hover: 0 12px 28px -6px rgba(0, 159, 223, 0.35), 0 4px 10px -2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 159, 223, 0.5);
+  --shadow-dock: 0 16px 36px -6px rgba(0, 0, 0, 0.95), 0 4px 14px -2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.18);
+  --shadow-elevated: 0 4px 8px rgba(0, 0, 0, 0.8), 0 8px 12px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(255, 255, 255, 0.12);
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
+  text-rendering: optimizeLegibility;
+  transition: background-color var(--duration-fast) var(--ease-fluid), color var(--duration-fast) var(--ease-fluid);
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background var(--duration-fast) var(--ease-fluid);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* High-Performance Rendering & Composite Layers */
+.thumbnail-card-container {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
+/* GPU Acceleration Helper */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Refined Floating Dock in Brand Color */
+.floating-dock {
+  background: rgba(0, 159, 223, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 16px 36px -6px rgba(0, 159, 223, 0.45), 0 4px 14px -2px rgba(0, 159, 223, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.35);
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  transition: all var(--duration-normal) var(--ease-fluid);
+  transform: translateZ(0);
+}
+
+.floating-dock:hover {
+  box-shadow: 0 20px 42px -6px rgba(0, 159, 223, 0.55), 0 6px 18px -2px rgba(0, 159, 223, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Smooth Interactive Elements */
+button, input, select, a {
+  transition-timing-function: var(--ease-fluid);
+}
+
+/* Slider Custom Styling */
+input[type='range'].custom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 9999px;
+  outline: none;
+  height: 4px;
+  transition: background var(--duration-fast) var(--ease-fluid);
+}
+
+input[type='range'].custom-slider:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+input[type='range'].custom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-fluid);
+}
+
+input[type='range'].custom-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+input[type='range'].custom-slider::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+/* Polish Entrance Animations with Blur */
+@keyframes smoothBlurIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+.animate-blur-in {
+  animation: smoothBlurIn var(--duration-slow) var(--ease-fluid) forwards;
+}
+
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-blur {
+  animation: smoothFadeIn var(--duration-normal) var(--ease-fluid) forwards;
+}
+
+/* Bottom Fade Mask */
+.bottom-fade-mask {
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

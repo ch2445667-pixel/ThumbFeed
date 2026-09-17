@@ -273,6 +273,52 @@ export async function POST(req: NextRequest) {
     }
 
     let input = channelUrl.trim();
+
+    // Check if input is actually a single video URL
+    const singleVideoMatch = input.match(/(?:watch\?(?:.*&)?v=|youtu\.be\/|\/shorts\/|\/embed\/|\/live\/)([a-zA-Z0-9_-]{11})/i);
+    if (singleVideoMatch && singleVideoMatch[1]) {
+      const vId = singleVideoMatch[1];
+      let videoTitle = 'YouTube Video';
+      let authorName = 'YouTube Creator';
+      let thumbUrl = `https://i.ytimg.com/vi/${vId}/maxresdefault.jpg`;
+
+      try {
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${vId}&format=json`);
+        if (oembedRes.ok) {
+          const odata = await oembedRes.json();
+          if (odata.title) videoTitle = odata.title;
+          if (odata.author_name) authorName = odata.author_name;
+          if (odata.thumbnail_url) thumbUrl = odata.thumbnail_url;
+        }
+      } catch (directVidErr) {
+        console.warn('Single video oEmbed in channel route error:', directVidErr);
+      }
+
+      const { niche, tags } = classifyNicheFromTitle(videoTitle, authorName);
+      const singleItem: ExtractedChannelVideo = {
+        id: `ch-yt-${vId}`,
+        videoId: vId,
+        title: videoTitle,
+        creator: authorName,
+        imageUrl: thumbUrl,
+        sourceUrl: `https://www.youtube.com/watch?v=${vId}`,
+        niche,
+        tags
+      };
+
+      return NextResponse.json({
+        success: true,
+        channel: {
+          name: authorName,
+          avatar: `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
+          url: `https://www.youtube.com/watch?v=${vId}`
+        },
+        count: 1,
+        requestedLimit,
+        videos: [singleItem],
+        items: [singleItem]
+      });
+    }
     
     // Normalize channel URL
     let targetUrl = input;
@@ -536,7 +582,8 @@ Return a strict JSON array of objects with keys: "videoId" (exact 11-char YouTub
       },
       count: extractedVideos.length,
       requestedLimit,
-      videos: extractedVideos
+      videos: extractedVideos,
+      items: extractedVideos
     });
 
   } catch (err: any) {

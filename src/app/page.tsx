@@ -19,6 +19,7 @@ import {
   getStoredThumbnails,
   deleteStoredThumbnailPermanently
 } from '../lib/storage';
+import { supabase } from '../lib/supabase';
 import { preloadAllThumbnails, prioritizeUpcomingThumbnails } from '../lib/imageCache';
 
 // Deterministic seeded shuffle using Mulberry32 PRNG so order never drifts automatically
@@ -104,10 +105,29 @@ export default function HomePage() {
     // Initial sync on mount
     loadData();
 
-    // Auto-sync polling every 7 seconds to catch background extension uploads
+    // Auto-sync polling every 5 seconds to catch background extension uploads
     const pollTimer = setInterval(() => {
       loadData();
-    }, 7000);
+    }, 5000);
+
+    // Supabase Realtime channel to get notified immediately when Chrome extension saves a record
+    let realtimeChannel: any = null;
+    if (supabase) {
+      try {
+        realtimeChannel = supabase
+          .channel('realtime:thumbnails_feed')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'thumbnails' },
+            () => {
+              loadData();
+            }
+          )
+          .subscribe();
+      } catch (e) {
+        console.warn('Supabase Realtime not available, falling back to interval:', e);
+      }
+    }
 
     // Auto-sync instantly whenever the user focuses the window (e.g. switching from Chrome extension)
     const onWindowFocus = () => {
@@ -126,6 +146,9 @@ export default function HomePage() {
     return () => {
       isMounted = false;
       clearInterval(pollTimer);
+      if (realtimeChannel && supabase) {
+        supabase.removeChannel(realtimeChannel);
+      }
       window.removeEventListener('focus', onWindowFocus);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };

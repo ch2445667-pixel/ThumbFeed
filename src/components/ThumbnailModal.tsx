@@ -76,7 +76,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
             exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             id="thumbnail-modal-content"
-            className="relative w-full max-w-4xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-[18px] shadow-[0_25px_50px_-12px_rgba(15,23,42,0.25),0_0_0_1px_rgba(0,159,223,0.15)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8),0_0_0_1px_rgba(0,159,223,0.3)] overflow-hidden z-10 my-auto flex flex-col p-4 sm:p-6 gap-3 gpu-layer"
+            className="relative w-full max-w-4xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-[18px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95)] overflow-hidden z-10 my-auto flex flex-col p-4 sm:p-6 gap-3 gpu-layer"
           >
             {/* Floating Close & Download Header */}
             <div className="flex items-center justify-between">

@@ -92,7 +92,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 }`}
               >
                 <span className="truncate">{niche}</span>
-                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white ml-1 shrink-0" />}
               </button>
             );
           })}

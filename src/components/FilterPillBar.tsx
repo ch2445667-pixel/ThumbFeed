@@ -97,7 +97,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
               transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto bg-white/95 dark:bg-black/95 backdrop-blur-2xl border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-slate-100 p-4 rounded-[18px] shadow-[0_20px_48px_-8px_rgba(15,23,42,0.25),0_0_0_1px_rgba(0,159,223,0.15)] dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.95),0_0_0_1px_rgba(0,159,223,0.3)] max-w-lg w-full space-y-3.5 relative select-none gpu-layer"
+              className="pointer-events-auto bg-white/95 dark:bg-black/95 backdrop-blur-2xl border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-slate-100 p-4 rounded-[18px] shadow-[0_20px_48px_-8px_rgba(15,23,42,0.25)] dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.95)] max-w-lg w-full space-y-3.5 relative select-none gpu-layer"
             >
               {/* Header Row: Title & Sort Options */}
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-2.5">

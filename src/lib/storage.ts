@@ -39,7 +39,7 @@ export const DEFAULT_COLLECTIONS: CollectionBoard[] = [
     description: 'Thumbnails with bold expressions, curiosity gaps and high engagement',
     thumbnailIds: [INITIAL_THUMBNAILS[0]?.id || 'thumb-1', INITIAL_THUMBNAILS[1]?.id || 'thumb-2', INITIAL_THUMBNAILS[2]?.id || 'thumb-3'],
     createdAt: '2026-08-20',
-    colorTheme: '#ef4444'
+    colorTheme: '#401D1A'
   },
   {
     id: 'col-2',
@@ -47,7 +47,7 @@ export const DEFAULT_COLLECTIONS: CollectionBoard[] = [
     description: 'Clean Apple-style and sleek documentary lighting references',
     thumbnailIds: [INITIAL_THUMBNAILS[3]?.id || 'thumb-4', INITIAL_THUMBNAILS[4]?.id || 'thumb-5', INITIAL_THUMBNAILS[5]?.id || 'thumb-6'],
     createdAt: '2026-08-20',
-    colorTheme: '#6366f1'
+    colorTheme: '#E4E0D3'
   }
 ];
 
@@ -151,17 +151,34 @@ export function classifyNicheFromFilename(filename: string): { niche: ThumbnailI
 }
 
 export function normalizeItemNiche(item: ThumbnailItem): ThumbnailItem {
+  if (item.tags && Array.isArray(item.tags)) {
+    return {
+      ...item,
+      niche: item.niche || ((item.tags[0] || '') as ThumbnailItem['niche'])
+    };
+  }
+
   const currentNiche = item.niche as string;
+  if (!currentNiche) {
+    return {
+      ...item,
+      tags: []
+    };
+  }
+
   const validNiches: ThumbnailItem['niche'][] = [
     'IRL', 'Business', 'Tech', 'Entertainment', 'Gaming', 'Sports', 'Documentary', 'Educational'
   ];
 
   if (validNiches.includes(item.niche)) {
-    return item;
+    return {
+      ...item,
+      tags: [item.niche]
+    };
   }
 
-  // Map previous categories to new categories
-  let remappedNiche: ThumbnailItem['niche'] = 'Tech';
+  // Map legacy category names
+  let remappedNiche: ThumbnailItem['niche'] = item.niche;
   if (currentNiche === 'Tech & AI') remappedNiche = 'Tech';
   else if (currentNiche === 'Finance & Business') remappedNiche = 'Business';
   else if (currentNiche === 'Vlogs & Lifestyle') remappedNiche = 'IRL';
@@ -170,14 +187,11 @@ export function normalizeItemNiche(item: ThumbnailItem): ThumbnailItem {
   else if (currentNiche === 'Documentary') remappedNiche = 'Documentary';
   else if (currentNiche === 'Gaming') remappedNiche = 'Gaming';
   else if (currentNiche === 'Entertainment') remappedNiche = 'Entertainment';
-  else {
-    const meta = classifyNicheFromFilename(item.title + ' ' + item.imageUrl);
-    remappedNiche = meta.niche;
-  }
 
   return {
     ...item,
-    niche: remappedNiche
+    niche: remappedNiche,
+    tags: item.tags || (remappedNiche ? [remappedNiche] : [])
   };
 }
 
@@ -196,15 +210,74 @@ export function shuffleThumbnails(items: ThumbnailItem[]): ThumbnailItem[] {
 }
 
 /**
- * Deterministically merge new items without randomizing the feed
+ * Extracts multiple deduplication keys for a thumbnail item to prevent duplicates
+ * across YouTube video IDs, canonical URLs, image sources, and IDs.
+ */
+export function extractDedupeKeys(item: { id?: string; imageUrl?: string; sourceUrl?: string; videoId?: string; title?: string }): string[] {
+  const keys: string[] = [];
+  if (item.id) keys.push(`id:${item.id}`);
+
+  // 1. Direct YouTube 11-char video ID if present
+  const directYtId = item.videoId;
+  if (directYtId && directYtId.length === 11) {
+    keys.push(`yt:${directYtId}`);
+  }
+
+  // 2. Scan id, sourceUrl, and imageUrl for any 11-char YouTube video ID
+  const scan = `${item.id || ''} ${item.sourceUrl || ''} ${item.imageUrl || ''}`;
+  const ytRegex = /(?:watch\?(?:.*&)?v=|youtu\.be\/|\/shorts\/|\/vi\/|thumb-yt-|thumb-storage-|ch-yt-|yt-vid-|yt-ch-|yt-|_)([a-zA-Z0-9_-]{11})(?:[_\.\?&\/:]|$)/gi;
+  let ytMatch;
+  while ((ytMatch = ytRegex.exec(scan)) !== null) {
+    const idFound = ytMatch[1];
+    if (idFound && idFound.length === 11) {
+      keys.push(`yt:${idFound}`);
+    }
+  }
+
+  // 3. Normalized image URL
+  if (item.imageUrl) {
+    keys.push(`img:${item.imageUrl.toLowerCase()}`);
+    const fname = item.imageUrl.split('/').pop()?.split('?')[0]?.toLowerCase();
+    if (fname && fname.length > 5 && !fname.includes('maxresdefault') && !fname.includes('hqdefault')) {
+      keys.push(`fname:${fname}`);
+    }
+  }
+
+  // 4. Normalized source URL
+  if (item.sourceUrl && item.sourceUrl.trim()) {
+    keys.push(`src:${item.sourceUrl.trim().toLowerCase()}`);
+  }
+
+  return keys;
+}
+
+/**
+ * Deterministically merge new items without duplicates and without randomizing the feed
  */
 export function blendAndDistributeThumbnails(baseList: ThumbnailItem[], newItems: ThumbnailItem[]): ThumbnailItem[] {
   if (!newItems || newItems.length === 0) return baseList;
-  const newKeys = new Set(newItems.map(i => i.id || i.imageUrl));
-  const filteredBase = baseList.filter(t => !newKeys.has(t.id) && !newKeys.has(t.imageUrl));
-  
+
+  // 1. Deduplicate new items among themselves
+  const seenKeys = new Set<string>();
+  const uniqueNewItems: ThumbnailItem[] = [];
+
+  for (const item of newItems) {
+    const keys = extractDedupeKeys(item);
+    const isDup = keys.some(k => seenKeys.has(k));
+    if (!isDup) {
+      keys.forEach(k => seenKeys.add(k));
+      uniqueNewItems.push(item);
+    }
+  }
+
+  // 2. Filter base list to remove any item matching seenKeys
+  const filteredBase = baseList.filter(item => {
+    const keys = extractDedupeKeys(item);
+    return !keys.some(k => seenKeys.has(k));
+  });
+
   // Deterministically place new additions at the front of the feed
-  return [...newItems, ...filteredBase];
+  return [...uniqueNewItems, ...filteredBase];
 }
 
 /**
@@ -223,14 +296,29 @@ export function getUserImportedThumbnails(): ThumbnailItem[] {
 }
 
 /**
- * Save user imported thumbnails into the dedicated persistent store
+ * Save user imported thumbnails into the dedicated persistent store with strict deduplication
  */
 export function saveUserImportedThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[] {
   if (typeof window === 'undefined') return newItems;
   try {
     const current = getUserImportedThumbnails();
-    const newKeys = new Set(newItems.map(i => i.id || i.imageUrl));
-    const merged = [...newItems, ...current.filter(t => !newKeys.has(t.id) && !newKeys.has(t.imageUrl))];
+    const seenKeys = new Set<string>();
+    const uniqueNew: ThumbnailItem[] = [];
+
+    for (const item of newItems) {
+      const keys = extractDedupeKeys(item);
+      if (!keys.some(k => seenKeys.has(k))) {
+        keys.forEach(k => seenKeys.add(k));
+        uniqueNew.push(item);
+      }
+    }
+
+    const filteredCurrent = current.filter(item => {
+      const keys = extractDedupeKeys(item);
+      return !keys.some(k => seenKeys.has(k));
+    });
+
+    const merged = [...uniqueNew, ...filteredCurrent];
     localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(merged));
     return merged;
   } catch (e) {
@@ -312,8 +400,8 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
             // Newly added file in the Supabase bucket (from Chrome Extension or User)!
             const title = dbRec?.title || formatTitleFromFilename(decodedName) || 'YouTube Thumbnail';
             const meta = classifyNicheFromFilename(decodedName);
-            const niche = dbRec?.niche || meta.niche;
-            const tags = dbRec?.tags && dbRec.tags.length > 0 ? dbRec.tags : meta.tags;
+            const niche = dbRec ? (dbRec.niche ?? '') : meta.niche;
+            const tags = dbRec ? (Array.isArray(dbRec.tags) ? dbRec.tags : []) : meta.tags;
 
             const newItem: ThumbnailItem = {
               id: dbRec?.id || `thumb-storage-${file.id || idx}-${fileName.replace(/[^a-zA-Z0-9]/g, '')}`,
@@ -324,7 +412,7 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
               niche,
               styles: dbRec?.styles || ['High-Contrast Glow', 'Face Close-up'],
               tags,
-              colors: dbRec?.colors || ['#FF3366', '#0F172A', '#3B82F6', '#FFFFFF'],
+              colors: dbRec?.colors || ['#401D1A', '#E4E0D3', '#FFFFFF'],
               ocrText: dbRec?.ocr_text || '',
               emotion: dbRec?.emotion || 'Curious',
               breakdownNotes: dbRec?.breakdown_notes || 'Auto-synchronized directly from Supabase Storage bucket.',
@@ -355,10 +443,10 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
             creator: row.creator || 'TanzeelGFX',
             imageUrl: row.image_url,
             sourceUrl: row.source_url || row.image_url,
-            niche: row.niche || 'Tech & AI',
+            niche: row.niche || '',
             styles: row.styles && row.styles.length > 0 ? row.styles : ['Face Close-up', 'High-Contrast Glow'],
-            tags: row.tags && row.tags.length > 0 ? row.tags : [row.niche || 'Tech & AI', 'YouTube Hook', 'High CTR'],
-            colors: row.colors && row.colors.length > 0 ? row.colors : ['#FF3366', '#0F172A', '#FFCC00', '#FFFFFF'],
+            tags: Array.isArray(row.tags) ? row.tags : (row.niche ? [row.niche] : []),
+            colors: row.colors && row.colors.length > 0 ? row.colors : ['#401D1A', '#E4E0D3', '#FFFFFF'],
             ocrText: row.ocr_text || '',
             emotion: row.emotion || 'Curious',
             breakdownNotes: row.breakdown_notes || 'High-CTR YouTube thumbnail design leveraging visual hierarchy.',
@@ -381,8 +469,10 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
   const validBase = baseThumbnails.filter(b => !deletedKeys.has(b.id) && !deletedKeys.has(b.imageUrl));
   const validUserImports = userImports.filter(u => !deletedKeys.has(u.id) && !deletedKeys.has(u.imageUrl));
 
-  const userKeys = new Set(validUserImports.map(u => u.id || u.imageUrl));
-  const filteredBase = validBase.filter(b => !userKeys.has(b.id) && !userKeys.has(b.imageUrl));
+  // Extract all dedupe keys from valid user imports to strictly prevent duplicate entries
+  const userKeys = new Set<string>();
+  validUserImports.forEach(u => extractDedupeKeys(u).forEach(k => userKeys.add(k)));
+  const filteredBase = validBase.filter(b => !extractDedupeKeys(b).some(k => userKeys.has(k)));
   const combined = validUserImports.length > 0
     ? blendAndDistributeThumbnails(filteredBase, validUserImports)
     : filteredBase;
@@ -419,9 +509,10 @@ export function getStoredThumbnails(): ThumbnailItem[] {
       return baseList;
     }
 
-    // Blend user imported thumbnails throughout the base library smoothly
-    const userKeys = new Set(userImports.map(u => u.id || u.imageUrl));
-    const filteredBase = baseList.filter(b => !userKeys.has(b.id) && !userKeys.has(b.imageUrl));
+    // Blend user imported thumbnails throughout the base library smoothly with strict deduplication
+    const userKeys = new Set<string>();
+    userImports.forEach(u => extractDedupeKeys(u).forEach(k => userKeys.add(k)));
+    const filteredBase = baseList.filter(b => !extractDedupeKeys(b).some(k => userKeys.has(k)));
     return blendAndDistributeThumbnails(filteredBase, userImports).map(normalizeItemNiche);
   } catch {
     return INITIAL_THUMBNAILS;

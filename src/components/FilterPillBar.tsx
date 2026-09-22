@@ -97,29 +97,29 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
               transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto bg-white/95 dark:bg-black/95 backdrop-blur-2xl border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-slate-100 p-4 rounded-[18px] shadow-[0_20px_48px_-8px_rgba(15,23,42,0.25)] dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.95)] max-w-lg w-full space-y-3.5 relative select-none gpu-layer"
+              className="pointer-events-auto bg-[#FFFFFF]/95 dark:bg-[#401D1A]/95 backdrop-blur-2xl border border-[#401D1A]/15 dark:border-[#E4E0D3]/25 text-[#401D1A] dark:text-[#FFFFFF] p-4 rounded-[18px] shadow-[0_20px_48px_-8px_rgba(64,29,26,0.25)] dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.95)] max-w-lg w-full space-y-3.5 relative select-none gpu-layer"
             >
               {/* Header Row: Title & Sort Options */}
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-2.5">
+              <div className="flex items-center justify-between border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-[8px] bg-[#009FDF]/10 text-[#009FDF] border border-[#009FDF]/25 flex items-center justify-center">
+                  <div className="p-1.5 rounded-[8px] bg-[#401D1A]/10 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 flex items-center justify-center">
                     <IconFilter className="w-3.5 h-3.5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 tracking-wide">Filter & Browse</h4>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Select or create any tag category</p>
+                    <h4 className="text-xs font-bold text-[#401D1A] dark:text-[#FFFFFF] tracking-wide">Filter & Browse</h4>
+                    <p className="text-[10px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">Select or create any tag category</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   {/* Sort Toggles */}
-                  <div className="flex items-center bg-slate-100 dark:bg-zinc-900 p-0.5 rounded-[10px] text-[11px] border border-slate-200/60 dark:border-white/10">
+                  <div className="flex items-center bg-[#E4E0D3]/50 dark:bg-[#401D1A] p-0.5 rounded-[10px] text-[11px] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25">
                     <button
                       onClick={() => onToggleSort('latest')}
                       className={`flex items-center gap-1 px-2.5 py-1 rounded-[8px] font-medium active:scale-[0.96] transition-all duration-150 cursor-pointer ${
                         filters.sortBy === 'latest'
-                          ? 'bg-white dark:bg-zinc-800 text-[#009FDF] dark:text-[#38bdf8] font-bold shadow-xs border border-slate-200/60 dark:border-white/10'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                          ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] font-bold shadow-xs'
+                          : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
                       }`}
                       title="Sort by latest additions"
                     >
@@ -130,8 +130,8 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                       onClick={() => onToggleSort('popular')}
                       className={`flex items-center gap-1 px-2.5 py-1 rounded-[8px] font-medium active:scale-[0.96] transition-all duration-150 cursor-pointer ${
                         filters.sortBy === 'popular'
-                          ? 'bg-white dark:bg-zinc-800 text-[#009FDF] dark:text-[#38bdf8] font-bold shadow-xs border border-slate-200/60 dark:border-white/10'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                          ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] font-bold shadow-xs'
+                          : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
                       }`}
                       title="Sort by top rated likes"
                     >
@@ -142,19 +142,19 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                       onClick={() => onToggleSort('random')}
                       className={`flex items-center gap-1 px-2.5 py-1 rounded-[8px] font-medium active:scale-[0.96] transition-all duration-150 cursor-pointer ${
                         filters.sortBy === 'random'
-                          ? 'bg-white dark:bg-zinc-800 text-[#f76d25] font-bold shadow-xs border border-slate-200/60 dark:border-white/10'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                          ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] font-bold shadow-xs'
+                          : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
                       }`}
                       title="Random shuffle"
                     >
-                      <IconSparkles className="w-3 h-3 text-[#f76d25]" />
+                      <IconSparkles className="w-3 h-3" />
                       <span>Shuffle</span>
                     </button>
                   </div>
 
                   <button
                     onClick={onClose}
-                    className="p-1 rounded-[8px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-[0.92] transition-all duration-150 flex items-center justify-center cursor-pointer"
+                    className="p-1 rounded-[8px] text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 active:scale-[0.92] transition-all duration-150 flex items-center justify-center cursor-pointer"
                     title="Close filter menu"
                   >
                     <IconClose className="w-4 h-4" />
@@ -176,15 +176,17 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                         onClick={() => onSelectCategory(cat)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold whitespace-nowrap active:scale-[0.96] transition-all duration-150 select-none cursor-pointer ${
                           isSelected
-                            ? 'bg-[#009FDF] text-white shadow-md shadow-[#009FDF]/25 ring-1 ring-[#009FDF]'
-                            : 'bg-slate-100 dark:bg-zinc-900 text-slate-700 dark:text-slate-300 hover:bg-[#009FDF]/10 dark:hover:bg-[#009FDF]/20 hover:text-[#009FDF] dark:hover:text-[#38bdf8] border border-slate-200/50 dark:border-white/10'
+                            ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-md ring-1 ring-[#401D1A] dark:ring-[#E4E0D3]'
+                            : 'bg-[#E4E0D3]/50 dark:bg-[#FFFFFF]/10 text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#401D1A]/10 dark:hover:bg-[#E4E0D3]/20 hover:text-[#401D1A] dark:hover:text-[#FFFFFF] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25'
                         }`}
                       >
                         <span>{cat}</span>
                         {count !== undefined && count > 0 && (
                           <span
                             className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                              isSelected ? 'bg-white/25 text-white' : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-slate-300'
+                              isSelected
+                                ? 'bg-[#FFFFFF]/25 text-[#FFFFFF] dark:bg-[#401D1A]/25 dark:text-[#401D1A]'
+                                : 'bg-[#401D1A]/10 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3]'
                             }`}
                           >
                             {count}
@@ -213,19 +215,19 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                       value={newCatInput}
                       onChange={(e) => setNewCatInput(e.target.value)}
                       placeholder="New category..."
-                      className="px-2.5 py-1 text-xs rounded-[9px] bg-slate-100 dark:bg-zinc-800 border border-[#009FDF] text-slate-900 dark:text-slate-100 focus:outline-none w-28"
+                      className="px-2.5 py-1 text-xs rounded-[9px] bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A] dark:border-[#E4E0D3] text-[#401D1A] dark:text-[#FFFFFF] focus:outline-none w-28"
                     />
                     <button
                       type="submit"
                       disabled={!newCatInput.trim()}
-                      className="px-2 py-1 text-[11px] font-bold bg-[#009FDF] text-white rounded-[8px] disabled:opacity-50 cursor-pointer"
+                      className="px-2 py-1 text-[11px] font-bold bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] rounded-[8px] disabled:opacity-50 cursor-pointer"
                     >
                       Add
                     </button>
                     <button
                       type="button"
                       onClick={() => { setIsAddingNew(false); setNewCatInput(''); }}
-                      className="px-1.5 py-1 text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      className="px-1.5 py-1 text-[11px] text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] cursor-pointer"
                     >
                       &times;
                     </button>
@@ -234,7 +236,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsAddingNew(true)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-medium text-[#009FDF] hover:bg-[#009FDF]/10 border border-dashed border-[#009FDF]/40 transition-all cursor-pointer"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-medium text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#401D1A]/10 dark:hover:bg-[#E4E0D3]/20 border border-dashed border-[#401D1A]/40 dark:border-[#E4E0D3]/40 transition-all cursor-pointer"
                   >
                     <IconPlus className="w-3 h-3" />
                     <span>New Category</span>
@@ -244,14 +246,14 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
 
               {/* Footer info & Reset button */}
               {hasActiveFilters && (
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/10 text-xs">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Active: <span className="text-[#009FDF] dark:text-[#38bdf8] font-semibold">{filters.selectedNiche}</span>
+                <div className="flex items-center justify-between pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 text-xs">
+                  <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
+                    Active: <span className="text-[#401D1A] dark:text-[#E4E0D3] font-semibold">{filters.selectedNiche}</span>
                     {filters.sortBy !== 'latest' && filters.sortBy !== 'random' && ` • ${filters.sortBy}`}
                   </span>
                   <button
                     onClick={onResetFilters}
-                    className="text-[11px] font-semibold text-[#f76d25] hover:text-[#df5c17] flex items-center gap-1 py-0.5 px-2 rounded-[8px] hover:bg-[#fef1eb] dark:hover:bg-[#f76d25]/10 active:scale-[0.96] transition-all duration-150 cursor-pointer"
+                    className="text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:underline flex items-center gap-1 py-0.5 px-2 rounded-[8px] hover:bg-[#E4E0D3]/50 dark:hover:bg-[#FFFFFF]/10 active:scale-[0.96] transition-all duration-150 cursor-pointer"
                   >
                     <IconRotateCcw className="w-3 h-3" />
                     <span>Reset all</span>

@@ -1,5 +1,40 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="112" fill="#007bc4" />
-  <path d="M 256 114 L 321 151 L 321 214 L 256 176 L 191 214 L 191 151 Z" fill="#ffffff" />
-  <path d="M 132 214 L 191 214 L 191 298 L 256 336 L 321 298 L 321 214 L 380 214 L 380 332 L 256 404 L 132 332 Z" fill="#ffffff" />
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#140504" flood-opacity="0.45" />
+    </filter>
+  </defs>
+  <!-- Dark Burgundy Base Canvas -->
+  <rect width="800" height="800" rx="96" fill="#401D1A" />
+  
+  <g filter="url(#shadow)">
+    <!-- Stylized Monogram / Logo Mark in #E4E0D3 -->
+    <path fill="#E4E0D3" fill-rule="evenodd" d="
+      M 238 250
+      L 476 250
+      L 483 222
+      C 487 199 507 182 531 182
+      C 555 182 575 199 571 222
+      L 567 250
+      L 588 250
+      C 611 250 630 269 630 292
+      C 630 315 611 334 588 334
+      L 553 334
+      L 527 550
+      C 525 571 508 588 486 588
+      C 468 588 456 577 453 562
+      C 440 538 406 534 366 544
+      C 328 554 296 572 278 588
+      L 238 588
+      C 215 588 196 569 196 546
+      C 196 523 215 504 238 504
+      C 255 504 290 502 336 486
+      C 382 470 422 470 455 475
+      L 467 334
+      L 238 334
+      C 215 334 196 315 196 292
+      C 196 269 215 250 238 250
+      Z
+    " />
+  </g>
 </svg>

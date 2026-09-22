@@ -21,10 +21,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Shocked",
@@ -52,10 +52,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -84,10 +84,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -117,10 +117,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -148,14 +148,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -181,10 +181,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -213,10 +213,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -246,10 +246,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Shocked",
@@ -277,10 +277,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Intense",
@@ -310,14 +310,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -343,10 +343,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Happy",
@@ -374,10 +374,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -406,10 +406,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Urgent",
@@ -439,10 +439,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -470,14 +470,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -503,10 +503,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -535,10 +535,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -568,10 +568,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -600,10 +600,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -632,14 +632,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -664,10 +664,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Confident",
@@ -697,10 +697,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -728,10 +728,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Intense",
@@ -759,10 +759,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Curious",
@@ -790,14 +790,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -823,10 +823,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Mysterious",
@@ -854,10 +854,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -887,10 +887,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -919,10 +919,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -950,14 +950,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -983,10 +983,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Curious",
@@ -1015,10 +1015,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -1047,10 +1047,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Mysterious",
@@ -1080,10 +1080,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -1111,14 +1111,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -1144,10 +1144,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -1176,10 +1176,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -1209,10 +1209,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Curious",
@@ -1240,10 +1240,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Happy",
@@ -1273,14 +1273,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -1305,10 +1305,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Urgent",
@@ -1337,10 +1337,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -1369,10 +1369,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Shocked",
@@ -1401,10 +1401,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -1432,14 +1432,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -1465,10 +1465,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Happy",
@@ -1496,10 +1496,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Curious",
@@ -1528,10 +1528,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -1560,10 +1560,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Confident",
@@ -1591,14 +1591,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -1623,10 +1623,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Intense",
@@ -1656,10 +1656,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -1689,10 +1689,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Happy",
@@ -1721,10 +1721,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Mysterious",
@@ -1752,14 +1752,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -1785,10 +1785,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Confident",
@@ -1816,10 +1816,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -1849,10 +1849,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -1881,10 +1881,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Curious",
@@ -1912,14 +1912,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -1945,10 +1945,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Mysterious",
@@ -1976,10 +1976,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -2008,10 +2008,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -2040,10 +2040,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -2072,14 +2072,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -2105,10 +2105,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -2137,10 +2137,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -2170,10 +2170,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Mysterious",
@@ -2201,10 +2201,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Urgent",
@@ -2234,14 +2234,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -2266,10 +2266,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Shocked",
@@ -2298,10 +2298,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -2330,10 +2330,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -2363,10 +2363,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -2394,14 +2394,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -2427,10 +2427,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Urgent",
@@ -2459,10 +2459,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Confident",
@@ -2491,10 +2491,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -2522,10 +2522,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -2553,14 +2553,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -2586,10 +2586,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -2619,10 +2619,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -2652,10 +2652,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Urgent",
@@ -2683,10 +2683,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Confident",
@@ -2714,14 +2714,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -2747,10 +2747,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -2779,10 +2779,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Curious",
@@ -2812,10 +2812,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -2844,10 +2844,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Mysterious",
@@ -2875,14 +2875,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -2908,10 +2908,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Confident",
@@ -2940,10 +2940,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -2972,10 +2972,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Intense",
@@ -3005,10 +3005,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -3037,14 +3037,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -3070,10 +3070,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Mysterious",
@@ -3102,10 +3102,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -3135,10 +3135,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Confident",
@@ -3166,10 +3166,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Shocked",
@@ -3199,14 +3199,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -3231,10 +3231,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Curious",
@@ -3263,10 +3263,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -3296,10 +3296,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -3328,10 +3328,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -3359,14 +3359,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -3392,10 +3392,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -3424,10 +3424,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -3455,10 +3455,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -3486,10 +3486,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Happy",
@@ -3518,14 +3518,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -3551,10 +3551,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -3584,10 +3584,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -3615,10 +3615,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Confident",
@@ -3646,10 +3646,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -3678,14 +3678,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -3710,10 +3710,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -3741,10 +3741,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -3774,10 +3774,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -3806,10 +3806,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Confident",
@@ -3837,14 +3837,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -3870,10 +3870,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Intense",
@@ -3903,10 +3903,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -3935,10 +3935,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -3968,10 +3968,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Mysterious",
@@ -3999,14 +3999,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -4032,10 +4032,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -4063,10 +4063,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Shocked",
@@ -4094,10 +4094,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -4125,10 +4125,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Curious",
@@ -4158,14 +4158,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -4191,10 +4191,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Mysterious",
@@ -4222,10 +4222,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -4255,10 +4255,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -4288,10 +4288,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -4320,14 +4320,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -4353,10 +4353,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Curious",
@@ -4385,10 +4385,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -4418,10 +4418,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Mysterious",
@@ -4450,10 +4450,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -4482,14 +4482,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -4515,10 +4515,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -4548,10 +4548,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -4579,10 +4579,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Curious",
@@ -4611,10 +4611,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -4643,14 +4643,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -4676,10 +4676,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Urgent",
@@ -4708,10 +4708,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Confident",
@@ -4741,10 +4741,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -4773,10 +4773,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Intense",
@@ -4804,14 +4804,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -4837,10 +4837,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Happy",
@@ -4868,10 +4868,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -4899,10 +4899,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Confident",
@@ -4932,10 +4932,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -4964,14 +4964,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -4996,10 +4996,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -5028,10 +5028,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -5061,10 +5061,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Happy",
@@ -5092,10 +5092,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Mysterious",
@@ -5124,14 +5124,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -5157,10 +5157,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Confident",
@@ -5188,10 +5188,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -5220,10 +5220,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Intense",
@@ -5252,10 +5252,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -5284,14 +5284,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -5317,10 +5317,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Mysterious",
@@ -5349,10 +5349,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -5380,10 +5380,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -5412,10 +5412,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -5444,14 +5444,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -5476,10 +5476,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -5509,10 +5509,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -5541,10 +5541,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Mysterious",
@@ -5573,10 +5573,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Urgent",
@@ -5605,14 +5605,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -5638,10 +5638,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Shocked",
@@ -5669,10 +5669,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -5702,10 +5702,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -5734,10 +5734,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Urgent",
@@ -5765,14 +5765,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -5798,10 +5798,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Urgent",
@@ -5831,10 +5831,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -5862,10 +5862,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Shocked",
@@ -5894,10 +5894,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -5926,14 +5926,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -5959,10 +5959,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -5991,10 +5991,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Mysterious",
@@ -6022,10 +6022,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -6053,10 +6053,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Confident",
@@ -6086,14 +6086,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#eab308 and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -6119,10 +6119,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Intense",
@@ -6151,10 +6151,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -6184,10 +6184,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -6216,10 +6216,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Mysterious",
@@ -6248,14 +6248,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -6281,10 +6281,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Confident",
@@ -6313,10 +6313,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Shocked",
@@ -6345,10 +6345,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -6377,10 +6377,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -6409,14 +6409,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -6442,10 +6442,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -6475,10 +6475,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -6506,10 +6506,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Confident",
@@ -6537,10 +6537,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Shocked",
@@ -6568,14 +6568,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -6601,10 +6601,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Curious",
@@ -6633,10 +6633,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Happy",
@@ -6666,10 +6666,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -6698,10 +6698,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -6730,14 +6730,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -6763,10 +6763,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Shocked",
@@ -6795,10 +6795,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -6826,10 +6826,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -6859,10 +6859,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -6890,14 +6890,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -6923,10 +6923,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -6954,10 +6954,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Confident",
@@ -6986,10 +6986,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -7017,10 +7017,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Intense",
@@ -7050,14 +7050,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -7083,10 +7083,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Happy",
@@ -7115,10 +7115,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -7148,10 +7148,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -7180,10 +7180,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -7212,14 +7212,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -7245,10 +7245,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -7277,10 +7277,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -7308,10 +7308,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -7340,10 +7340,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -7371,14 +7371,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -7404,10 +7404,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -7437,10 +7437,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -7470,10 +7470,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Intense",
@@ -7501,10 +7501,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -7532,14 +7532,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -7565,10 +7565,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Mysterious",
@@ -7596,10 +7596,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -7629,10 +7629,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -7661,10 +7661,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Curious",
@@ -7692,14 +7692,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -7725,10 +7725,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Curious",
@@ -7756,10 +7756,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -7788,10 +7788,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Mysterious",
@@ -7821,10 +7821,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -7852,14 +7852,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -7885,10 +7885,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -7916,10 +7916,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Intense",
@@ -7949,10 +7949,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Curious",
@@ -7981,10 +7981,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Curious",
@@ -8014,14 +8014,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -8046,10 +8046,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Urgent",
@@ -8078,10 +8078,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -8110,10 +8110,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Shocked",
@@ -8141,10 +8141,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -8172,14 +8172,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -8205,10 +8205,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -8237,10 +8237,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -8270,10 +8270,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -8302,10 +8302,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -8334,14 +8334,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -8367,10 +8367,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -8400,10 +8400,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -8431,10 +8431,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Happy",
@@ -8462,10 +8462,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Mysterious",
@@ -8494,14 +8494,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -8527,10 +8527,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -8559,10 +8559,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Shocked",
@@ -8592,10 +8592,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -8624,10 +8624,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -8655,14 +8655,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -8688,10 +8688,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Mysterious",
@@ -8720,10 +8720,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -8752,10 +8752,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -8785,10 +8785,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -8816,14 +8816,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -8848,10 +8848,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -8880,10 +8880,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -8913,10 +8913,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Mysterious",
@@ -8945,10 +8945,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Shocked",
@@ -8977,14 +8977,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -9010,10 +9010,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Shocked",
@@ -9041,10 +9041,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -9074,10 +9074,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -9106,10 +9106,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -9137,14 +9137,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -9170,10 +9170,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Mysterious",
@@ -9202,10 +9202,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -9233,10 +9233,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -9265,10 +9265,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -9296,14 +9296,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -9329,10 +9329,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -9362,10 +9362,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -9395,10 +9395,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Urgent",
@@ -9427,10 +9427,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Confident",
@@ -9459,14 +9459,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -9491,10 +9491,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -9522,10 +9522,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -9555,10 +9555,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -9587,10 +9587,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -9618,14 +9618,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -9651,10 +9651,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Confident",
@@ -9682,10 +9682,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -9713,10 +9713,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Intense",
@@ -9745,10 +9745,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -9777,14 +9777,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -9810,10 +9810,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Mysterious",
@@ -9841,10 +9841,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Urgent",
@@ -9873,10 +9873,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -9904,10 +9904,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Shocked",
@@ -9937,14 +9937,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -9970,10 +9970,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Curious",
@@ -10002,10 +10002,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -10035,10 +10035,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -10068,10 +10068,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -10100,14 +10100,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -10133,10 +10133,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Shocked",
@@ -10165,10 +10165,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -10198,10 +10198,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -10230,10 +10230,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -10261,14 +10261,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -10294,10 +10294,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -10327,10 +10327,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -10358,10 +10358,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Shocked",
@@ -10389,10 +10389,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -10420,14 +10420,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -10453,10 +10453,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Happy",
@@ -10484,10 +10484,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -10517,10 +10517,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -10549,10 +10549,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -10581,14 +10581,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -10614,10 +10614,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Intense",
@@ -10646,10 +10646,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -10678,10 +10678,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -10711,10 +10711,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -10742,14 +10742,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -10775,10 +10775,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -10807,10 +10807,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -10839,10 +10839,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -10870,10 +10870,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Curious",
@@ -10903,14 +10903,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -10936,10 +10936,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Mysterious",
@@ -10967,10 +10967,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -11000,10 +11000,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -11032,10 +11032,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -11063,14 +11063,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -11096,10 +11096,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Curious",
@@ -11128,10 +11128,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -11160,10 +11160,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -11191,10 +11191,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Curious",
@@ -11223,14 +11223,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -11255,10 +11255,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Shocked",
@@ -11287,10 +11287,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -11320,10 +11320,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Curious",
@@ -11351,10 +11351,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -11383,14 +11383,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -11415,10 +11415,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -11446,10 +11446,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -11479,10 +11479,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -11511,10 +11511,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -11542,14 +11542,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -11575,10 +11575,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Happy",
@@ -11608,10 +11608,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -11640,10 +11640,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -11673,10 +11673,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -11705,14 +11705,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -11738,10 +11738,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -11769,10 +11769,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -11802,10 +11802,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Happy",
@@ -11833,10 +11833,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Mysterious",
@@ -11866,14 +11866,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -11898,10 +11898,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Confident",
@@ -11929,10 +11929,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -11961,10 +11961,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -11992,10 +11992,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -12023,14 +12023,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -12056,10 +12056,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Mysterious",
@@ -12088,10 +12088,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -12121,10 +12121,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -12152,10 +12152,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Shocked",
@@ -12183,14 +12183,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -12215,10 +12215,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -12248,10 +12248,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -12281,10 +12281,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Mysterious",
@@ -12312,10 +12312,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Urgent",
@@ -12344,14 +12344,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -12377,10 +12377,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -12408,10 +12408,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -12441,10 +12441,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -12473,10 +12473,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -12505,14 +12505,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -12538,10 +12538,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Urgent",
@@ -12570,10 +12570,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -12602,10 +12602,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -12635,10 +12635,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -12666,14 +12666,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -12699,10 +12699,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -12731,10 +12731,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -12764,10 +12764,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Urgent",
@@ -12795,10 +12795,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Confident",
@@ -12828,14 +12828,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -12861,10 +12861,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Intense",
@@ -12893,10 +12893,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -12926,10 +12926,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -12958,10 +12958,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -12990,14 +12990,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -13023,10 +13023,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Confident",
@@ -13055,10 +13055,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Shocked",
@@ -13086,10 +13086,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -13117,10 +13117,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Curious",
@@ -13149,14 +13149,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -13182,10 +13182,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Mysterious",
@@ -13214,10 +13214,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -13247,10 +13247,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Confident",
@@ -13278,10 +13278,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -13310,14 +13310,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -13343,10 +13343,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Curious",
@@ -13374,10 +13374,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -13407,10 +13407,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Mysterious",
@@ -13439,10 +13439,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Urgent",
@@ -13471,14 +13471,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -13504,10 +13504,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Shocked",
@@ -13535,10 +13535,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -13567,10 +13567,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -13600,10 +13600,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -13631,14 +13631,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -13664,10 +13664,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -13696,10 +13696,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -13727,10 +13727,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -13758,10 +13758,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Intense",
@@ -13791,14 +13791,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -13823,10 +13823,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Happy",
@@ -13854,10 +13854,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -13887,10 +13887,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -13920,10 +13920,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -13952,14 +13952,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -13985,10 +13985,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -14017,10 +14017,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -14049,10 +14049,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -14081,10 +14081,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -14112,14 +14112,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -14144,10 +14144,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Confident",
@@ -14177,10 +14177,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -14210,10 +14210,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Intense",
@@ -14242,10 +14242,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -14273,14 +14273,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -14306,10 +14306,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Mysterious",
@@ -14337,10 +14337,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -14370,10 +14370,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -14402,10 +14402,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -14433,14 +14433,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -14466,10 +14466,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Curious",
@@ -14498,10 +14498,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -14530,10 +14530,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -14563,10 +14563,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -14594,14 +14594,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -14626,10 +14626,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -14658,10 +14658,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -14691,10 +14691,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -14722,10 +14722,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Happy",
@@ -14755,14 +14755,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -14788,10 +14788,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Urgent",
@@ -14820,10 +14820,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -14853,10 +14853,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -14884,10 +14884,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -14916,14 +14916,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -14949,10 +14949,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -14980,10 +14980,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -15012,10 +15012,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -15044,10 +15044,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -15075,14 +15075,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -15107,10 +15107,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -15140,10 +15140,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -15173,10 +15173,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Happy",
@@ -15205,10 +15205,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Mysterious",
@@ -15236,14 +15236,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -15269,10 +15269,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Confident",
@@ -15300,10 +15300,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -15333,10 +15333,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -15365,10 +15365,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Curious",
@@ -15397,14 +15397,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -15430,10 +15430,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Mysterious",
@@ -15463,10 +15463,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -15495,10 +15495,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -15528,10 +15528,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -15559,14 +15559,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -15592,10 +15592,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -15624,10 +15624,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -15656,10 +15656,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Urgent",
@@ -15688,10 +15688,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Urgent",
@@ -15721,14 +15721,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -15753,10 +15753,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Shocked",
@@ -15785,10 +15785,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -15818,10 +15818,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -15851,10 +15851,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -15882,14 +15882,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -15915,10 +15915,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -15947,10 +15947,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -15980,10 +15980,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -16011,10 +16011,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -16042,14 +16042,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -16075,10 +16075,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -16108,10 +16108,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -16139,10 +16139,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Urgent",
@@ -16171,10 +16171,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -16203,14 +16203,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -16236,10 +16236,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Intense",
@@ -16268,10 +16268,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Curious",
@@ -16301,10 +16301,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -16333,10 +16333,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Curious",
@@ -16364,14 +16364,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -16397,10 +16397,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Confident",
@@ -16429,10 +16429,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -16461,10 +16461,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -16494,10 +16494,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -16526,14 +16526,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -16559,10 +16559,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -16590,10 +16590,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Urgent",
@@ -16623,10 +16623,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Confident",
@@ -16654,10 +16654,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Shocked",
@@ -16686,14 +16686,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -16718,10 +16718,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Curious",
@@ -16750,10 +16750,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -16783,10 +16783,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Mysterious",
@@ -16815,10 +16815,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -16847,14 +16847,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -16880,10 +16880,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Shocked",
@@ -16911,10 +16911,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -16943,10 +16943,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -16974,10 +16974,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Happy",
@@ -17006,14 +17006,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -17039,10 +17039,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -17071,10 +17071,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -17104,10 +17104,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Shocked",
@@ -17135,10 +17135,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -17167,14 +17167,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -17200,10 +17200,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Happy",
@@ -17231,10 +17231,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -17264,10 +17264,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -17296,10 +17296,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -17327,14 +17327,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -17360,10 +17360,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Intense",
@@ -17393,10 +17393,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -17425,10 +17425,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Happy",
@@ -17458,10 +17458,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Mysterious",
@@ -17489,14 +17489,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -17522,10 +17522,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -17553,10 +17553,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -17584,10 +17584,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -17615,10 +17615,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Curious",
@@ -17648,14 +17648,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -17681,10 +17681,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Mysterious",
@@ -17713,10 +17713,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -17745,10 +17745,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Confident",
@@ -17776,10 +17776,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -17808,14 +17808,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -17841,10 +17841,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Curious",
@@ -17873,10 +17873,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Happy",
@@ -17906,10 +17906,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Mysterious",
@@ -17938,10 +17938,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -17969,14 +17969,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -18001,10 +18001,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Shocked",
@@ -18034,10 +18034,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -18065,10 +18065,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Curious",
@@ -18096,10 +18096,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Happy",
@@ -18129,14 +18129,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -18162,10 +18162,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -18193,10 +18193,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -18226,10 +18226,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Mysterious",
@@ -18258,10 +18258,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Curious",
@@ -18290,14 +18290,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -18323,10 +18323,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Happy",
@@ -18355,10 +18355,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -18387,10 +18387,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -18420,10 +18420,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -18452,14 +18452,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -18484,10 +18484,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -18516,10 +18516,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -18549,10 +18549,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Happy",
@@ -18580,10 +18580,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Mysterious",
@@ -18613,14 +18613,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -18646,10 +18646,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Confident",
@@ -18678,10 +18678,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -18711,10 +18711,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -18743,10 +18743,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -18775,14 +18775,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -18808,10 +18808,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Mysterious",
@@ -18839,10 +18839,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Urgent",
@@ -18870,10 +18870,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -18902,10 +18902,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -18934,14 +18934,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -18966,10 +18966,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -18998,10 +18998,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -19031,10 +19031,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Mysterious",
@@ -19063,10 +19063,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Urgent",
@@ -19095,14 +19095,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -19127,10 +19127,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -19159,10 +19159,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#06b6d4",
-      "#0f172a",
-      "#38bdf8",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Intense",
@@ -19192,10 +19192,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -19224,10 +19224,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -19255,14 +19255,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -19288,10 +19288,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Urgent",
@@ -19319,10 +19319,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -19350,10 +19350,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -19383,10 +19383,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -19414,14 +19414,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Curious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -19447,10 +19447,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -19479,10 +19479,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -19512,10 +19512,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Urgent",
@@ -19544,10 +19544,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Confident",
@@ -19577,14 +19577,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -19610,10 +19610,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Intense",
@@ -19641,10 +19641,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -19674,10 +19674,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -19707,10 +19707,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Mysterious",
@@ -19738,14 +19738,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -19771,10 +19771,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Confident",
@@ -19803,10 +19803,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Shocked",
@@ -19836,10 +19836,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -19868,10 +19868,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -19899,14 +19899,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -19932,10 +19932,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Mysterious",
@@ -19965,10 +19965,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -19996,10 +19996,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Urgent",
@@ -20027,10 +20027,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Shocked",
@@ -20058,14 +20058,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -20091,10 +20091,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Curious",
@@ -20122,10 +20122,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -20155,10 +20155,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -20186,10 +20186,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -20218,14 +20218,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -20251,10 +20251,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Shocked",
@@ -20283,10 +20283,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -20315,10 +20315,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -20348,10 +20348,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -20379,14 +20379,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Mysterious",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -20412,10 +20412,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -20443,10 +20443,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Confident",
@@ -20475,10 +20475,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -20506,10 +20506,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Intense",
@@ -20539,14 +20539,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -20571,10 +20571,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Happy",
@@ -20603,10 +20603,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -20635,10 +20635,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Shocked",
@@ -20667,10 +20667,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -20699,14 +20699,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -20732,10 +20732,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -20764,10 +20764,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Curious",
@@ -20796,10 +20796,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -20828,10 +20828,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Intense",
@@ -20860,14 +20860,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Hook"
     ],
     "colors": [
-      "#a855f7",
-      "#1e1b4b",
-      "#ec4899",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Urgent",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#a855f7 and #ec4899) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "5.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -20893,10 +20893,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -20926,10 +20926,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -20959,10 +20959,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Intense",
@@ -20991,10 +20991,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Curious",
@@ -21022,14 +21022,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -21055,10 +21055,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Mysterious",
@@ -21086,10 +21086,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Mysterious",
@@ -21119,10 +21119,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -21151,10 +21151,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -21183,14 +21183,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "6.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -21216,10 +21216,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Curious",
@@ -21247,10 +21247,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -21279,10 +21279,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Curious",
@@ -21311,10 +21311,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -21343,14 +21343,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -21376,10 +21376,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -21407,10 +21407,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Intense",
@@ -21440,10 +21440,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Curious",
@@ -21471,10 +21471,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Happy",
@@ -21504,14 +21504,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "1.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -21536,10 +21536,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Urgent",
@@ -21568,10 +21568,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
@@ -21601,10 +21601,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "99% FAIL THIS",
     "emotion": "Curious",
@@ -21634,10 +21634,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -21665,14 +21665,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "WATCH THIS",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#10b981 and #fbbf24) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -21698,10 +21698,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
@@ -21729,10 +21729,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "THEY LIED.",
     "emotion": "Mysterious",
@@ -21761,10 +21761,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -21792,10 +21792,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "$10,000 / DAY",
     "emotion": "Confident",
@@ -21824,14 +21824,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "2.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -21856,10 +21856,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Intense",
@@ -21889,10 +21889,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Curious",
@@ -21922,10 +21922,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Happy",
@@ -21953,10 +21953,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Mysterious",
@@ -21985,14 +21985,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Curiosity"
     ],
     "colors": [
-      "#f59e0b",
-      "#18181b",
-      "#ef4444",
-      "#fafafa"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "AI WON.",
     "emotion": "Shocked",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#f59e0b and #ef4444) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#E4E0D3 and #401D1A) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -22018,10 +22018,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Confident",
@@ -22050,10 +22050,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "HOW I DID IT",
     "emotion": "Shocked",
@@ -22083,10 +22083,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",
@@ -22115,10 +22115,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Performance"
     ],
     "colors": [
-      "#ef4444",
-      "#18181b",
-      "#f97316",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "NEW SECRET",
     "emotion": "Shocked",
@@ -22146,14 +22146,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Happy",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "3.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -22179,10 +22179,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "DO NOT CLICK",
     "emotion": "Mysterious",
@@ -22211,10 +22211,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Urgent",
@@ -22242,10 +22242,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "IT HAPPENED",
     "emotion": "Mysterious",
@@ -22275,10 +22275,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Shocked",
@@ -22307,14 +22307,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "I REGRET THIS",
     "emotion": "Intense",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.2M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -22340,10 +22340,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "100 DAYS",
     "emotion": "Curious",
@@ -22372,10 +22372,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Entrepreneur"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "NEVER DO THIS",
     "emotion": "Curious",
@@ -22405,10 +22405,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Knowledge"
     ],
     "colors": [
-      "#10b981",
-      "#064e3b",
-      "#fbbf24",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "THE TRUTH",
     "emotion": "Mysterious",
@@ -22437,10 +22437,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Comedy"
     ],
     "colors": [
-      "#eab308",
-      "#000000",
-      "#ef4444",
-      "#ffffff"
+      "#E4E0D3",
+      "#401D1A",
+      "#401D1A",
+      "#FFFFFF"
     ],
     "ocrText": "IT’S OVER",
     "emotion": "Urgent",
@@ -22469,14 +22469,14 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Confident",
-    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#3b82f6 and #60a5fa) creates maximum visual pop against YouTube’s neutral UI.",
+    "breakdownNotes": "Features high optical clarity with crisp edge-detection and zero clutter. The strategic placement of dominant colors (#401D1A and #E4E0D3) creates maximum visual pop against YouTube’s neutral UI.",
     "viewsEstimate": "4.7M",
     "source": "supabase-storage",
     "createdAt": "2026-08-20T18:44:35.39991+00:00",
@@ -22502,10 +22502,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "Authentic"
     ],
     "colors": [
-      "#f43f5e",
-      "#fff1f2",
-      "#fda4af",
-      "#1f2937"
+      "#401D1A",
+      "#FFFFFF",
+      "#E4E0D3",
+      "#401D1A"
     ],
     "ocrText": "BEFORE & AFTER",
     "emotion": "Shocked",
@@ -22533,10 +22533,10 @@ export const INITIAL_THUMBNAILS: ThumbnailItem[] = [
       "NextGen"
     ],
     "colors": [
-      "#3b82f6",
-      "#0f172a",
-      "#60a5fa",
-      "#ffffff"
+      "#401D1A",
+      "#401D1A",
+      "#E4E0D3",
+      "#FFFFFF"
     ],
     "ocrText": "",
     "emotion": "Intense",

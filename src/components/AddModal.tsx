@@ -22,6 +22,7 @@ import {
   addCustomCategory,
   subscribeCategories
 } from '../lib/categories';
+import { extractDedupeKeys } from '../lib/storage';
 
 interface AddModalProps {
   isOpen: boolean;
@@ -110,6 +111,12 @@ function extractYoutubeVideoIds(text: string): { id: string; originalUrl: string
   return matches;
 }
 
+function extractSingleYoutubeId(urlOrStr: string): string | null {
+  if (!urlOrStr) return null;
+  const match = urlOrStr.match(/(?:watch\?(?:.*&)?v=|youtu\.be\/|\/shorts\/|\/live\/|\/embed\/|\/vi\/|thumb-yt-|ch-yt-|yt-)([a-zA-Z0-9_-]{11})/i);
+  return match && match[1] ? match[1] : null;
+}
+
 function isChannelInput(text: string): boolean {
   const trimmed = text.trim();
   // If there are explicit video links or video IDs, it is NOT a channel input
@@ -181,399 +188,314 @@ function classifyNicheFromTitle(title: string, creator: string = ''): { niche: N
   return { niche, tags };
 }
 
-export const POPULAR_TAGS: string[] = [
-  'High CTR',
-  'Bold Text',
-  'Face Close-up',
-  'Reaction Face',
-  'Minimalist',
-  'Viral',
-  '3D Render',
-  'Split Screen',
-  'Before / After',
-  'Typography',
-  'Illustrated',
-  'Clean Design',
-  'Dark Theme',
-  'Neon Glow',
-  'Deep Dive',
-  'Tutorial',
-  'Clickbait Hook',
-  'YouTube',
-  'Gaming',
-  'Design'
-];
-
-interface ItemTagSelectorProps {
-  tags: string[];
-  onChange: (newTags: string[]) => void;
+interface UnifiedCategoryBarProps {
+  label?: string;
+  itemCount: number;
+  categories: string[];
+  selectedCategories: string[];
+  onToggleCategory: (category: string) => void;
+  onCategoryCreated: (newCategory: string) => void;
   accentColor?: string;
 }
 
-const ItemTagSelector: React.FC<ItemTagSelectorProps> = ({
-  tags = [],
-  onChange,
-  accentColor = '#009FDF'
+const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
+  label = 'Select categories for all items',
+  itemCount,
+  categories,
+  selectedCategories,
+  onToggleCategory,
+  onCategoryCreated,
+  accentColor = '#401D1A'
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [inputVal, setInputVal] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [newCatInput, setNewCatInput] = useState('');
 
-  const addTag = (newTag: string) => {
-    const splitTags = newTag.split(/[,]+/).map(t => t.trim()).filter(Boolean);
-    if (splitTags.length === 0) return;
-    const lowerExisting = new Set(tags.map(t => t.toLowerCase()));
-    const toAdd = splitTags.filter(t => !lowerExisting.has(t.toLowerCase()));
-    if (toAdd.length > 0) {
-      onChange([...tags, ...toAdd]);
-    }
-  };
+  const handleAdd = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = newCatInput.trim();
+    if (!clean) return;
 
-  const removeTag = (tagToRemove: string) => {
-    onChange(tags.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()));
+    // Save to shared categories (which auto-adds to filter pills across the app)
+    addCustomCategory(clean);
+    onCategoryCreated(clean);
+    onToggleCategory(clean);
+    setNewCatInput('');
+    setIsAdding(false);
   };
 
   return (
-    <div className="space-y-1.5 pt-0.5">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700/80"
-          >
-            <span>#{tag}</span>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                removeTag(tag);
-              }}
-              className="text-zinc-400 hover:text-red-400 p-0.5 rounded transition-colors cursor-pointer"
-              title={`Remove ${tag}`}
-            >
-              <IconClose className="w-2.5 h-2.5" />
-            </button>
+    <div className="p-3 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl space-y-2">
+      <div className="flex items-center justify-between text-xs flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="font-semibold text-[#401D1A] dark:text-[#E4E0D3] text-[11px]">
+            {label} ({itemCount} {itemCount === 1 ? 'item' : 'items'}):
           </span>
-        ))}
-
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border transition-all cursor-pointer ${
-            isOpen
-              ? 'bg-zinc-800 text-white border-zinc-600'
-              : 'bg-zinc-900/90 border-dashed border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500'
-          }`}
-        >
-          <IconPlus className="w-2.5 h-2.5" />
-          <span>{tags.length === 0 ? 'Add Tags' : 'Tag'}</span>
-        </button>
-      </div>
-
-      {isOpen && (
-        <div className="p-2.5 bg-zinc-950/95 border border-zinc-800 rounded-xl space-y-2 text-xs animate-in fade-in zoom-in-95 duration-150 shadow-xl">
-          <div className="flex items-center gap-1.5">
-            <input
-              type="text"
-              value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  if (inputVal.trim()) {
-                    addTag(inputVal);
-                    setInputVal('');
-                  }
-                }
-              }}
-              placeholder="Type tag (or comma-separated) & hit Enter..."
-              className="flex-1 px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (inputVal.trim()) {
-                  addTag(inputVal);
-                  setInputVal('');
-                }
-              }}
-              disabled={!inputVal.trim()}
-              className="px-2.5 py-1 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-all cursor-pointer"
-              style={{ backgroundColor: accentColor }}
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="p-1 text-zinc-400 hover:text-white cursor-pointer"
-              title="Close picker"
-            >
-              <IconClose className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10px] text-zinc-500 font-medium">Quick Suggestions:</span>
-            <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 custom-scrollbar">
-              {POPULAR_TAGS.map((suggested) => {
-                const isSelected = tags.some(t => t.toLowerCase() === suggested.toLowerCase());
-                return (
-                  <button
-                    key={suggested}
-                    type="button"
-                    onClick={() => isSelected ? removeTag(suggested) : addTag(suggested)}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all cursor-pointer ${
-                      isSelected
-                        ? 'text-white font-bold'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'
-                    }`}
-                    style={isSelected ? { backgroundColor: accentColor } : undefined}
-                  >
-                    {isSelected ? '✓ ' : '+ '}
-                    {suggested}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface SectionPresetTagBarProps {
-  label: string;
-  selectedTags: string[];
-  onChange: (tags: string[]) => void;
-  accentColor?: string;
-  placeholder?: string;
-}
-
-const SectionPresetTagBar: React.FC<SectionPresetTagBarProps> = ({
-  label,
-  selectedTags,
-  onChange,
-  accentColor = '#009FDF',
-  placeholder = '+ Add custom tag (Enter)...'
-}) => {
-  const [customTagInput, setCustomTagInput] = useState('');
-
-  const toggleTag = (tag: string) => {
-    if (selectedTags.some(t => t.toLowerCase() === tag.toLowerCase())) {
-      onChange(selectedTags.filter(t => t.toLowerCase() !== tag.toLowerCase()));
-    } else {
-      onChange([...selectedTags, tag]);
-    }
-  };
-
-  const handleAddCustom = () => {
-    const split = customTagInput.split(/[,]+/).map(t => t.trim()).filter(Boolean);
-    if (split.length === 0) return;
-    const lowerExisting = new Set(selectedTags.map(t => t.toLowerCase()));
-    const toAdd = split.filter(t => !lowerExisting.has(t.toLowerCase()));
-    if (toAdd.length > 0) {
-      onChange([...selectedTags, ...toAdd]);
-    }
-    setCustomTagInput('');
-  };
-
-  return (
-    <div className="p-3 bg-zinc-950/80 border border-zinc-800/80 rounded-xl space-y-2 text-xs">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-zinc-300 flex items-center gap-1.5">
-          <IconTag className="w-3.5 h-3.5" style={{ color: accentColor }} />
-          <span>{label}</span>
-          {selectedTags.length > 0 && (
+          {selectedCategories.map(cat => (
             <span
-              className="px-1.5 py-0.2 rounded-full text-[10px] font-bold text-white"
+              key={cat}
+              className="px-2 py-0.5 rounded text-[11px] font-bold text-[#FFFFFF] shadow-xs inline-flex items-center gap-1"
               style={{ backgroundColor: accentColor }}
             >
-              {selectedTags.length}
+              <span>{cat}</span>
+              <button
+                type="button"
+                onClick={() => onToggleCategory(cat)}
+                className="hover:opacity-80 text-white/90 hover:text-white cursor-pointer leading-none text-xs"
+                title={`Remove ${cat} from all`}
+              >
+                ×
+              </button>
             </span>
+          ))}
+          {selectedCategories.length === 0 && (
+            <span className="text-[11px] text-[#401D1A]/50 dark:text-[#E4E0D3]/50 italic">None selected (click a category below to apply)</span>
           )}
-        </span>
+        </div>
 
-        {selectedTags.length > 0 && (
+        {!isAdding && (
           <button
             type="button"
-            onClick={() => onChange([])}
-            className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+            onClick={() => setIsAdding(true)}
+            className="text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:opacity-80 flex items-center gap-1 cursor-pointer transition-colors"
           >
-            Clear tags
+            <IconPlus className="w-3 h-3" />
+            <span>+ New Category</span>
           </button>
         )}
       </div>
 
-      {/* Preset Chips */}
+      {/* Inline Add New Category Box */}
+      {isAdding && (
+        <form onSubmit={handleAdd} className="flex items-center gap-2 p-2 bg-[#E4E0D3]/30 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-lg">
+          <input
+            type="text"
+            value={newCatInput}
+            onChange={(e) => setNewCatInput(e.target.value)}
+            placeholder="Category name (e.g. Finance, Anime)..."
+            className="flex-1 bg-transparent text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none"
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={!newCatInput.trim()}
+            className="px-2.5 py-1 rounded bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-40 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+          >
+            <IconCheck className="w-3 h-3" />
+            <span>Add to Filters</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIsAdding(false); setNewCatInput(''); }}
+            className="p-1 text-[#401D1A]/60 dark:text-[#E4E0D3]/60 hover:text-[#401D1A] dark:hover:text-[#FFFFFF] cursor-pointer"
+          >
+            <IconClose className="w-3.5 h-3.5" />
+          </button>
+        </form>
+      )}
+
+      {/* Categories from Filters - Click to toggle for all items */}
       <div className="flex flex-wrap items-center gap-1.5">
-        {POPULAR_TAGS.slice(0, 10).map((tag) => {
-          const isSelected = selectedTags.some(t => t.toLowerCase() === tag.toLowerCase());
+        {categories.map((cat) => {
+          const isSelected = selectedCategories.some(c => c.toLowerCase() === cat.toLowerCase());
           return (
             <button
-              key={tag}
+              key={cat}
               type="button"
-              onClick={() => toggleTag(tag)}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-medium transition-all active:scale-95 cursor-pointer ${
+              onClick={() => onToggleCategory(cat)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                 isSelected
                   ? 'text-white font-bold shadow-xs'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'
+                  : 'bg-[#E4E0D3]/40 dark:bg-[#FFFFFF]/10 hover:bg-[#E4E0D3] text-[#401D1A] dark:text-[#E4E0D3] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
               }`}
               style={isSelected ? { backgroundColor: accentColor } : undefined}
             >
-              {isSelected ? '✓ ' : '+ '}
-              {tag}
+              <span>{isSelected ? '✓ ' : '+ '}</span>
+              <span>{cat}</span>
             </button>
           );
         })}
       </div>
-
-      {/* Custom Tag Input */}
-      <div className="flex items-center gap-2 pt-1">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={customTagInput}
-            onChange={(e) => setCustomTagInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleAddCustom();
-              }
-            }}
-            placeholder={placeholder}
-            className="w-full px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleAddCustom}
-          disabled={!customTagInput.trim()}
-          className="px-2.5 py-1 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all cursor-pointer"
-          style={{ backgroundColor: accentColor }}
-        >
-          Add
-        </button>
-      </div>
-
-      {/* Additional Custom Selected Tags */}
-      {selectedTags.some(t => !POPULAR_TAGS.slice(0, 10).some(p => p.toLowerCase() === t.toLowerCase())) && (
-        <div className="flex flex-wrap gap-1 pt-1 border-t border-zinc-800/60">
-          {selectedTags
-            .filter(t => !POPULAR_TAGS.slice(0, 10).some(p => p.toLowerCase() === t.toLowerCase()))
-            .map(tag => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-white"
-                style={{ backgroundColor: accentColor }}
-              >
-                <span>#{tag}</span>
-                <button
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className="hover:text-red-200 transition-colors cursor-pointer"
-                >
-                  <IconClose className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            ))}
-        </div>
-      )}
     </div>
   );
 };
 
-interface BatchTagToolbarProps {
-  itemCount: number;
+interface ItemCategoryMultiSelectProps {
+  selectedCategories: string[];
   availableCategories: string[];
-  onApplyCategory: (cat: NicheCategory) => void;
-  onToggleTag: (tag: string) => void;
-  onAddCustomTag: (tag: string) => void;
+  onChange: (categories: string[]) => void;
+  onCategoryCreated?: (newCategory: string) => void;
   accentColor?: string;
 }
 
-const BatchTagToolbar: React.FC<BatchTagToolbarProps> = ({
-  itemCount,
+const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
+  selectedCategories,
   availableCategories,
-  onApplyCategory,
-  onToggleTag,
-  onAddCustomTag,
-  accentColor = '#009FDF'
+  onChange,
+  onCategoryCreated,
+  accentColor = '#401D1A'
 }) => {
-  const [customTag, setCustomTag] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newCatInput, setNewCatInput] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleAdd = () => {
-    if (customTag.trim()) {
-      onAddCustomTag(customTag);
-      setCustomTag('');
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setIsAddingNew(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutside);
+      return () => document.removeEventListener('mousedown', handleOutside);
+    }
+  }, [isOpen]);
+
+  const handleToggle = (cat: string) => {
+    const exists = selectedCategories.some(c => c.toLowerCase() === cat.toLowerCase());
+    if (exists) {
+      onChange(selectedCategories.filter(c => c.toLowerCase() !== cat.toLowerCase()));
+    } else {
+      onChange([...selectedCategories, cat]);
     }
   };
 
+  const handleRemove = (e: React.MouseEvent, cat: string) => {
+    e.stopPropagation();
+    onChange(selectedCategories.filter(c => c.toLowerCase() !== cat.toLowerCase()));
+  };
+
+  const handleCreateNew = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newCatInput.trim();
+    if (!clean) return;
+    addCustomCategory(clean);
+    if (onCategoryCreated) onCategoryCreated(clean);
+    if (!selectedCategories.some(c => c.toLowerCase() === clean.toLowerCase())) {
+      onChange([...selectedCategories, clean]);
+    }
+    setNewCatInput('');
+    setIsAddingNew(false);
+  };
+
+  const filtered = availableCategories.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase().trim())
+  );
+
   return (
-    <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2.5 text-xs">
-      {/* Category Row */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[11px] text-zinc-400 font-semibold mr-1 flex items-center gap-1">
-          <IconTag className="w-3 h-3" style={{ color: accentColor }} />
-          Category to all:
+    <div ref={containerRef} className="relative flex flex-wrap items-center gap-1.5 w-full">
+      {/* Active category chips */}
+      {selectedCategories.map(cat => (
+        <span
+          key={cat}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold text-white shadow-2xs border border-white/10"
+          style={{ backgroundColor: accentColor }}
+        >
+          <span>{cat}</span>
+          <button
+            type="button"
+            onClick={(e) => handleRemove(e, cat)}
+            className="text-white/80 hover:text-white cursor-pointer leading-none text-xs ml-0.5"
+            title={`Remove ${cat}`}
+          >
+            ×
+          </button>
         </span>
-        {(availableCategories.length > 0 ? availableCategories : ['Tech', 'Gaming', 'Business', 'IRL', 'Documentary', 'Sports', 'Educational', 'Entertainment']).slice(0, 8).map(cat => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => onApplyCategory(cat as NicheCategory)}
-            className="px-2 py-0.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-[11px] font-medium transition-all active:scale-95 cursor-pointer"
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+      ))}
+      {selectedCategories.length === 0 && (
+        <span className="text-[11px] text-[#401D1A]/50 dark:text-[#E4E0D3]/50 italic mr-1">None</span>
+      )}
 
-      {/* Quick Tags Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-zinc-900">
-        <div className="flex items-center gap-1.5 flex-wrap flex-1">
-          <span className="text-[11px] text-zinc-400 font-semibold mr-1">
-            Tags to all:
-          </span>
-          {POPULAR_TAGS.slice(0, 8).map(tag => (
+      {/* Button to open multi-select popover */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#E4E0D3]/40 hover:bg-[#E4E0D3] dark:bg-[#FFFFFF]/10 text-[#401D1A] dark:text-[#E4E0D3] hover:text-[#401D1A] dark:hover:text-[#FFFFFF] border border-[#401D1A]/20 dark:border-[#E4E0D3]/20 flex items-center gap-1 cursor-pointer transition-colors"
+      >
+        <IconPlus className="w-3 h-3" />
+        <span>Category</span>
+      </button>
+
+      {/* Popover Dropdown */}
+      {isOpen && (
+        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/25 rounded-xl shadow-2xl p-2.5 space-y-2">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 text-xs">
+            <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF] text-[11px]">Select Categories</span>
             <button
-              key={tag}
               type="button"
-              onClick={() => onToggleTag(tag)}
-              className="px-2 py-0.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-[10px] font-medium transition-all active:scale-95 cursor-pointer"
+              onClick={() => setIsAddingNew(!isAddingNew)}
+              className="text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:underline cursor-pointer"
             >
-              + {tag}
+              {isAddingNew ? 'Cancel' : '+ New Category'}
             </button>
-          ))}
-        </div>
+          </div>
 
-        {/* Custom Tag Input for all */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <input
-            type="text"
-            value={customTag}
-            onChange={(e) => setCustomTag(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleAdd();
-              }
-            }}
-            placeholder="Custom tag..."
-            className="w-28 px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded-md text-[11px] text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
-          />
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={!customTag.trim()}
-            className="px-2 py-0.5 rounded-md text-[11px] font-bold text-white disabled:opacity-30 transition-all cursor-pointer"
-            style={{ backgroundColor: accentColor }}
-          >
-            + Add
-          </button>
+          {isAddingNew && (
+            <form onSubmit={handleCreateNew} className="flex items-center gap-1.5 p-1.5 bg-[#E4E0D3]/30 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-lg">
+              <input
+                type="text"
+                value={newCatInput}
+                onChange={(e) => setNewCatInput(e.target.value)}
+                placeholder="Category name..."
+                className="flex-1 bg-transparent text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={!newCatInput.trim()}
+                className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-40 cursor-pointer"
+              >
+                Add
+              </button>
+            </form>
+          )}
+
+          <div className="relative">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search categories..."
+              className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-lg text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
+            />
+          </div>
+
+          <div className="max-h-40 overflow-y-auto space-y-1 custom-scrollbar pr-0.5">
+            {filtered.map(cat => {
+              const isSelected = selectedCategories.some(c => c.toLowerCase() === cat.toLowerCase());
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => handleToggle(cat)}
+                  className={`w-full flex items-center justify-between px-2 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors text-left ${
+                    isSelected
+                      ? 'bg-[#E4E0D3]/60 dark:bg-[#FFFFFF]/15 text-[#401D1A] dark:text-[#FFFFFF] font-semibold'
+                      : 'hover:bg-[#E4E0D3]/30 dark:hover:bg-[#FFFFFF]/5 text-[#401D1A] dark:text-[#E4E0D3]'
+                  }`}
+                >
+                  <span>{cat}</span>
+                  {isSelected && (
+                    <span
+                      className="w-3.5 h-3.5 rounded flex items-center justify-center text-white text-[10px]"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            {filtered.length === 0 && (
+              <div className="text-center py-2 text-[11px] text-[#401D1A]/50 dark:text-[#E4E0D3]/50">
+                No matching category found
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -587,10 +509,10 @@ export const AddModal: React.FC<AddModalProps> = ({
   const [activeTab, setActiveTab] = useState<AddTabMode>('upload');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
-  // Pre-set tags per section
-  const [uploadPresetTags, setUploadPresetTags] = useState<string[]>(['High CTR', 'Design']);
-  const [youtubePresetTags, setYoutubePresetTags] = useState<string[]>(['High CTR', 'YouTube']);
-  const [pinterestPresetTags, setPinterestPresetTags] = useState<string[]>(['Pinterest', 'Design']);
+  // Selected Categories per section (supports multiple categories, defaults to none)
+  const [uploadCategories, setUploadCategories] = useState<string[]>([]);
+  const [youtubeCategories, setYoutubeCategories] = useState<string[]>([]);
+  const [pinterestCategories, setPinterestCategories] = useState<string[]>([]);
 
   // --- Upload / Paste Tab State ---
   const [queuedImages, setQueuedImages] = useState<QueuedImageItem[]>([]);
@@ -634,6 +556,9 @@ export const AddModal: React.FC<AddModalProps> = ({
       setPinterestInput('');
       setPinterestItems([]);
       setPinterestError('');
+      setUploadCategories([]);
+      setYoutubeCategories([]);
+      setPinterestCategories([]);
       setIsUploadingToCloud(false);
       setUploadStatusText('');
     }
@@ -645,22 +570,21 @@ export const AddModal: React.FC<AddModalProps> = ({
       const jpgDataUrl = await convertToJpg(file, 0.9);
       const rawName = (file instanceof File && file.name) ? file.name : (customName || `Thumbnail ${Date.now().toString().slice(-4)}`);
       const cleanTitle = rawName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
-      const meta = classifyNicheFromTitle(cleanTitle);
-      const mergedTags = Array.from(new Set([...uploadPresetTags, ...meta.tags]));
+      const chosenCategories = [...uploadCategories];
 
       return {
         id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         dataUrl: jpgDataUrl,
         title: cleanTitle || 'Curated Thumbnail',
         creator: 'You',
-        niche: meta.niche,
-        tags: mergedTags
+        niche: (chosenCategories[0] || '') as NicheCategory,
+        tags: [...chosenCategories]
       };
     } catch (err) {
       console.warn('Error converting image:', err);
       return null;
     }
-  }, [uploadPresetTags]);
+  }, [uploadCategories]);
 
   // Handle multiple files selected via browse or drop
   const handleMultipleFiles = useCallback(async (files: FileList | File[]) => {
@@ -742,6 +666,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           }
         } catch {
           // fallback dataUrl
+          const chosenCategories = [...uploadCategories];
           setQueuedImages(prev => [
             ...prev,
             {
@@ -749,8 +674,8 @@ export const AddModal: React.FC<AddModalProps> = ({
               dataUrl: text,
               title: `Pasted Thumbnail ${prev.length + 1}`,
               creator: 'You',
-              niche: 'Tech',
-              tags: ['High CTR', 'Design']
+              niche: (chosenCategories[0] || '') as NicheCategory,
+              tags: [...chosenCategories]
             }
           ]);
         } finally {
@@ -758,7 +683,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         }
       }
     }
-  }, [isOpen, activeTab, processImageFile, queuedImages.length]);
+  }, [isOpen, activeTab, processImageFile, queuedImages.length, uploadCategories]);
 
   // Attach global paste listener
   useEffect(() => {
@@ -863,91 +788,81 @@ export const AddModal: React.FC<AddModalProps> = ({
     }
   };
 
-  // Batch apply category to all queued images
-  const handleApplyCategoryToAllImages = (cat: NicheCategory) => {
-    setQueuedImages(prev => prev.map(img => ({
-      ...img,
-      niche: cat,
-      tags: Array.from(new Set([cat, ...img.tags]))
-    })));
+  // Category created in modal - dynamically updates availableCategories
+  const handleCategoryCreated = (newCat: string) => {
+    setAvailableCategories(prev => {
+      const set = new Set([...prev, newCat]);
+      return Array.from(set);
+    });
   };
 
-  // Batch tag handlers for Upload
-  const handleToggleTagOnAllUpload = (tag: string) => {
+  // Section-level category toggling (toggles for the section and syncs across all items)
+  const handleToggleUploadCategory = (cat: string) => {
+    const exists = uploadCategories.some(c => c.toLowerCase() === cat.toLowerCase());
+    const nextCategories = exists
+      ? uploadCategories.filter(c => c.toLowerCase() !== cat.toLowerCase())
+      : [...uploadCategories, cat];
+
+    setUploadCategories(nextCategories);
+
+    // Apply change to all queued images
     setQueuedImages(prev => prev.map(img => {
-      const has = img.tags.some(t => t.toLowerCase() === tag.toLowerCase());
-      const newTags = has
-        ? img.tags.filter(t => t.toLowerCase() !== tag.toLowerCase())
-        : [...img.tags, tag];
-      return { ...img, tags: newTags };
+      const currentTags = img.tags || [];
+      const itemHasCat = currentTags.some(t => t.toLowerCase() === cat.toLowerCase());
+      const nextTags = exists
+        ? currentTags.filter(t => t.toLowerCase() !== cat.toLowerCase())
+        : (itemHasCat ? currentTags : [...currentTags, cat]);
+      return {
+        ...img,
+        niche: (nextTags[0] || '') as NicheCategory,
+        tags: nextTags
+      };
     }));
   };
 
-  const handleAddCustomTagToAllUpload = (customTag: string) => {
-    const split = customTag.split(/[,]+/).map(t => t.trim()).filter(Boolean);
-    if (split.length === 0) return;
-    setQueuedImages(prev => prev.map(img => {
-      const lowerExisting = new Set(img.tags.map(t => t.toLowerCase()));
-      const toAdd = split.filter(t => !lowerExisting.has(t.toLowerCase()));
-      return { ...img, tags: [...img.tags, ...toAdd] };
-    }));
-  };
+  const handleToggleYoutubeCategory = (cat: string) => {
+    const exists = youtubeCategories.some(c => c.toLowerCase() === cat.toLowerCase());
+    const nextCategories = exists
+      ? youtubeCategories.filter(c => c.toLowerCase() !== cat.toLowerCase())
+      : [...youtubeCategories, cat];
 
-  // Batch handlers for YouTube
-  const handleApplyCategoryToAllYoutube = (cat: NicheCategory) => {
-    setYoutubeItems(prev => prev.map(item => ({
-      ...item,
-      niche: cat,
-      tags: Array.from(new Set([cat, ...item.tags]))
-    })));
-  };
+    setYoutubeCategories(nextCategories);
 
-  const handleToggleTagOnAllYoutube = (tag: string) => {
+    // Apply change to all YouTube items
     setYoutubeItems(prev => prev.map(item => {
-      const has = item.tags.some(t => t.toLowerCase() === tag.toLowerCase());
-      const newTags = has
-        ? item.tags.filter(t => t.toLowerCase() !== tag.toLowerCase())
-        : [...item.tags, tag];
-      return { ...item, tags: newTags };
+      const currentTags = item.tags || [];
+      const itemHasCat = currentTags.some(t => t.toLowerCase() === cat.toLowerCase());
+      const nextTags = exists
+        ? currentTags.filter(t => t.toLowerCase() !== cat.toLowerCase())
+        : (itemHasCat ? currentTags : [...currentTags, cat]);
+      return {
+        ...item,
+        niche: (nextTags[0] || '') as NicheCategory,
+        tags: nextTags
+      };
     }));
   };
 
-  const handleAddCustomTagToAllYoutube = (customTag: string) => {
-    const split = customTag.split(/[,]+/).map(t => t.trim()).filter(Boolean);
-    if (split.length === 0) return;
-    setYoutubeItems(prev => prev.map(item => {
-      const lowerExisting = new Set(item.tags.map(t => t.toLowerCase()));
-      const toAdd = split.filter(t => !lowerExisting.has(t.toLowerCase()));
-      return { ...item, tags: [...item.tags, ...toAdd] };
-    }));
-  };
+  const handleTogglePinterestCategory = (cat: string) => {
+    const exists = pinterestCategories.some(c => c.toLowerCase() === cat.toLowerCase());
+    const nextCategories = exists
+      ? pinterestCategories.filter(c => c.toLowerCase() !== cat.toLowerCase())
+      : [...pinterestCategories, cat];
 
-  // Batch handlers for Pinterest
-  const handleApplyCategoryToAllPinterest = (cat: NicheCategory) => {
-    setPinterestItems(prev => prev.map(item => ({
-      ...item,
-      niche: cat,
-      tags: Array.from(new Set([cat, ...item.tags]))
-    })));
-  };
+    setPinterestCategories(nextCategories);
 
-  const handleToggleTagOnAllPinterest = (tag: string) => {
+    // Apply change to all Pinterest items
     setPinterestItems(prev => prev.map(item => {
-      const has = item.tags.some(t => t.toLowerCase() === tag.toLowerCase());
-      const newTags = has
-        ? item.tags.filter(t => t.toLowerCase() !== tag.toLowerCase())
-        : [...item.tags, tag];
-      return { ...item, tags: newTags };
-    }));
-  };
-
-  const handleAddCustomTagToAllPinterest = (customTag: string) => {
-    const split = customTag.split(/[,]+/).map(t => t.trim()).filter(Boolean);
-    if (split.length === 0) return;
-    setPinterestItems(prev => prev.map(item => {
-      const lowerExisting = new Set(item.tags.map(t => t.toLowerCase()));
-      const toAdd = split.filter(t => !lowerExisting.has(t.toLowerCase()));
-      return { ...item, tags: [...item.tags, ...toAdd] };
+      const currentTags = item.tags || [];
+      const itemHasCat = currentTags.some(t => t.toLowerCase() === cat.toLowerCase());
+      const nextTags = exists
+        ? currentTags.filter(t => t.toLowerCase() !== cat.toLowerCase())
+        : (itemHasCat ? currentTags : [...currentTags, cat]);
+      return {
+        ...item,
+        niche: (nextTags[0] || '') as NicheCategory,
+        tags: nextTags
+      };
     }));
   };
 
@@ -960,14 +875,17 @@ export const AddModal: React.FC<AddModalProps> = ({
     let finalItems: ThumbnailItem[] = [];
 
     try {
-      const payload = queuedImages.map(item => ({
-        id: item.id,
-        imageUrl: item.dataUrl,
-        title: item.title || 'Curated Thumbnail',
-        creator: item.creator || 'Creator',
-        niche: item.niche,
-        tags: item.tags
-      }));
+      const payload = queuedImages.map(item => {
+        const itemCategories = item.tags || [];
+        return {
+          id: item.id,
+          imageUrl: item.dataUrl,
+          title: item.title || 'Curated Thumbnail',
+          creator: item.creator || 'Creator',
+          niche: (itemCategories[0] || '') as NicheCategory,
+          tags: itemCategories
+        };
+      });
 
       const res = await fetch('/api/supabase/upload-thumbnail', {
         method: 'POST',
@@ -986,15 +904,42 @@ export const AddModal: React.FC<AddModalProps> = ({
           });
         }
 
-        finalItems = queuedImages.map(img => ({
+        finalItems = queuedImages.map(img => {
+          const itemCategories = img.tags || [];
+          return {
+            id: img.id,
+            title: img.title || 'Curated Thumbnail',
+            creator: img.creator || 'Creator',
+            imageUrl: uploadedMap.get(img.id) || img.dataUrl,
+            sourceUrl: uploadedMap.get(img.id) || img.dataUrl,
+            niche: (itemCategories[0] || '') as NicheCategory,
+            styles: ['Face Close-up', 'High-Contrast Glow'],
+            tags: itemCategories,
+            colors: [],
+            ocrText: '',
+            emotion: 'Curious',
+            breakdownNotes: 'Uploaded thumbnail design.',
+            source: 'supabase-storage',
+            createdAt: new Date().toISOString(),
+            likesCount: Math.floor(Math.random() * 80) + 40
+          };
+        });
+      } else {
+        throw new Error('Supabase upload route returned non-ok');
+      }
+    } catch (err) {
+      console.warn('Fallback to local storage upload:', err);
+      finalItems = queuedImages.map(img => {
+        const itemCategories = img.tags || [];
+        return {
           id: img.id,
           title: img.title || 'Curated Thumbnail',
           creator: img.creator || 'Creator',
-          imageUrl: uploadedMap.get(img.id) || img.dataUrl,
-          sourceUrl: uploadedMap.get(img.id) || img.dataUrl,
-          niche: img.niche,
+          imageUrl: img.dataUrl,
+          sourceUrl: img.dataUrl,
+          niche: (itemCategories[0] || '') as NicheCategory,
           styles: ['Face Close-up', 'High-Contrast Glow'],
-          tags: img.tags && img.tags.length > 0 ? img.tags : [img.niche, 'Design'],
+          tags: itemCategories,
           colors: [],
           ocrText: '',
           emotion: 'Curious',
@@ -1002,29 +947,8 @@ export const AddModal: React.FC<AddModalProps> = ({
           source: 'supabase-storage',
           createdAt: new Date().toISOString(),
           likesCount: Math.floor(Math.random() * 80) + 40
-        }));
-      } else {
-        throw new Error('Supabase upload route returned non-ok');
-      }
-    } catch (err) {
-      console.warn('Fallback to local storage upload:', err);
-      finalItems = queuedImages.map(img => ({
-        id: img.id,
-        title: img.title || 'Curated Thumbnail',
-        creator: img.creator || 'Creator',
-        imageUrl: img.dataUrl,
-        sourceUrl: img.dataUrl,
-        niche: img.niche,
-        styles: ['Face Close-up', 'High-Contrast Glow'],
-        tags: img.tags && img.tags.length > 0 ? img.tags : [img.niche, 'Design'],
-        colors: [],
-        ocrText: '',
-        emotion: 'Curious',
-        breakdownNotes: 'Uploaded thumbnail design.',
-        source: 'supabase-storage',
-        createdAt: new Date().toISOString(),
-        likesCount: Math.floor(Math.random() * 80) + 40
-      }));
+        };
+      });
     } finally {
       setIsUploadingToCloud(false);
       setUploadStatusText('');
@@ -1053,7 +977,14 @@ export const AddModal: React.FC<AddModalProps> = ({
 
     try {
       // 1. Check for direct Video link(s) FIRST
-      const videoMatches = extractYoutubeVideoIds(trimmed);
+      const rawVideoMatches = extractYoutubeVideoIds(trimmed);
+
+      // Deduplicate video links by ID immediately
+      const uniqueMap = new Map<string, (typeof rawVideoMatches)[0]>();
+      rawVideoMatches.forEach(m => {
+        if (!uniqueMap.has(m.id)) uniqueMap.set(m.id, m);
+      });
+      const videoMatches = Array.from(uniqueMap.values());
 
       if (videoMatches.length > 0) {
         // Extract all matched video links in parallel
@@ -1087,8 +1018,7 @@ export const AddModal: React.FC<AddModalProps> = ({
               console.warn('oEmbed lookup error for', match.id, err);
             }
 
-            const meta = classifyNicheFromTitle(title, creator);
-            const mergedTags = Array.from(new Set([...youtubePresetTags, ...meta.tags, 'YouTube']));
+            const chosenCategories = [...youtubeCategories];
             return {
               id: `yt-vid-${match.id}`,
               videoId: match.id,
@@ -1096,8 +1026,8 @@ export const AddModal: React.FC<AddModalProps> = ({
               title,
               creator,
               imageUrl: imgUrl,
-              niche: meta.niche,
-              tags: mergedTags,
+              niche: (chosenCategories[0] || '') as NicheCategory,
+              tags: [...chosenCategories],
               selected: true
             };
           })
@@ -1123,21 +1053,30 @@ export const AddModal: React.FC<AddModalProps> = ({
         if (!res.ok || !Array.isArray(videoList) || videoList.length === 0) {
           throw new Error(data.error || 'No thumbnails found for this channel');
         }
-        const mapped: BatchExtractedItem[] = videoList.map((it: any, idx: number) => {
-          const itemTags = Array.isArray(it.tags) ? it.tags : [];
-          const mergedTags = Array.from(new Set([...youtubePresetTags, ...itemTags, 'YouTube']));
-          return {
-            id: `yt-ch-${it.videoId || idx}`,
+
+        // Deduplicate channel video items strictly by videoId
+        const seenVideoIds = new Set<string>();
+        const chosenCategories = [...youtubeCategories];
+        const mapped: BatchExtractedItem[] = [];
+
+        videoList.forEach((it: any, idx: number) => {
+          const vId = it.videoId || `${idx}`;
+          if (seenVideoIds.has(vId)) return;
+          seenVideoIds.add(vId);
+
+          mapped.push({
+            id: `yt-ch-${vId}`,
             videoId: it.videoId,
             url: it.sourceUrl || `https://www.youtube.com/watch?v=${it.videoId}`,
             title: it.title || 'YouTube Thumbnail',
             creator: it.creator || data.channel?.name || 'Creator',
             imageUrl: it.imageUrl || getYoutubeJpgUrl(it.videoId),
-            niche: it.niche || 'Tech',
-            tags: mergedTags,
+            niche: (chosenCategories[0] || '') as NicheCategory,
+            tags: [...chosenCategories],
             selected: true
-          };
+          });
         });
+
         setYoutubeItems(mapped);
       }
     } catch (err: any) {
@@ -1169,20 +1108,27 @@ export const AddModal: React.FC<AddModalProps> = ({
         throw new Error(data.error || 'No Pinterest images found at this link');
       }
 
-      const mapped: BatchExtractedItem[] = data.items.map((pin: any) => {
-        const pinTags = Array.isArray(pin.tags) ? pin.tags : [];
-        const mergedTags = Array.from(new Set([...pinterestPresetTags, ...pinTags, 'Pinterest', 'Design']));
-        return {
+      const chosenCategories = [...pinterestCategories];
+      const seenUrls = new Set<string>();
+      const mapped: BatchExtractedItem[] = [];
+
+      data.items.forEach((pin: any) => {
+        const pinKey = pin.imageUrl || pin.url || pin.id;
+        if (seenUrls.has(pinKey)) return;
+        seenUrls.add(pinKey);
+
+        mapped.push({
           id: `pin-${pin.id}`,
           url: pin.url,
           title: pin.title || 'Pinterest Pin',
           creator: pin.creator || 'Pinterest Curator',
           imageUrl: pin.imageUrl,
-          niche: (pin.niche as NicheCategory) || 'Tech',
-          tags: mergedTags,
+          niche: (chosenCategories[0] || '') as NicheCategory,
+          tags: [...chosenCategories],
           selected: true
-        };
+        });
       });
+
       setPinterestItems(mapped);
     } catch (err: any) {
       setPinterestError(err.message || 'Failed to extract Pinterest pin');
@@ -1196,36 +1142,54 @@ export const AddModal: React.FC<AddModalProps> = ({
     const selected = items.filter(i => i.selected !== false);
     if (selected.length === 0) return;
 
+    // Deduplicate selected batch items with extractDedupeKeys
+    const seenBatchKeys = new Set<string>();
+    const uniqueItems: BatchExtractedItem[] = [];
+    selected.forEach(it => {
+      const keys = extractDedupeKeys(it);
+      if (!keys.some(k => seenBatchKeys.has(k))) {
+        keys.forEach(k => seenBatchKeys.add(k));
+        uniqueItems.push(it);
+      }
+    });
+
     setIsUploadingToCloud(true);
-    setUploadStatusText(`Saving ${selected.length} thumbnails to cloud...`);
+    setUploadStatusText(`Saving ${uniqueItems.length} thumbnails to cloud...`);
 
-    let finalThumbnails: ThumbnailItem[] = selected.map((item, idx) => ({
-      id: `thumb-ext-${Date.now()}-${idx}`,
-      title: item.title,
-      creator: item.creator,
-      imageUrl: item.imageUrl,
-      sourceUrl: item.url,
-      niche: item.niche,
-      styles: ['Face Close-up', 'High-Contrast Glow'],
-      tags: item.tags && item.tags.length > 0 ? item.tags : [item.niche, 'Design'],
-      colors: [],
-      ocrText: '',
-      emotion: 'Curious',
-      breakdownNotes: 'Auto-extracted inspiration thumbnail.',
-      source: 'supabase-storage',
-      createdAt: new Date().toISOString(),
-      likesCount: Math.floor(Math.random() * 150) + 40
-    }));
-
-    try {
-      const uploadPayload = selected.map(item => ({
-        videoId: item.videoId,
-        imageUrl: item.imageUrl,
+    let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
+      const chosenCategories = item.tags || [];
+      return {
+        id: item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`),
         title: item.title,
         creator: item.creator,
-        niche: item.niche,
-        tags: item.tags
-      }));
+        imageUrl: item.imageUrl,
+        sourceUrl: item.url,
+        niche: (chosenCategories[0] || '') as NicheCategory,
+        styles: ['Face Close-up', 'High-Contrast Glow'],
+        tags: chosenCategories,
+        colors: [],
+        ocrText: '',
+        emotion: 'Curious',
+        breakdownNotes: 'Auto-extracted inspiration thumbnail.',
+        source: 'supabase-storage',
+        createdAt: new Date().toISOString(),
+        likesCount: Math.floor(Math.random() * 150) + 40
+      };
+    });
+
+    try {
+      const uploadPayload = uniqueItems.map((item, idx) => {
+        const chosenCategories = item.tags || [];
+        return {
+          id: item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`),
+          videoId: item.videoId,
+          imageUrl: item.imageUrl,
+          title: item.title,
+          creator: item.creator,
+          niche: (chosenCategories[0] || '') as NicheCategory,
+          tags: chosenCategories
+        };
+      });
 
       const res = await fetch('/api/supabase/upload-thumbnail', {
         method: 'POST',
@@ -1243,8 +1207,8 @@ export const AddModal: React.FC<AddModalProps> = ({
           });
 
           finalThumbnails = finalThumbnails.map((item, idx) => {
-            const vId = selected[idx]?.videoId;
-            const supaUrl = (vId ? map.get(vId) : null) || map.get(selected[idx]?.id);
+            const vId = uniqueItems[idx]?.videoId;
+            const supaUrl = (vId ? map.get(vId) : null) || map.get(uniqueItems[idx]?.id);
             return {
               ...item,
               imageUrl: supaUrl || item.imageUrl
@@ -1277,20 +1241,20 @@ export const AddModal: React.FC<AddModalProps> = ({
       {/* Click outside to close */}
       <div className="fixed inset-0" onClick={onClose} />
 
-      {/* Main Modal Box - Deep Obsidian Pure Black */}
+      {/* Main Modal Box - Clean Multi-surface */}
       <div
         id="add-modal-content"
-        className="relative w-full max-w-2xl bg-[#09090b] text-white rounded-[20px] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.95)] border border-zinc-800/80 overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in"
+        className="relative w-full max-w-2xl bg-[#FFFFFF] dark:bg-[#401D1A] text-[#401D1A] dark:text-[#E4E0D3] rounded-[20px] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.5)] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/80 bg-black/40">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 bg-[#FFFFFF] dark:bg-[#401D1A]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#009FDF]">
+            <div className="w-8 h-8 rounded-xl bg-[#401D1A]/10 dark:bg-[#E4E0D3]/20 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 flex items-center justify-center text-[#401D1A] dark:text-[#E4E0D3]">
               <IconPlus className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-white tracking-tight">Add Thumbnails</h2>
-              <p className="text-[11px] text-zinc-400">Import from files, clipboard paste, YouTube, or Pinterest</p>
+              <h2 className="font-bold text-sm text-[#401D1A] dark:text-[#FFFFFF] tracking-tight">Add Thumbnails</h2>
+              <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">Import from files, clipboard paste, YouTube, or Pinterest</p>
             </div>
           </div>
 
@@ -1298,7 +1262,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             type="button"
             id="add-modal-close-btn"
             onClick={onClose}
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/60 active:scale-95 transition-all cursor-pointer"
+            className="p-2 rounded-xl text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 active:scale-95 transition-all cursor-pointer"
             title="Close"
           >
             <IconClose className="w-4 h-4" />
@@ -1306,22 +1270,26 @@ export const AddModal: React.FC<AddModalProps> = ({
         </div>
 
         {/* Minimalist Tab Switcher */}
-        <div className="px-5 pt-3 pb-2 border-b border-zinc-800/60 bg-[#09090b]">
-          <div className="flex items-center p-1 bg-zinc-900/90 rounded-xl border border-zinc-800 text-xs font-semibold gap-1">
+        <div className="px-5 pt-3 pb-2 border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 bg-[#FFFFFF] dark:bg-[#401D1A]">
+          <div className="flex items-center p-1 bg-[#E4E0D3]/30 dark:bg-[#401D1A]/80 rounded-xl border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 text-xs font-semibold gap-1">
             <button
               type="button"
               id="tab-upload-images"
               onClick={() => setActiveTab('upload')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'upload'
-                  ? 'bg-zinc-800 text-white shadow-xs font-bold'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs font-bold'
+                  : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
               }`}
             >
-              <IconUploadCloud className="w-3.5 h-3.5 text-[#009FDF]" />
+              <IconUploadCloud className="w-3.5 h-3.5" />
               <span>Upload / Paste</span>
               {queuedImages.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-[#009FDF] text-white font-bold">
+                <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  activeTab === 'upload'
+                    ? 'bg-[#FFFFFF] text-[#401D1A] dark:bg-[#401D1A] dark:text-[#FFFFFF]'
+                    : 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A]'
+                }`}>
                   {queuedImages.length}
                 </span>
               )}
@@ -1333,11 +1301,11 @@ export const AddModal: React.FC<AddModalProps> = ({
               onClick={() => setActiveTab('youtube')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'youtube'
-                  ? 'bg-zinc-800 text-white shadow-xs font-bold'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs font-bold'
+                  : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
               }`}
             >
-              <IconYoutube className="w-3.5 h-3.5 text-red-500" />
+              <IconYoutube className="w-3.5 h-3.5" />
               <span>YouTube</span>
             </button>
 
@@ -1347,11 +1315,11 @@ export const AddModal: React.FC<AddModalProps> = ({
               onClick={() => setActiveTab('pinterest')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'pinterest'
-                  ? 'bg-zinc-800 text-white shadow-xs font-bold'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs font-bold'
+                  : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
               }`}
             >
-              <IconPinterest className="w-3.5 h-3.5 text-rose-500" />
+              <IconPinterest className="w-3.5 h-3.5" />
               <span>Pinterest</span>
             </button>
           </div>
@@ -1373,14 +1341,14 @@ export const AddModal: React.FC<AddModalProps> = ({
                   id="paste-image-from-clipboard-btn"
                   onClick={handlePasteButtonClick}
                   disabled={isProcessingFiles}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 hover:border-[#009FDF] text-white font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#FFFFFF] hover:bg-[#E4E0D3]/20 dark:bg-[#401D1A] dark:hover:bg-[#FFFFFF]/5 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 hover:border-[#401D1A] dark:hover:border-[#E4E0D3] text-[#401D1A] dark:text-[#FFFFFF] font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-[#009FDF]/15 text-[#009FDF] group-hover:bg-[#009FDF] group-hover:text-white flex items-center justify-center transition-colors">
+                  <div className="w-6 h-6 rounded-lg bg-[#401D1A]/10 text-[#401D1A] group-hover:bg-[#401D1A] group-hover:text-white dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3] dark:group-hover:bg-[#E4E0D3] dark:group-hover:text-[#401D1A] flex items-center justify-center transition-colors">
                     <IconClipboardPaste className="w-3.5 h-3.5" />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold text-xs text-white">Paste Thumbnail Image</div>
-                    <div className="text-[10px] text-zinc-400 font-normal">Click to paste or press Ctrl + V</div>
+                    <div className="font-bold text-xs text-[#401D1A] dark:text-[#FFFFFF]">Paste Thumbnail Image</div>
+                    <div className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 font-normal">Click to paste or press Ctrl + V</div>
                   </div>
                 </button>
 
@@ -1389,14 +1357,14 @@ export const AddModal: React.FC<AddModalProps> = ({
                   id="browse-bulk-images-btn"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isProcessingFiles}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 hover:border-emerald-500 text-white font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#FFFFFF] hover:bg-[#E4E0D3]/20 dark:bg-[#401D1A] dark:hover:bg-[#FFFFFF]/5 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 hover:border-[#401D1A] dark:hover:border-[#E4E0D3] text-[#401D1A] dark:text-[#FFFFFF] font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center transition-colors">
+                  <div className="w-6 h-6 rounded-lg bg-[#401D1A]/10 text-[#401D1A] group-hover:bg-[#401D1A] group-hover:text-white dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3] dark:group-hover:bg-[#E4E0D3] dark:group-hover:text-[#401D1A] flex items-center justify-center transition-colors">
                     <IconUploadCloud className="w-3.5 h-3.5" />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold text-xs text-white">Browse Images (Bulk)</div>
-                    <div className="text-[10px] text-zinc-400 font-normal">Select multiple files at once</div>
+                    <div className="font-bold text-xs text-[#401D1A] dark:text-[#FFFFFF]">Browse Images (Bulk)</div>
+                    <div className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 font-normal">Select multiple files at once</div>
                   </div>
                 </button>
               </div>
@@ -1406,15 +1374,15 @@ export const AddModal: React.FC<AddModalProps> = ({
                 <div
                   className={`p-2.5 rounded-xl text-xs flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150 ${
                     pasteNotice.isError
-                      ? 'bg-amber-950/40 border border-amber-800/60 text-amber-200'
-                      : 'bg-emerald-950/40 border border-emerald-800/60 text-emerald-200'
+                      ? 'bg-[#401D1A]/10 border border-[#401D1A]/30 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:border-[#E4E0D3]/40 dark:text-[#E4E0D3]'
+                      : 'bg-[#E4E0D3]/40 border border-[#401D1A]/20 text-[#401D1A] dark:bg-[#FFFFFF]/10 dark:border-[#E4E0D3]/30 dark:text-[#FFFFFF]'
                   }`}
                 >
                   <span>{pasteNotice.text}</span>
                   <button
                     type="button"
                     onClick={() => setPasteNotice(null)}
-                    className="text-zinc-400 hover:text-white text-sm leading-none"
+                    className="text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF] text-sm leading-none"
                   >
                     &times;
                   </button>
@@ -1429,8 +1397,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className={`relative flex flex-col items-center justify-center p-6 sm:p-7 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center group select-none ${
                   dragOver
-                    ? 'border-[#009FDF] bg-[#009FDF]/10 scale-[0.99]'
-                    : 'border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900/40'
+                    ? 'border-[#401D1A] bg-[#401D1A]/10 dark:border-[#E4E0D3] dark:bg-[#E4E0D3]/20 scale-[0.99]'
+                    : 'border-[#401D1A]/20 dark:border-[#E4E0D3]/25 bg-[#E4E0D3]/20 hover:border-[#401D1A]/40 hover:bg-[#E4E0D3]/30 dark:bg-[#FFFFFF]/5 dark:hover:bg-[#FFFFFF]/10'
                 }`}
               >
                 <input
@@ -1444,53 +1412,44 @@ export const AddModal: React.FC<AddModalProps> = ({
                   className="hidden"
                 />
 
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-[#009FDF] flex items-center justify-center mb-2.5 group-hover:scale-105 group-hover:border-[#009FDF]/40 transition-all shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/25 text-[#401D1A] dark:text-[#E4E0D3] flex items-center justify-center mb-2.5 group-hover:scale-105 transition-all shadow-sm">
                   {isProcessingFiles ? (
-                    <IconSpinner className="w-5 h-5 animate-spin text-[#009FDF]" />
+                    <IconSpinner className="w-5 h-5 animate-spin text-[#401D1A] dark:text-[#E4E0D3]" />
                   ) : (
                     <IconImage className="w-5 h-5" />
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-white">
+                  <p className="text-xs font-bold text-[#401D1A] dark:text-[#FFFFFF]">
                     {isProcessingFiles
                       ? 'Processing and formatting images...'
                       : 'Or drop image files here directly'}
                   </p>
-                  <p className="text-[11px] text-zinc-400">
+                  <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
                     Auto-converts PNG / JPG / WebP into standard 16:9 thumbnail format
                   </p>
                 </div>
               </div>
 
-              {/* Section Tag Presets */}
-              <SectionPresetTagBar
-                label="Tags applied to uploaded / pasted thumbnails:"
-                selectedTags={uploadPresetTags}
-                onChange={setUploadPresetTags}
-                accentColor="#009FDF"
-                placeholder="+ Add custom tag (e.g. Minimalist, Bold Text)..."
-              />
-
               {/* Queued Images List */}
               {queuedImages.length > 0 && (
                 <div className="space-y-3 pt-2">
                   {/* Queue Header with Quick Batch Actions */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-zinc-900/70 border border-zinc-800 rounded-xl text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[#E4E0D3]/30 dark:bg-[#401D1A]/80 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-white">
+                      <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF]">
                         {queuedImages.length} {queuedImages.length === 1 ? 'image' : 'images'} ready
                       </span>
-                      <span className="text-[11px] text-zinc-500">•</span>
-                      <span className="text-[11px] text-zinc-400">You can still paste more or click browse</span>
+                      <span className="text-[11px] text-[#401D1A]/40 dark:text-[#E4E0D3]/40">•</span>
+                      <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">You can still paste more or click browse</span>
                     </div>
 
                     <div className="flex items-center gap-2 self-end sm:self-auto">
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] dark:bg-[#401D1A] hover:bg-[#E4E0D3] dark:hover:bg-[#FFFFFF]/10 text-[#401D1A] dark:text-[#E4E0D3] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer"
                       >
                         <IconPlus className="w-3 h-3" />
                         <span>Add more</span>
@@ -1499,21 +1458,22 @@ export const AddModal: React.FC<AddModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setQueuedImages([])}
-                        className="px-2 py-1 rounded-lg text-zinc-400 hover:text-red-400 text-[11px] transition-colors cursor-pointer"
+                        className="px-2 py-1 rounded-lg text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF] text-[11px] transition-colors cursor-pointer"
                       >
                         Clear all
                       </button>
                     </div>
                   </div>
 
-                  {/* Batch Category & Tag Toolbar for Queued Images */}
-                  <BatchTagToolbar
+                  {/* Single Unified Category Bar for Queued Images */}
+                  <UnifiedCategoryBar
+                    label="Select category for all images"
                     itemCount={queuedImages.length}
-                    availableCategories={availableCategories}
-                    onApplyCategory={handleApplyCategoryToAllImages}
-                    onToggleTag={handleToggleTagOnAllUpload}
-                    onAddCustomTag={handleAddCustomTagToAllUpload}
-                    accentColor="#009FDF"
+                    categories={availableCategories}
+                    selectedCategories={uploadCategories}
+                    onToggleCategory={handleToggleUploadCategory}
+                    onCategoryCreated={handleCategoryCreated}
+                    accentColor="#401D1A"
                   />
 
                   {/* Queued Cards Grid */}
@@ -1521,10 +1481,10 @@ export const AddModal: React.FC<AddModalProps> = ({
                     {queuedImages.map((img, index) => (
                       <div
                         key={img.id}
-                        className="p-3 bg-zinc-900/80 border border-zinc-800 rounded-xl flex items-start gap-3 relative group hover:border-zinc-700 transition-all"
+                        className="p-3 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl flex items-start gap-3 relative group hover:border-[#401D1A]/30 dark:hover:border-[#E4E0D3]/40 transition-all"
                       >
                         {/* Aspect 16:9 Preview */}
-                        <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-zinc-800">
+                        <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-[#401D1A]/15 dark:border-[#E4E0D3]/20">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={img.dataUrl}
@@ -1533,8 +1493,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                           />
                         </div>
 
-                        {/* Title & Category & Tags Form */}
-                        <div className="flex-1 min-w-0 space-y-1.5">
+                        {/* Title & Category */}
+                        <div className="flex-1 min-w-0 space-y-2">
                           <input
                             type="text"
                             value={img.title}
@@ -1543,47 +1503,32 @@ export const AddModal: React.FC<AddModalProps> = ({
                               setQueuedImages(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
                             }}
                             placeholder="Thumbnail Title"
-                            className="w-full px-2 py-1 bg-black border border-zinc-800 rounded-md text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#009FDF]"
+                            className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-md text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
                           />
 
-                          <div className="flex items-center gap-1.5">
-                            <select
-                              value={img.niche}
-                              onChange={(e) => {
-                                const val = e.target.value as NicheCategory;
+                          <div className="space-y-1">
+                            <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Categories:</span>
+                            <ItemCategoryMultiSelect
+                              selectedCategories={img.tags || []}
+                              availableCategories={availableCategories}
+                              onChange={(cats) => {
                                 setQueuedImages(prev => prev.map((p, i) => i === index ? {
                                   ...p,
-                                  niche: val,
-                                  tags: Array.from(new Set([val, ...p.tags]))
+                                  niche: (cats[0] || '') as NicheCategory,
+                                  tags: cats
                                 } : p));
                               }}
-                              className="px-2 py-0.5 bg-black border border-zinc-800 rounded text-[11px] text-zinc-300 focus:outline-none focus:border-[#009FDF] cursor-pointer"
-                            >
-                              {(availableCategories.length > 0 ? availableCategories : ['Tech', 'Gaming', 'Business', 'IRL', 'Documentary', 'Sports', 'Educational', 'Entertainment']).map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
-                              ))}
-                            </select>
-
-                            <span className="text-[10px] text-zinc-500 truncate">
-                              #{img.niche}
-                            </span>
+                              onCategoryCreated={handleCategoryCreated}
+                              accentColor="#401D1A"
+                            />
                           </div>
-
-                          {/* Individual Item Tag Selector */}
-                          <ItemTagSelector
-                            tags={img.tags}
-                            onChange={(newTags) => {
-                              setQueuedImages(prev => prev.map((p, i) => i === index ? { ...p, tags: newTags } : p));
-                            }}
-                            accentColor="#009FDF"
-                          />
                         </div>
 
                         {/* Remove item button */}
                         <button
                           type="button"
                           onClick={() => setQueuedImages(prev => prev.filter((_, i) => i !== index))}
-                          className="p-1 text-zinc-500 hover:text-red-400 rounded-md transition-colors cursor-pointer"
+                          className="p-1 text-[#401D1A]/50 hover:text-[#401D1A] dark:text-[#E4E0D3]/50 dark:hover:text-[#FFFFFF] rounded-md transition-colors cursor-pointer"
                           title="Remove image"
                         >
                           <IconTrash className="w-3.5 h-3.5" />
@@ -1593,12 +1538,12 @@ export const AddModal: React.FC<AddModalProps> = ({
                   </div>
 
                   {/* Bottom Action for Queued Images */}
-                  <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
+                  <div className="pt-3 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setQueuedImages([])}
                       disabled={isUploadingToCloud}
-                      className="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#401D1A]/70 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -1608,7 +1553,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       id="save-all-queued-images-btn"
                       onClick={handleUploadQueuedImages}
                       disabled={isUploadingToCloud || queuedImages.length === 0}
-                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#009FDF] hover:bg-[#008cc4] active:scale-[0.97] disabled:opacity-50 transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-[#FFFFFF] bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] active:scale-[0.97] disabled:opacity-50 transition-all shadow-md flex items-center gap-2 cursor-pointer"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -1636,8 +1581,8 @@ export const AddModal: React.FC<AddModalProps> = ({
           {activeTab === 'youtube' && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                  <IconYoutube className="w-4 h-4 text-red-500" />
+                <label className="text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] flex items-center gap-1.5">
+                  <IconYoutube className="w-4 h-4" />
                   <span>Paste YouTube Video Links or Channel Handle</span>
                 </label>
 
@@ -1655,13 +1600,13 @@ export const AddModal: React.FC<AddModalProps> = ({
                     }
                   }}
                   placeholder="Paste one or multiple YouTube URLs (one per line) or channel @handle (e.g. @MrBeast)..."
-                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#009FDF] resize-none"
+                  className="w-full px-3 py-2.5 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3] resize-none"
                 />
 
                 {/* Channel Limit Selector if channel entered */}
                 {isChannelInput(youtubeInput) && (
-                  <div className="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800 rounded-xl text-xs">
-                    <span className="text-zinc-400 font-medium">Channel extract count:</span>
+                  <div className="flex items-center justify-between p-2.5 bg-[#E4E0D3]/30 dark:bg-[#401D1A]/80 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs">
+                    <span className="text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Channel extract count:</span>
                     <div className="flex items-center gap-1.5">
                       {[30, 50, 100].map(limit => (
                         <button
@@ -1670,8 +1615,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                           onClick={() => setYoutubeChannelLimit(limit)}
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                             youtubeChannelLimit === limit
-                              ? 'bg-[#009FDF] text-white shadow-xs'
-                              : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                              ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs'
+                              : 'bg-[#FFFFFF] dark:bg-[#401D1A] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
                           }`}
                         >
                           {limit} videos
@@ -1682,7 +1627,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                 )}
 
                 <div className="flex items-center justify-between pt-1">
-                  <p className="text-[11px] text-zinc-500">
+                  <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
                     Supports bulk extraction of thumbnails in maximum resolution
                   </p>
 
@@ -1690,7 +1635,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                     type="button"
                     onClick={handleExtractYoutube}
                     disabled={isYoutubeLoading || !youtubeInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-[#009FDF] hover:bg-[#008cc4] disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#401D1A] text-[#FFFFFF] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     {isYoutubeLoading ? (
                       <>
@@ -1707,26 +1652,17 @@ export const AddModal: React.FC<AddModalProps> = ({
                 </div>
 
                 {youtubeError && (
-                  <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-300">
+                  <div className="p-3 bg-[#401D1A]/10 border border-[#401D1A]/30 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:border-[#E4E0D3]/40 dark:text-[#E4E0D3] rounded-xl text-xs">
                     {youtubeError}
                   </div>
                 )}
               </div>
 
-              {/* YouTube Section Tag Presets */}
-              <SectionPresetTagBar
-                label="Tags applied to extracted YouTube thumbnails:"
-                selectedTags={youtubePresetTags}
-                onChange={setYoutubePresetTags}
-                accentColor="#009FDF"
-                placeholder="+ Add custom tag (e.g. High CTR, MrBeast)..."
-              />
-
               {/* YouTube Extracted Result List */}
               {youtubeItems.length > 0 && (
-                <div className="space-y-3 pt-2 border-t border-zinc-800">
+                <div className="space-y-3 pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white">
+                    <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF]">
                       Found {youtubeItems.length} thumbnails
                     </span>
 
@@ -1736,20 +1672,21 @@ export const AddModal: React.FC<AddModalProps> = ({
                         const allSelected = youtubeItems.every(i => i.selected !== false);
                         setYoutubeItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
                       }}
-                      className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-[11px] font-semibold text-zinc-300 cursor-pointer"
+                      className="px-2.5 py-1 bg-[#FFFFFF] dark:bg-[#401D1A] hover:bg-[#E4E0D3] dark:hover:bg-[#FFFFFF]/10 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-lg text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] cursor-pointer"
                     >
                       {youtubeItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
                     </button>
                   </div>
 
-                  {/* Batch Tag Toolbar for YouTube */}
-                  <BatchTagToolbar
+                  {/* Single Unified Category Bar for YouTube */}
+                  <UnifiedCategoryBar
+                    label="Select category for all thumbnails"
                     itemCount={youtubeItems.length}
-                    availableCategories={availableCategories}
-                    onApplyCategory={handleApplyCategoryToAllYoutube}
-                    onToggleTag={handleToggleTagOnAllYoutube}
-                    onAddCustomTag={handleAddCustomTagToAllYoutube}
-                    accentColor="#009FDF"
+                    categories={availableCategories}
+                    selectedCategories={youtubeCategories}
+                    onToggleCategory={handleToggleYoutubeCategory}
+                    onCategoryCreated={handleCategoryCreated}
+                    accentColor="#401D1A"
                   />
 
                   {/* YouTube Cards List */}
@@ -1759,8 +1696,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                         key={item.id}
                         className={`p-3 rounded-xl border transition-all ${
                           item.selected !== false
-                            ? 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700'
-                            : 'bg-zinc-950/40 border-zinc-900/80 opacity-50'
+                            ? 'bg-[#FFFFFF] dark:bg-[#401D1A] border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
+                            : 'bg-[#E4E0D3]/20 dark:bg-[#401D1A]/40 border-[#401D1A]/10 dark:border-[#E4E0D3]/10 opacity-50'
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -1771,19 +1708,19 @@ export const AddModal: React.FC<AddModalProps> = ({
                             }}
                             className={`w-4 h-4 mt-1 rounded flex items-center justify-center shrink-0 border cursor-pointer ${
                               item.selected !== false
-                                ? 'bg-[#009FDF] border-[#009FDF] text-white'
-                                : 'border-zinc-700 bg-zinc-800'
+                                ? 'bg-[#401D1A] border-[#401D1A] text-white dark:bg-[#E4E0D3] dark:border-[#E4E0D3] dark:text-[#401D1A]'
+                                : 'border-[#401D1A]/30 dark:border-[#E4E0D3]/30 bg-[#FFFFFF] dark:bg-[#401D1A]'
                             }`}
                           >
                             {item.selected !== false && <IconCheck className="w-3 h-3" />}
                           </button>
 
-                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-zinc-800">
+                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-[#401D1A]/15 dark:border-[#E4E0D3]/20">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                           </div>
 
-                          <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="flex-1 min-w-0 space-y-2">
                             <input
                               type="text"
                               value={item.title}
@@ -1792,46 +1729,36 @@ export const AddModal: React.FC<AddModalProps> = ({
                                 setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
                               }}
                               placeholder="Thumbnail Title"
-                              className="w-full px-2 py-1 bg-black border border-zinc-800 rounded-md text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#009FDF]"
+                              className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-md text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
                             />
 
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <select
-                                value={item.niche}
-                                onChange={(e) => {
-                                  const val = e.target.value as NicheCategory;
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Categories:</span>
+                                <span className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 truncate max-w-[140px]">
+                                  • {item.creator}
+                                </span>
+                              </div>
+                              <ItemCategoryMultiSelect
+                                selectedCategories={item.tags || []}
+                                availableCategories={availableCategories}
+                                onChange={(cats) => {
                                   setYoutubeItems(prev => prev.map((p, i) => i === index ? {
                                     ...p,
-                                    niche: val,
-                                    tags: Array.from(new Set([val, ...p.tags]))
+                                    niche: (cats[0] || '') as NicheCategory,
+                                    tags: cats
                                   } : p));
                                 }}
-                                className="px-2 py-0.5 bg-black border border-zinc-800 rounded text-[11px] text-zinc-300 focus:outline-none focus:border-[#009FDF] cursor-pointer"
-                              >
-                                {(availableCategories.length > 0 ? availableCategories : ['Tech', 'Gaming', 'Business', 'IRL', 'Documentary', 'Sports', 'Educational', 'Entertainment']).map(cat => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
-
-                              <span className="text-[10px] text-zinc-400 truncate max-w-[140px]">
-                                {item.creator}
-                              </span>
+                                onCategoryCreated={handleCategoryCreated}
+                                accentColor="#401D1A"
+                              />
                             </div>
-
-                            {/* Multiple Tag Selection for this YouTube Item */}
-                            <ItemTagSelector
-                              tags={item.tags}
-                              onChange={(newTags) => {
-                                setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, tags: newTags } : p));
-                              }}
-                              accentColor="#009FDF"
-                            />
                           </div>
 
                           <button
                             type="button"
                             onClick={() => setYoutubeItems(prev => prev.filter((_, i) => i !== index))}
-                            className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                            className="p-1 text-[#401D1A]/50 hover:text-[#401D1A] dark:text-[#E4E0D3]/50 dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
                             title="Remove"
                           >
                             <IconTrash className="w-3.5 h-3.5" />
@@ -1841,11 +1768,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-zinc-800 flex items-center justify-between">
+                  <div className="pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setYoutubeItems([])}
-                      className="px-3.5 py-2 text-xs text-zinc-400 hover:text-white"
+                      className="px-3.5 py-2 text-xs text-[#401D1A]/70 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF]"
                     >
                       Clear
                     </button>
@@ -1854,7 +1781,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       type="button"
                       onClick={() => handleSaveBatchItems(youtubeItems)}
                       disabled={isUploadingToCloud || youtubeItems.filter(i => i.selected !== false).length === 0}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#009FDF] hover:bg-[#008cc4] disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-[#FFFFFF] bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -1882,8 +1809,8 @@ export const AddModal: React.FC<AddModalProps> = ({
           {activeTab === 'pinterest' && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                  <IconPinterest className="w-4 h-4 text-rose-500" />
+                <label className="text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] flex items-center gap-1.5">
+                  <IconPinterest className="w-4 h-4" />
                   <span>Paste Pinterest Pin Links or Board URL</span>
                 </label>
 
@@ -1901,11 +1828,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     }
                   }}
                   placeholder="Paste Pinterest links (e.g. https://pin.it/4k6G4P6 or https://www.pinterest.com/pin/515873332295753837/)..."
-                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#009FDF] resize-none"
+                  className="w-full px-3 py-2.5 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3] resize-none"
                 />
 
                 <div className="flex items-center justify-between pt-1">
-                  <p className="text-[11px] text-zinc-500">
+                  <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
                     Paste one or multiple Pinterest links to extract high-definition images
                   </p>
 
@@ -1913,7 +1840,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                     type="button"
                     onClick={handleExtractPinterest}
                     disabled={isPinterestLoading || !pinterestInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#401D1A] text-[#FFFFFF] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     {isPinterestLoading ? (
                       <>
@@ -1930,26 +1857,17 @@ export const AddModal: React.FC<AddModalProps> = ({
                 </div>
 
                 {pinterestError && (
-                  <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-300">
+                  <div className="p-3 bg-[#401D1A]/10 border border-[#401D1A]/30 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:border-[#E4E0D3]/40 dark:text-[#E4E0D3] rounded-xl text-xs">
                     {pinterestError}
                   </div>
                 )}
               </div>
 
-              {/* Pinterest Section Tag Presets */}
-              <SectionPresetTagBar
-                label="Tags applied to extracted Pinterest pins:"
-                selectedTags={pinterestPresetTags}
-                onChange={setPinterestPresetTags}
-                accentColor="#e11d48"
-                placeholder="+ Add custom tag (e.g. Design, Editorial, Aesthetic)..."
-              />
-
               {/* Pinterest Extracted Result List */}
               {pinterestItems.length > 0 && (
-                <div className="space-y-3 pt-2 border-t border-zinc-800">
+                <div className="space-y-3 pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white">
+                    <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF]">
                       Found {pinterestItems.length} Pinterest pins
                     </span>
 
@@ -1959,20 +1877,21 @@ export const AddModal: React.FC<AddModalProps> = ({
                         const allSelected = pinterestItems.every(i => i.selected !== false);
                         setPinterestItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
                       }}
-                      className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-[11px] font-semibold text-zinc-300 cursor-pointer"
+                      className="px-2.5 py-1 bg-[#FFFFFF] dark:bg-[#401D1A] hover:bg-[#E4E0D3] dark:hover:bg-[#FFFFFF]/10 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-lg text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] cursor-pointer"
                     >
                       {pinterestItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
                     </button>
                   </div>
 
-                  {/* Batch Tag Toolbar for Pinterest */}
-                  <BatchTagToolbar
+                  {/* Single Unified Category Bar for Pinterest */}
+                  <UnifiedCategoryBar
+                    label="Select category for all pins"
                     itemCount={pinterestItems.length}
-                    availableCategories={availableCategories}
-                    onApplyCategory={handleApplyCategoryToAllPinterest}
-                    onToggleTag={handleToggleTagOnAllPinterest}
-                    onAddCustomTag={handleAddCustomTagToAllPinterest}
-                    accentColor="#e11d48"
+                    categories={availableCategories}
+                    selectedCategories={pinterestCategories}
+                    onToggleCategory={handleTogglePinterestCategory}
+                    onCategoryCreated={handleCategoryCreated}
+                    accentColor="#401D1A"
                   />
 
                   {/* Pinterest Cards List */}
@@ -1982,8 +1901,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                         key={item.id}
                         className={`p-3 rounded-xl border transition-all ${
                           item.selected !== false
-                            ? 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700'
-                            : 'bg-zinc-950/40 border-zinc-900/80 opacity-50'
+                            ? 'bg-[#FFFFFF] dark:bg-[#401D1A] border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
+                            : 'bg-[#E4E0D3]/20 dark:bg-[#401D1A]/40 border-[#401D1A]/10 dark:border-[#E4E0D3]/10 opacity-50'
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -1994,19 +1913,19 @@ export const AddModal: React.FC<AddModalProps> = ({
                             }}
                             className={`w-4 h-4 mt-1 rounded flex items-center justify-center shrink-0 border cursor-pointer ${
                               item.selected !== false
-                                ? 'bg-rose-600 border-rose-600 text-white'
-                                : 'border-zinc-700 bg-zinc-800'
+                                ? 'bg-[#401D1A] border-[#401D1A] text-white dark:bg-[#E4E0D3] dark:border-[#E4E0D3] dark:text-[#401D1A]'
+                                : 'border-[#401D1A]/30 dark:border-[#E4E0D3]/30 bg-[#FFFFFF] dark:bg-[#401D1A]'
                             }`}
                           >
                             {item.selected !== false && <IconCheck className="w-3 h-3" />}
                           </button>
 
-                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-zinc-800">
+                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-[#401D1A]/15 dark:border-[#E4E0D3]/20">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                           </div>
 
-                          <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="flex-1 min-w-0 space-y-2">
                             <input
                               type="text"
                               value={item.title}
@@ -2015,46 +1934,36 @@ export const AddModal: React.FC<AddModalProps> = ({
                                 setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
                               }}
                               placeholder="Pin Title"
-                              className="w-full px-2 py-1 bg-black border border-zinc-800 rounded-md text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
+                              className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-md text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
                             />
 
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <select
-                                value={item.niche}
-                                onChange={(e) => {
-                                  const val = e.target.value as NicheCategory;
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Categories:</span>
+                                <span className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 truncate max-w-[140px]">
+                                  • {item.creator}
+                                </span>
+                              </div>
+                              <ItemCategoryMultiSelect
+                                selectedCategories={item.tags || []}
+                                availableCategories={availableCategories}
+                                onChange={(cats) => {
                                   setPinterestItems(prev => prev.map((p, i) => i === index ? {
                                     ...p,
-                                    niche: val,
-                                    tags: Array.from(new Set([val, ...p.tags]))
+                                    niche: (cats[0] || '') as NicheCategory,
+                                    tags: cats
                                   } : p));
                                 }}
-                                className="px-2 py-0.5 bg-black border border-zinc-800 rounded text-[11px] text-zinc-300 focus:outline-none focus:border-rose-500 cursor-pointer"
-                              >
-                                {(availableCategories.length > 0 ? availableCategories : ['Tech', 'Gaming', 'Business', 'IRL', 'Documentary', 'Sports', 'Educational', 'Entertainment']).map(cat => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
-
-                              <span className="text-[10px] text-zinc-400 truncate max-w-[140px]">
-                                {item.creator}
-                              </span>
+                                onCategoryCreated={handleCategoryCreated}
+                                accentColor="#401D1A"
+                              />
                             </div>
-
-                            {/* Multiple Tag Selection for this Pinterest Item */}
-                            <ItemTagSelector
-                              tags={item.tags}
-                              onChange={(newTags) => {
-                                setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, tags: newTags } : p));
-                              }}
-                              accentColor="#e11d48"
-                            />
                           </div>
 
                           <button
                             type="button"
                             onClick={() => setPinterestItems(prev => prev.filter((_, i) => i !== index))}
-                            className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                            className="p-1 text-[#401D1A]/50 hover:text-[#401D1A] dark:text-[#E4E0D3]/50 dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
                             title="Remove"
                           >
                             <IconTrash className="w-3.5 h-3.5" />
@@ -2064,11 +1973,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-zinc-800 flex items-center justify-between">
+                  <div className="pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setPinterestItems([])}
-                      className="px-3.5 py-2 text-xs text-zinc-400 hover:text-white"
+                      className="px-3.5 py-2 text-xs text-[#401D1A]/70 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF]"
                     >
                       Clear
                     </button>
@@ -2077,7 +1986,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       type="button"
                       onClick={() => handleSaveBatchItems(pinterestItems)}
                       disabled={isUploadingToCloud || pinterestItems.filter(i => i.selected !== false).length === 0}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-[#FFFFFF] bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
                     >
                       {isUploadingToCloud ? (
                         <>

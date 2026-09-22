@@ -125,15 +125,16 @@ export async function POST(req: NextRequest) {
 
       // Upsert record into Supabase database table 'thumbnails'
       try {
+        const assignedId = item.id || (item.videoId ? `thumb-yt-${item.videoId}` : `thumb-storage-${vId}`);
         const record = {
-          id: item.id || `thumb-storage-${vId}`,
+          id: assignedId,
           title: item.title,
           creator: item.creator || 'YouTube Creator',
           image_url: finalPublicUrl,
           source_url: item.videoId ? `https://www.youtube.com/watch?v=${item.videoId}` : item.imageUrl,
-          niche: item.niche || 'Tech & AI',
+          niche: item.niche || '',
           styles: item.styles || ['Face Close-up', 'High-Contrast Glow'],
-          tags: item.tags || ['YouTube', 'High CTR'],
+          tags: item.tags || (item.niche ? [item.niche] : []),
           source: 'supabase-storage',
           created_at: new Date().toISOString()
         };
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest) {
       }
 
       uploadedResults.push({
-        id: item.id || `thumb-storage-${vId}`,
+        id: item.id || (item.videoId ? `thumb-yt-${item.videoId}` : `thumb-storage-${vId}`),
         videoId: item.videoId,
         title: item.title,
         creator: item.creator,

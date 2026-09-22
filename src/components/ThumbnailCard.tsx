@@ -21,7 +21,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   return (
     <div
       onClick={onInspect}
-      className="group relative aspect-video w-full rounded-[15px] overflow-hidden bg-slate-200/80 dark:bg-slate-800/80 border border-transparent dark:border-slate-800/60 cursor-pointer shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 active:scale-[0.985] transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] gpu-layer thumbnail-card-container select-none"
+      className="group relative aspect-video w-full rounded-[15px] overflow-hidden bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/10 dark:border-[#E4E0D3]/20 cursor-pointer shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:scale-[1.05] hover:z-20 active:scale-[0.985] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu gpu-layer thumbnail-card-container select-none"
       style={{ aspectRatio: '16/9', width: '100%', maxWidth: '100%' }}
     >
       {/* 16:9 Thumbnail Image */}
@@ -30,7 +30,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         src={item.imageUrl}
         alt={item.title}
         suppressHydrationWarning
-        className="w-full h-full object-cover object-center transform-gpu group-hover:scale-[1.04] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] block"
+        className="w-full h-full object-cover object-center block"
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         loading={index < 6 ? 'eager' : 'lazy'}
         decoding="async"
@@ -52,7 +52,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
               onDelete(item);
             }}
             title="Delete thumbnail permanently"
-            className="p-1.5 rounded-[8px] bg-white/95 dark:bg-slate-900/95 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 active:scale-[0.94] backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-slate-700/60 transition-all duration-150 flex items-center justify-center cursor-pointer"
+            className="p-1.5 rounded-[8px] bg-[#FFFFFF]/95 dark:bg-[#401D1A]/95 text-[#401D1A] dark:text-[#E4E0D3] hover:text-[#401D1A] dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3] dark:hover:bg-[#401D1A] active:scale-[0.94] backdrop-blur-md shadow-sm border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 transition-all duration-150 flex items-center justify-center cursor-pointer"
           >
             <IconTrash className="w-3.5 h-3.5" />
           </button>
@@ -68,7 +68,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
             onInspect();
           }}
           title="Inspect thumbnail"
-          className="p-1.5 rounded-[8px] bg-white/95 dark:bg-slate-900/95 text-slate-900 dark:text-slate-100 hover:text-[#009FDF] dark:hover:text-[#009FDF] hover:bg-white dark:hover:bg-slate-800 active:scale-[0.94] backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-slate-700/60 transition-all duration-150 flex items-center justify-center cursor-pointer"
+          className="p-1.5 rounded-[8px] bg-[#FFFFFF]/95 dark:bg-[#401D1A]/95 text-[#401D1A] dark:text-[#E4E0D3] hover:text-[#401D1A] dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3] dark:hover:bg-[#401D1A] active:scale-[0.94] backdrop-blur-md shadow-sm border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 transition-all duration-150 flex items-center justify-center cursor-pointer"
         >
           <IconMaximize className="w-3.5 h-3.5" />
         </button>

@@ -17,7 +17,7 @@ interface FloatingDockProps {
   onToggleFilter: () => void;
   hasActiveFilters: boolean;
   onShuffle: () => void;
-  onOpenAdd: () => void;
+  onOpenAdd?: () => void;
 }
 
 export const FloatingDock: React.FC<FloatingDockProps> = ({
@@ -102,10 +102,10 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.95 }}
           onClick={onToggleFilter}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-xs font-semibold transition-colors cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors cursor-pointer ${
             hasActiveFilters
-              ? 'bg-white text-[#009FDF] shadow-xs'
-              : 'text-white/90 hover:text-white hover:bg-white/20'
+              ? 'bg-[#FFFFFF] text-[#401D1A] shadow-xs'
+              : 'text-[#FFFFFF]/90 hover:text-[#FFFFFF] hover:bg-[#FFFFFF]/20'
           }`}
         >
           <IconFilter className="w-3.5 h-3.5" />
@@ -119,21 +119,23 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           transition={{ duration: 0.25 }}
           onClick={onShuffle}
           title="Shuffle Inspiration"
-          className="p-2 rounded-[10px] text-white/85 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
+          className="p-2 rounded-[10px] text-[#FFFFFF]/85 hover:text-[#FFFFFF] hover:bg-[#FFFFFF]/20 transition-colors flex items-center justify-center cursor-pointer"
         >
           <IconShuffle className="w-4 h-4" />
         </motion.button>
 
-        {/* 5. + Add Button (Refined 15px Pill with Orange Accent Icon) */}
-        <motion.button
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onOpenAdd}
-          className="flex items-center gap-1.5 pl-3 pr-4 py-1.5 rounded-[15px] text-xs font-bold text-slate-900 bg-white hover:bg-slate-50 transition-colors shadow-xs ring-1 ring-black/5 cursor-pointer"
-        >
-          <IconPlus className="w-3.5 h-3.5 text-[#f76d25]" />
-          <span>Add</span>
-        </motion.button>
+        {/* 5. + Add Button (Only visible when onOpenAdd is provided) */}
+        {onOpenAdd && (
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onOpenAdd}
+            className="flex items-center gap-1.5 pl-3 pr-4 py-1.5 rounded-[8px] border border-[#401D1A]/20 text-xs font-bold text-[#401D1A] bg-[#FFFFFF] hover:bg-[#E4E0D3] transition-colors shadow-xs cursor-pointer"
+          >
+            <IconPlus className="w-3.5 h-3.5 text-[#401D1A]" />
+            <span>Add</span>
+          </motion.button>
+        )}
       </motion.nav>
     </div>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/lib/authContext";
 
 export const metadata: Metadata = {
   title: "ThumbFeed",
@@ -50,8 +51,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-background text-slate-900 dark:text-slate-100 min-h-screen antialiased selection:bg-[#009FDF]/20 selection:text-[#009FDF]">
-        {children}
+      <body className="bg-background text-[#401D1A] dark:text-[#FFFFFF] min-h-screen antialiased selection:bg-[#401D1A] selection:text-[#FFFFFF]">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

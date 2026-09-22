@@ -3,10 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --brand-blue: #009FDF;
-  --brand-orange: #f76d25;
+  --background: #E4E0D3;
+  --foreground: #401D1A;
+  --surface: #FFFFFF;
+  --brand: #401D1A;
+  --brand-blue: #401D1A;
+  --brand-orange: #401D1A;
 
   /* Refined Dynamic Easing Curves */
   --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
@@ -25,20 +27,24 @@
   --duration-normal: 220ms;
   --duration-slow: 320ms;
 
-  /* Layered Shadow Stacks */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 12px 28px -6px rgba(0, 159, 223, 0.22), 0 4px 10px -2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 159, 223, 0.35);
-  --shadow-dock: 0 16px 36px -6px rgba(15, 23, 42, 0.35), 0 4px 12px -2px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.12);
-  --shadow-elevated: 0 4px 8px rgba(0, 0, 0, 0.02), 0 8px 12px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  /* Layered Shadow Stacks using #401D1A tone */
+  --shadow-card: 0 1px 3px rgba(64, 29, 26, 0.05), 0 4px 12px rgba(64, 29, 26, 0.03), 0 0 0 0.5px rgba(64, 29, 26, 0.08);
+  --shadow-card-hover: 0 12px 28px -6px rgba(64, 29, 26, 0.18), 0 4px 10px -2px rgba(64, 29, 26, 0.08), 0 0 0 1px rgba(64, 29, 26, 0.25);
+  --shadow-dock: 0 16px 36px -6px rgba(64, 29, 26, 0.45), 0 4px 12px -2px rgba(64, 29, 26, 0.2), 0 0 0 1px rgba(228, 224, 211, 0.25);
+  --shadow-elevated: 0 4px 8px rgba(64, 29, 26, 0.04), 0 8px 12px rgba(64, 29, 26, 0.04), 0 0 0 0.5px rgba(64, 29, 26, 0.08);
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ffffff;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.9), 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
-  --shadow-card-hover: 0 12px 28px -6px rgba(0, 159, 223, 0.35), 0 4px 10px -2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 159, 223, 0.5);
-  --shadow-dock: 0 16px 36px -6px rgba(0, 0, 0, 0.95), 0 4px 14px -2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.18);
-  --shadow-elevated: 0 4px 8px rgba(0, 0, 0, 0.8), 0 8px 12px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(255, 255, 255, 0.12);
+  --background: #18181b;
+  --foreground: #FFFFFF;
+  --surface: #18181b;
+  --brand: #E4E0D3;
+  --brand-blue: #E4E0D3;
+  --brand-orange: #E4E0D3;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(228, 224, 211, 0.15);
+  --shadow-card-hover: 0 12px 28px -6px rgba(0, 0, 0, 0.8), 0 4px 10px -2px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(228, 224, 211, 0.35);
+  --shadow-dock: 0 16px 36px -6px rgba(0, 0, 0, 0.85), 0 4px 14px -2px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(228, 224, 211, 0.25);
+  --shadow-elevated: 0 4px 8px rgba(0, 0, 0, 0.6), 0 8px 12px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(228, 224, 211, 0.15);
 }
 
 body {
@@ -64,25 +70,27 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #401D1A;
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
+  opacity: 0.3;
   transition: background var(--duration-fast) var(--ease-fluid);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #401D1A;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #E4E0D3;
+  opacity: 0.3;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #FFFFFF;
 }
 
 /* High-Performance Rendering & Composite Layers */
@@ -98,19 +106,19 @@ body {
   perspective: 1000px;
 }
 
-/* Refined Floating Dock in Brand Color */
+/* Refined Floating Dock in Palette Color */
 .floating-dock {
-  background: rgba(0, 159, 223, 0.92);
+  background: #401D1A;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 16px 36px -6px rgba(0, 159, 223, 0.45), 0 4px 14px -2px rgba(0, 159, 223, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.35);
-  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 16px 36px -6px rgba(64, 29, 26, 0.5), 0 4px 14px -2px rgba(64, 29, 26, 0.3), 0 0 0 1px rgba(228, 224, 211, 0.35);
+  border: 0.5px solid rgba(228, 224, 211, 0.35);
   transition: all var(--duration-normal) var(--ease-fluid);
   transform: translateZ(0);
 }
 
 .floating-dock:hover {
-  box-shadow: 0 20px 42px -6px rgba(0, 159, 223, 0.55), 0 6px 18px -2px rgba(0, 159, 223, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 42px -6px rgba(64, 29, 26, 0.6), 0 6px 18px -2px rgba(64, 29, 26, 0.4), 0 0 0 1px rgba(228, 224, 211, 0.5);
 }
 
 /* Smooth Interactive Elements */
@@ -122,7 +130,7 @@ button, input, select, a {
 input[type='range'].custom-slider {
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(228, 224, 211, 0.35);
   border-radius: 9999px;
   outline: none;
   height: 4px;
@@ -130,7 +138,7 @@ input[type='range'].custom-slider {
 }
 
 input[type='range'].custom-slider:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(228, 224, 211, 0.6);
 }
 
 input[type='range'].custom-slider::-webkit-slider-thumb {
@@ -139,15 +147,15 @@ input[type='range'].custom-slider::-webkit-slider-thumb {
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #FFFFFF;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(64, 29, 26, 0.35), 0 0 0 0.5px rgba(228, 224, 211, 0.2);
   transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-fluid);
 }
 
 input[type='range'].custom-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 2px 6px rgba(64, 29, 26, 0.45);
 }
 
 input[type='range'].custom-slider::-webkit-slider-thumb:active {

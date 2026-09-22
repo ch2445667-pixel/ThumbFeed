@@ -12,6 +12,7 @@ import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 import { IconTrash } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
 import { INITIAL_THUMBNAILS } from '../lib/mockData';
+import { useAuth } from '../lib/authContext';
 import {
   saveStoredThumbnail,
   saveStoredThumbnails,
@@ -41,6 +42,8 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 }
 
 export default function HomePage() {
+  const { isAdmin } = useAuth();
+
   // Initialize with deterministic INITIAL_THUMBNAILS for exact SSR & Client hydration parity
   const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>(INITIAL_THUMBNAILS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -273,20 +276,23 @@ export default function HomePage() {
     setShuffleSeed(Date.now());
   };
 
-  // Add Thumbnail
+  // Add Thumbnail (Restricted to shivashiva66407@gmail.com)
   const handleAddThumbnail = (item: ThumbnailItem) => {
+    if (!isAdmin) return;
     const updated = saveStoredThumbnail(item);
     setThumbnails(updated);
   };
 
-  // Add Multiple Thumbnails in batch from YouTube channel or bulk extraction
+  // Add Multiple Thumbnails in batch (Restricted to shivashiva66407@gmail.com)
   const handleAddMultipleThumbnails = (items: ThumbnailItem[]) => {
+    if (!isAdmin) return;
     const updated = saveStoredThumbnails(items);
     setThumbnails(updated);
   };
 
-  // Permanently delete a thumbnail from database & state
+  // Permanently delete a thumbnail from database & state (Restricted to shivashiva66407@gmail.com)
   const handleDeleteThumbnail = async (item: ThumbnailItem) => {
+    if (!isAdmin) return;
     // Optimistically remove from visible state
     setThumbnails(prev => prev.filter(t => t.id !== item.id && t.imageUrl !== item.imageUrl));
     if (selectedItem?.id === item.id || selectedItem?.imageUrl === item.imageUrl) {
@@ -336,60 +342,24 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-slate-900 dark:text-slate-100 flex flex-col pt-16 pb-32 transition-colors duration-200">
+    <div className="min-h-screen bg-[#E4E0D3] dark:bg-[#18181b] text-[#401D1A] dark:text-[#FFFFFF] flex flex-col pt-16 pb-32 transition-colors duration-200">
       
       {/* Top Header - Transparent & Hides on scroll */}
       <TopBar />
-
-      {/* Active filter badge bar if niche/search is selected */}
-      {hasActiveFilters && (
-        <div className="px-6 sm:px-10 py-2.5 bg-slate-50 dark:bg-black/90 border-b border-slate-100 dark:border-white/10 flex items-center justify-between text-xs animate-fade-blur">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Active filters:</span>
-            {filters.selectedNiche !== 'All' && (
-              <span className="px-2.5 py-0.5 rounded-[8px] bg-[#009FDF] text-white font-medium flex items-center gap-1 shadow-2xs">
-                <span>{filters.selectedNiche}</span>
-                <button
-                  onClick={() => setFilters({ ...filters, selectedNiche: 'All' })}
-                  className="hover:text-slate-200 ml-0.5"
-                >
-                  &times;
-                </button>
-              </span>
-            )}
-            {filters.sortBy !== 'latest' && filters.sortBy !== 'random' && (
-              <span className="px-2.5 py-0.5 rounded-[8px] bg-[#e6f6fc] dark:bg-[#009FDF]/20 text-[#0073a3] dark:text-[#38bdf8] font-medium border border-[#b3e7f9] dark:border-[#009FDF]/40">
-                Sort: {filters.sortBy}
-              </span>
-            )}
-            {filters.searchQuery && (
-              <span className="px-2.5 py-0.5 rounded-[8px] bg-slate-200 dark:bg-zinc-800 text-slate-800 dark:text-slate-200 font-medium">
-                &ldquo;{filters.searchQuery}&rdquo;
-              </span>
-            )}
-          </div>
-          <button
-            onClick={resetFilters}
-            className="text-xs font-semibold text-[#f76d25] hover:text-[#df5c17] active:scale-95 shrink-0 ml-2 transition-all cursor-pointer"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
 
       {/* Main Grid Canvas */}
       <main className="flex-1 w-full px-6 sm:px-10 py-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-28 text-center animate-fade-blur">
-            <div className="w-8 h-8 rounded-full border-3 border-[#009FDF] border-t-transparent animate-spin mb-3" />
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Loading thumbnails...</p>
+            <div className="w-8 h-8 rounded-full border-3 border-[#401D1A] dark:border-[#E4E0D3] border-t-transparent animate-spin mb-3" />
+            <p className="text-xs font-medium text-[#401D1A]/70 dark:text-[#E4E0D3]/70">Loading thumbnails...</p>
           </div>
         ) : filteredThumbnails.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center animate-fade-blur">
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No thumbnails found.</p>
+            <p className="text-sm font-semibold text-[#401D1A] dark:text-[#FFFFFF]">No thumbnails found.</p>
             <button
               onClick={resetFilters}
-              className="mt-3 px-4 py-2 rounded-[12px] text-xs font-bold text-white bg-[#009FDF] hover:bg-[#008bc4] active:scale-[0.97] transition-all shadow-sm cursor-pointer"
+              className="mt-3 px-4 py-2 rounded-[12px] text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-[0.97] transition-all shadow-sm cursor-pointer"
             >
               Reset Filters
             </button>
@@ -402,7 +372,7 @@ export default function HomePage() {
                 item={item}
                 index={index}
                 onInspect={() => setSelectedItem(item)}
-                onDelete={() => setThumbnailToDelete(item)}
+                onDelete={isAdmin ? () => setThumbnailToDelete(item) : undefined}
               />
             ))}
           </div>
@@ -412,7 +382,7 @@ export default function HomePage() {
       {/* Bottom Blur & Overlay Fade Gradient */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed bottom-0 inset-x-0 h-28 sm:h-32 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-black dark:via-black/80 dark:to-transparent backdrop-blur-[3px] bottom-fade-mask z-30 transition-colors duration-200"
+        className="pointer-events-none fixed bottom-0 inset-x-0 h-28 sm:h-32 bg-gradient-to-t from-[#E4E0D3] via-[#E4E0D3]/80 to-transparent dark:from-[#18181b] dark:via-[#18181b]/80 dark:to-transparent backdrop-blur-[3px] bottom-fade-mask z-30 transition-colors duration-200"
       />
 
 
@@ -438,7 +408,7 @@ export default function HomePage() {
         onToggleFilter={() => setIsFilterBarOpen(prev => !prev)}
         hasActiveFilters={hasActiveFilters}
         onShuffle={handleShuffle}
-        onOpenAdd={() => setIsAddOpen(true)}
+        onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
       />
 
       {/* Search Modal */}
@@ -450,28 +420,32 @@ export default function HomePage() {
         filteredCount={filteredThumbnails.length}
       />
 
-      {/* Add Modal with Automatic Color Palette & Tag Extraction */}
-      <AddModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        onAddThumbnail={handleAddThumbnail}
-        onAddMultipleThumbnails={handleAddMultipleThumbnails}
-      />
+      {/* Add Modal with Automatic Color Palette & Tag Extraction (Only accessible by owner) */}
+      {isAdmin && (
+        <AddModal
+          isOpen={isAddOpen}
+          onClose={() => setIsAddOpen(false)}
+          onAddThumbnail={handleAddThumbnail}
+          onAddMultipleThumbnails={handleAddMultipleThumbnails}
+        />
+      )}
 
-      {/* Thumbnail Inspection Modal - With Download & Permanent Delete Option */}
+      {/* Thumbnail Inspection Modal - With Download & Permanent Delete Option (Delete only for owner) */}
       <ThumbnailModal
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
-        onDelete={handleDeleteThumbnail}
+        onDelete={isAdmin ? handleDeleteThumbnail : undefined}
       />
 
-      {/* Quick Delete Confirmation Modal */}
-      <DeleteConfirmModal
-        item={thumbnailToDelete}
-        isOpen={Boolean(thumbnailToDelete)}
-        onClose={() => setThumbnailToDelete(null)}
-        onConfirm={handleDeleteThumbnail}
-      />
+      {/* Quick Delete Confirmation Modal (Only accessible by owner) */}
+      {isAdmin && (
+        <DeleteConfirmModal
+          item={thumbnailToDelete}
+          isOpen={Boolean(thumbnailToDelete)}
+          onClose={() => setThumbnailToDelete(null)}
+          onConfirm={handleDeleteThumbnail}
+        />
+      )}
 
       {/* Deletion Toast Notification */}
       {toastMessage && (

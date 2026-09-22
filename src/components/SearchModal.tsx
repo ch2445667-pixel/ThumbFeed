@@ -45,30 +45,30 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.96 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[15px] shadow-[var(--shadow-dock)] overflow-hidden z-10 border border-gray-100 dark:border-slate-800 p-4 sm:p-5 space-y-4 gpu-layer"
+            className="relative w-full max-w-2xl bg-[#FFFFFF] dark:bg-[#401D1A] rounded-[15px] shadow-[var(--shadow-dock)] overflow-hidden z-10 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 p-4 sm:p-5 space-y-4 gpu-layer"
           >
             {/* Search Input Bar */}
             <div className="relative flex items-center">
-              <IconSearch className="absolute left-4 w-5 h-5 text-[#009FDF]" />
+              <IconSearch className="absolute left-4 w-5 h-5 text-[#401D1A] dark:text-[#E4E0D3]" />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Search by topic, creator (MrBeast), hook, or text..."
                 value={query}
                 onChange={(e) => onQueryChange(e.target.value)}
-                className="w-full pl-12 pr-12 py-3.5 bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-[12px] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-[#009FDF] focus:ring-2 focus:ring-[#009FDF]/20 transition-all font-medium"
+                className="w-full pl-12 pr-12 py-3.5 bg-[#E4E0D3]/40 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-[12px] text-sm text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:bg-[#FFFFFF] dark:focus:bg-[#401D1A] focus:border-[#401D1A] dark:focus:border-[#E4E0D3] focus:ring-2 focus:ring-[#401D1A]/15 dark:focus:ring-[#E4E0D3]/20 transition-all font-medium"
               />
               {query ? (
                 <button
                   onClick={() => onQueryChange('')}
-                  className="absolute right-4 p-1 rounded-[8px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                  className="absolute right-4 p-1 rounded-[8px] text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] active:scale-95 transition-all flex items-center justify-center cursor-pointer"
                 >
                   <IconClose className="w-4 h-4" />
                 </button>
               ) : (
                 <button
                   onClick={onClose}
-                  className="absolute right-4 px-2 py-0.5 rounded-[6px] text-[11px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 cursor-pointer"
+                  className="absolute right-4 px-2 py-0.5 rounded-[6px] text-[11px] font-mono text-[#401D1A]/60 dark:text-[#E4E0D3]/70 bg-[#E4E0D3]/50 dark:bg-[#FFFFFF]/10 border border-[#401D1A]/15 dark:border-[#E4E0D3]/25 cursor-pointer"
                 >
                   ESC
                 </button>
@@ -77,7 +77,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
             {/* Quick Search Chips */}
             <div className="flex items-center gap-2 pt-0.5 px-1 text-xs">
-              <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">Suggestions:</span>
+              <span className="text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium shrink-0">Suggestions:</span>
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                 {['$1 vs $1,000,000', 'Minecraft', 'Apple', 'Crypto', 'Gymnast'].map((s) => (
                   <button
@@ -86,7 +86,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       onQueryChange(s);
                       onClose();
                     }}
-                    className="px-2.5 py-1 rounded-[8px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#009FDF]/10 dark:hover:bg-[#009FDF]/20 hover:text-[#009FDF] dark:hover:text-[#38bdf8] border border-slate-200/50 dark:border-slate-700 active:scale-[0.96] transition-all whitespace-nowrap font-medium cursor-pointer"
+                    className="px-2.5 py-1 rounded-[8px] bg-[#E4E0D3]/50 dark:bg-[#FFFFFF]/10 text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#401D1A] hover:text-[#FFFFFF] dark:hover:bg-[#E4E0D3] dark:hover:text-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25 active:scale-[0.96] transition-all whitespace-nowrap font-medium cursor-pointer"
                   >
                     {s}
                   </button>
@@ -95,11 +95,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             </div>
 
             {/* Result Indicator */}
-            <div className="flex items-center justify-between pt-2 px-1 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pt-2 px-1 text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
               <span>{filteredCount} matching thumbnails</span>
               <button
                 onClick={onClose}
-                className="font-bold text-[#009FDF] hover:text-[#008bc4] active:scale-[0.96] transition-all flex items-center gap-1 cursor-pointer"
+                className="font-bold text-[#401D1A] dark:text-[#E4E0D3] hover:underline active:scale-[0.96] transition-all flex items-center gap-1 cursor-pointer"
               >
                 <span>Apply & View Grid</span>
                 <span>&rarr;</span>

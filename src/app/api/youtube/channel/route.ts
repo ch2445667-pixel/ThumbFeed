@@ -561,6 +561,18 @@ Return a strict JSON array of objects with keys: "videoId" (exact 11-char YouTub
       }
     }
 
+    // Strict deduplication by videoId, sourceUrl, and image URL
+    const uniqueVideos: ExtractedChannelVideo[] = [];
+    const finalSeen = new Set<string>();
+    for (const v of extractedVideos) {
+      const vId = v.videoId?.trim();
+      if (!vId) continue;
+      if (finalSeen.has(vId)) continue;
+      finalSeen.add(vId);
+      uniqueVideos.push(v);
+    }
+    extractedVideos = uniqueVideos;
+
     // Limit to requested count
     if (extractedVideos.length > requestedLimit) {
       extractedVideos = extractedVideos.slice(0, requestedLimit);

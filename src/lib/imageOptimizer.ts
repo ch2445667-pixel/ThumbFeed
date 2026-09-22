@@ -96,8 +96,8 @@ export async function convertToJpg(
           return;
         }
 
-        // Fill background with solid black (or white) in case source PNG had transparency
-        ctx.fillStyle = '#000000';
+        // Fill background with solid #401D1A in case source PNG had transparency
+        ctx.fillStyle = '#401D1A';
         ctx.fillRect(0, 0, width, height);
 
         // Draw image onto canvas

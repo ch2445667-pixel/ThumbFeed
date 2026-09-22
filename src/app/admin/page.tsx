@@ -15,7 +15,22 @@ const NICHES: NicheCategory[] = [
   'Gaming',
   'Sports',
   'Documentary',
-  'Educational'
+  'Educational',
+  'Podcast',
+  'Interviews',
+  'Football',
+  'Mindset',
+  'Self-Improvement',
+  'Lifestyle',
+  'Entrepreneurship',
+  'Geopolitics',
+  'Military',
+  'Nfl',
+  'Psychology',
+  'Soccer',
+  'Video Games',
+  'Vlog',
+  'War'
 ];
 
 const VISUAL_STYLES: VisualStyle[] = [

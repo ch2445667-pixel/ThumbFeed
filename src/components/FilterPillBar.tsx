@@ -39,7 +39,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   onClose,
   categoryCounts = {}
 }) => {
-  const [categories, setCategories] = useState<string[]>(['All', 'IRL', 'Business', 'Tech', 'Entertainment', 'Gaming', 'Sports', 'Documentary', 'Educational']);
+  const [categories, setCategories] = useState<string[]>(['All', 'IRL', 'Business', 'Tech', 'Entertainment', 'Gaming', 'Sports', 'Documentary', 'Educational', 'Podcast', 'Interviews', 'Football', 'Mindset', 'Self-Improvement', 'Lifestyle', 'Entrepreneurship', 'Geopolitics', 'Military', 'Nfl', 'Psychology', 'Soccer', 'Video Games', 'Vlog', 'War']);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newCatInput, setNewCatInput] = useState('');

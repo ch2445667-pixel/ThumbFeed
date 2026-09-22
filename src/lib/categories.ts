@@ -8,7 +8,22 @@ export const DEFAULT_CATEGORIES: string[] = [
   'Gaming',
   'Sports',
   'Documentary',
-  'Educational'
+  'Educational',
+  'Podcast',
+  'Interviews',
+  'Football',
+  'Mindset',
+  'Self-Improvement',
+  'Lifestyle',
+  'Entrepreneurship',
+  'Geopolitics',
+  'Military',
+  'Nfl',
+  'Psychology',
+  'Soccer',
+  'Video Games',
+  'Vlog',
+  'War'
 ];
 
 const STORAGE_KEY = 'thumbfeed_custom_categories';

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Search, Sparkles, X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { ViewModeToggle } from './ViewModeToggle';
 import { NicheCategory, VisualStyle, FilterState } from '../lib/types';
 
 const NICHES: (NicheCategory | 'All')[] = [
@@ -53,13 +54,17 @@ interface FilterBarProps {
   onChange: (filters: FilterState) => void;
   totalCount: number;
   filteredCount: number;
+  showCardInfo?: boolean;
+  onToggleCardInfo?: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
   filters,
   onChange,
   totalCount,
-  filteredCount
+  filteredCount,
+  showCardInfo = false,
+  onToggleCardInfo
 }) => {
   const toggleStyle = (style: VisualStyle) => {
     const exists = filters.selectedStyles.includes(style);
@@ -114,7 +119,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {/* Sort & Count Controls */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+          {/* View Mode Toggle: Detail vs Gallery (Exact replica of Image 1) */}
+          {onToggleCardInfo && (
+            <ViewModeToggle
+              isDetail={!!showCardInfo}
+              onToggle={onToggleCardInfo}
+            />
+          )}
+
           <div className="flex items-center gap-1.5 px-3 py-2 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs text-[#401D1A] dark:text-[#E4E0D3]">
             <ArrowUpDown className="w-3.5 h-3.5 text-[#401D1A] dark:text-[#E4E0D3]" />
             <select

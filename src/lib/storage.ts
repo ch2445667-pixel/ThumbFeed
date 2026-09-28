@@ -406,7 +406,7 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
             const newItem: ThumbnailItem = {
               id: dbRec?.id || `thumb-storage-${file.id || idx}-${fileName.replace(/[^a-zA-Z0-9]/g, '')}`,
               title,
-              creator: dbRec?.creator || 'TanzeelGFX',
+              creator: dbRec?.creator && !dbRec.creator.toLowerCase().includes('tanzee') ? dbRec.creator : 'Unknown',
               imageUrl,
               sourceUrl: dbRec?.source_url || imageUrl,
               niche,
@@ -440,7 +440,7 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
           const mapped: ThumbnailItem[] = data.map((row: any) => ({
             id: row.id,
             title: row.title || 'YouTube Thumbnail',
-            creator: row.creator || 'TanzeelGFX',
+            creator: row.creator && !row.creator.toLowerCase().includes('tanzee') ? row.creator : 'Unknown',
             imageUrl: row.image_url,
             sourceUrl: row.source_url || row.image_url,
             niche: row.niche || '',

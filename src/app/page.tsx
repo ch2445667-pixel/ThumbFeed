@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { TopBar } from '../components/TopBar';
+import { ProgressiveBlur } from '../components/ProgressiveBlur';
 import { ThumbnailCard } from '../components/ThumbnailCard';
 import { FloatingDock } from '../components/FloatingDock';
 import { FilterPillBar } from '../components/FilterPillBar';
@@ -22,6 +23,7 @@ import {
 } from '../lib/storage';
 import { supabase } from '../lib/supabase';
 import { preloadAllThumbnails, prioritizeUpcomingThumbnails } from '../lib/imageCache';
+import { fetchMissingYouTubeDetails } from '../lib/youtubeMetadataCache';
 
 // Deterministic seeded shuffle using Mulberry32 PRNG so order never drifts automatically
 function seededShuffle<T>(array: T[], seed: number): T[] {
@@ -41,16 +43,19 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
   return arr;
 }
 
+const DEFAULT_SHUFFLE_SEED = 882391;
+const SHUFFLED_INITIAL_THUMBNAILS = seededShuffle(INITIAL_THUMBNAILS, DEFAULT_SHUFFLE_SEED);
+
 export default function HomePage() {
   const { isAdmin } = useAuth();
 
-  // Initialize with deterministic INITIAL_THUMBNAILS for exact SSR & Client hydration parity
-  const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>(INITIAL_THUMBNAILS);
+  // Initialize with pre-shuffled thumbnails for instantaneous shuffled start with zero flash
+  const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>(SHUFFLED_INITIAL_THUMBNAILS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // UI Grid Zoom / Columns Slider (Default: 5 columns like in mockup)
-  const [columns, setColumns] = useState<number>(5);
-  const [shuffleSeed, setShuffleSeed] = useState<number>(42);
+  // UI Grid Zoom / Columns Slider: Default to 3 columns (Maximum zoom with 3 thumbnails on single row)
+  const [columns, setColumns] = useState<number>(3);
+  const [shuffleSeed, setShuffleSeed] = useState<number>(DEFAULT_SHUFFLE_SEED);
 
   // Modal / Filter Bar States
   const [isFilterBarOpen, setIsFilterBarOpen] = useState(false);
@@ -60,13 +65,51 @@ export default function HomePage() {
   const [thumbnailToDelete, setThumbnailToDelete] = useState<ThumbnailItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Option state: Toggle thumbnail card metadata footer (channel name, video title, views count)
+  const [showCardInfo, setShowCardInfo] = useState<boolean>(true);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('thumbfeed_show_card_info');
+      if (stored !== null) {
+        setShowCardInfo(stored === 'true');
+      }
+      const storedCols = localStorage.getItem('thumbfeed_columns');
+      if (storedCols) {
+        const val = parseInt(storedCols, 10);
+        if (val >= 3 && val <= 6) setColumns(val);
+      }
+    } catch {}
+  }, []);
+
+  const handleToggleCardInfo = useCallback(() => {
+    setShowCardInfo((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('thumbfeed_show_card_info', String(next));
+        } catch {}
+      }
+      return next;
+    });
+  }, []);
+
+  const handleColumnsChange = useCallback((cols: number) => {
+    const val = Math.min(6, Math.max(3, cols));
+    setColumns(val);
+    try {
+      localStorage.setItem('thumbfeed_columns', String(val));
+    } catch {}
+  }, []);
+
+  // Default sort is 'random' (Shuffle) so feed is always dynamically shuffled from start
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     selectedNiche: 'All',
     selectedStyles: [],
     selectedColor: null,
     selectedEmotion: null,
-    sortBy: 'latest'
+    sortBy: 'random'
   });
 
   // Load from local storage and continuously sync live from Supabase (auto-detecting Chrome extension uploads)
@@ -86,13 +129,11 @@ export default function HomePage() {
         const loadedThumbs = await fetchLiveSupabaseThumbnails();
         if (isMounted && loadedThumbs && loadedThumbs.length > 0) {
           setThumbnails(prev => {
-            // Check if there are any new items or count changes
             const prevIds = new Set(prev.map(p => p.id));
             const hasNew = loadedThumbs.some(t => !prevIds.has(t.id));
             const countChanged = prev.length !== loadedThumbs.length;
 
             if (hasNew || countChanged || prev[0]?.id !== loadedThumbs[0]?.id) {
-              preloadAllThumbnails(loadedThumbs.slice(0, 40).map(t => t.imageUrl), 40);
               return loadedThumbs;
             }
             return prev;
@@ -126,7 +167,11 @@ export default function HomePage() {
               loadData();
             }
           )
-          .subscribe();
+          .subscribe((status: string, err?: Error) => {
+            if (status === 'CHANNEL_ERROR') {
+              console.warn('Supabase realtime channel notice:', err?.message || status);
+            }
+          });
       } catch (e) {
         console.warn('Supabase Realtime not available, falling back to interval:', e);
       }
@@ -234,47 +279,11 @@ export default function HomePage() {
     }
   }, [filteredThumbnails]);
 
-  // Predictive Ahead-of-Scroll Preloader
-  useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          const viewportHeight = window.innerHeight;
-          const totalHeight = document.documentElement.scrollHeight;
-          
-          if (filteredThumbnails.length > 0) {
-            // Calculate approximate visible index based on scroll position
-            const scrollFraction = Math.min(Math.max((scrollY + viewportHeight) / totalHeight, 0), 1);
-            const approxIndex = Math.floor(scrollFraction * filteredThumbnails.length);
-            
-            // Prioritize the upcoming 40 thumbnails ahead of the current scroll position
-            const upcomingSlice = filteredThumbnails
-              .slice(approxIndex, approxIndex + 40)
-              .map(t => t.imageUrl);
-
-            if (upcomingSlice.length > 0) {
-              prioritizeUpcomingThumbnails(upcomingSlice);
-            }
-          }
-
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [filteredThumbnails]);
-
   // Shuffle Inspiration - shuffles all items on explicit user button click
-  const handleShuffle = () => {
+  const handleShuffle = useCallback(() => {
     setFilters(prev => ({ ...prev, sortBy: 'random' }));
     setShuffleSeed(Date.now());
-  };
+  }, []);
 
   // Add Thumbnail (Restricted to shivashiva66407@gmail.com)
   const handleAddThumbnail = (item: ThumbnailItem) => {
@@ -291,13 +300,11 @@ export default function HomePage() {
   };
 
   // Permanently delete a thumbnail from database & state (Restricted to shivashiva66407@gmail.com)
-  const handleDeleteThumbnail = async (item: ThumbnailItem) => {
+  const handleDeleteThumbnail = useCallback(async (item: ThumbnailItem) => {
     if (!isAdmin) return;
     // Optimistically remove from visible state
     setThumbnails(prev => prev.filter(t => t.id !== item.id && t.imageUrl !== item.imageUrl));
-    if (selectedItem?.id === item.id || selectedItem?.imageUrl === item.imageUrl) {
-      setSelectedItem(null);
-    }
+    setSelectedItem(prev => (prev?.id === item.id || prev?.imageUrl === item.imageUrl ? null : prev));
 
     try {
       await deleteStoredThumbnailPermanently(item);
@@ -308,29 +315,28 @@ export default function HomePage() {
     } catch (err) {
       console.error('Permanent delete failed:', err);
     }
-  };
+  }, [isAdmin]);
 
   const hasActiveFilters = 
     Boolean(filters.searchQuery) ||
-    filters.selectedNiche !== 'All' ||
-    filters.sortBy !== 'latest';
+    filters.selectedNiche !== 'All';
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters({
       searchQuery: '',
       selectedNiche: 'All',
       selectedStyles: [],
       selectedColor: null,
       selectedEmotion: null,
-      sortBy: 'latest'
+      sortBy: 'random'
     });
-  };
+  }, []);
 
-  // Dynamic grid column class based on zoom slider
+  // Dynamic grid column class based on zoom slider (3 columns = Maximum Zoom with 3 thumbnails per row)
   const getGridColsClass = () => {
     switch (columns) {
       case 3:
-        return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3';
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3';
       case 4:
         return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
       case 6:
@@ -345,7 +351,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#E4E0D3] dark:bg-[#18181b] text-[#401D1A] dark:text-[#FFFFFF] flex flex-col pt-16 pb-32 transition-colors duration-200">
       
       {/* Top Header - Transparent & Hides on scroll */}
-      <TopBar />
+      <TopBar showCardInfo={showCardInfo} onToggleCardInfo={handleToggleCardInfo} />
 
       {/* Main Grid Canvas */}
       <main className="flex-1 w-full px-6 sm:px-10 py-6">
@@ -371,6 +377,7 @@ export default function HomePage() {
                 key={item.id}
                 item={item}
                 index={index}
+                showCardInfo={showCardInfo}
                 onInspect={() => setSelectedItem(item)}
                 onDelete={isAdmin ? () => setThumbnailToDelete(item) : undefined}
               />
@@ -379,17 +386,16 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Bottom Blur & Overlay Fade Gradient */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed bottom-0 inset-x-0 h-28 sm:h-32 bg-gradient-to-t from-[#E4E0D3] via-[#E4E0D3]/80 to-transparent dark:from-[#18181b] dark:via-[#18181b]/80 dark:to-transparent backdrop-blur-[3px] bottom-fade-mask z-30 transition-colors duration-200"
-      />
+      {/* Progressive Blur at Bottom (Soft optical blur falloff at the very bottom edge) */}
+      <ProgressiveBlur direction="bottom" height="h-16 sm:h-20" maxBlur={10} zIndex={25} />
 
 
       {/* Filter Pill Popover - Appears directly above the floating dock only when Filter is clicked */}
       <FilterPillBar
         isVisible={isFilterBarOpen}
         filters={filters}
+        showCardInfo={showCardInfo}
+        onToggleCardInfo={handleToggleCardInfo}
         onSelectCategory={(cat) => setFilters(prev => ({ ...prev, selectedNiche: cat }))}
         onToggleSort={(sort) => {
           setFilters(prev => ({ ...prev, sortBy: sort }));
@@ -403,7 +409,7 @@ export default function HomePage() {
       {/* Floating Bottom Dock (Dynamic Island) */}
       <FloatingDock
         columns={columns}
-        onColumnsChange={setColumns}
+        onColumnsChange={handleColumnsChange}
         onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         onToggleFilter={() => setIsFilterBarOpen(prev => !prev)}
         hasActiveFilters={hasActiveFilters}

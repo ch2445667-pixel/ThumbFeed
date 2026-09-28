@@ -187,6 +187,9 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
                       src={item.imageUrl}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                      }}
                     />
                   </div>
 

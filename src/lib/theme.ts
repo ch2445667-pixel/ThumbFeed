@@ -25,6 +25,10 @@ export function applyTheme(theme: ThemeMode): void {
   if (typeof document === 'undefined') return;
   
   const root = document.documentElement;
+  
+  // Enable smooth unified transition for color and background properties
+  root.classList.add('theme-transition');
+
   if (theme === 'dark') {
     root.classList.add('dark');
   } else {
@@ -38,6 +42,11 @@ export function applyTheme(theme: ThemeMode): void {
   }
   
   listeners.forEach(fn => fn(theme));
+
+  // Remove transition class after completion so interactions stay instantaneous
+  window.setTimeout(() => {
+    root.classList.remove('theme-transition');
+  }, 260);
 }
 
 export function toggleTheme(): ThemeMode {

@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { LogOut, X, AlertCircle } from 'lucide-react';
-import { IconSun, IconMoon } from './icons/AppIcons';
-import { getInitialTheme, toggleTheme, subscribeTheme, ThemeMode } from '../lib/theme';
+import { ThemeToggle } from './ThemeToggle';
+import { ViewModeToggle } from './ViewModeToggle';
 import { useAuth } from '../lib/authContext';
 
 // Authentic 4-color Google G Icon
@@ -29,25 +29,19 @@ const GoogleGIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }
   </svg>
 );
 
-export const TopBar: React.FC = () => {
+interface TopBarProps {
+  showCardInfo?: boolean;
+  onToggleCardInfo?: () => void;
+}
+
+export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCardInfo }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [theme, setTheme] = useState<ThemeMode>('light');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
   const { user, isAdmin, loading, signingIn, signIn, signOut, error, clearError } = useAuth();
-
-  // Synchronize theme on mount and listen to changes
-  useEffect(() => {
-    setTheme(getInitialTheme());
-    const unsubscribe = subscribeTheme((newTheme) => {
-      setTheme(newTheme);
-    });
-    return unsubscribe;
-  }, []);
 
   // Close account menu on click outside
   useEffect(() => {
@@ -69,8 +63,6 @@ export const TopBar: React.FC = () => {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           const delta = currentScrollY - lastScrollY.current;
-
-          setIsScrolled(currentScrollY > 20);
 
           if (currentScrollY <= 20) {
             setIsVisible(true);
@@ -94,11 +86,6 @@ export const TopBar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleToggleTheme = () => {
-    const next = toggleTheme();
-    setTheme(next);
-  };
-
   const handleSignOutClick = async () => {
     await signOut();
     setIsMenuOpen(false);
@@ -107,12 +94,8 @@ export const TopBar: React.FC = () => {
   return (
     <>
       <header
-        className={`fixed top-0 inset-x-0 z-30 px-6 sm:px-10 h-16 flex items-center justify-between transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
+        className={`fixed top-0 inset-x-0 z-30 px-6 sm:px-10 h-16 flex items-center justify-between transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none bg-transparent ${
           isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
-        } ${
-          isScrolled
-            ? 'bg-[#E4E0D3]/85 dark:bg-[#18181b]/90 backdrop-blur-md border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/20 shadow-[0_4px_16px_-4px_rgba(64,29,26,0.06)] dark:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.5)]'
-            : 'bg-transparent'
         }`}
       >
         {/* Brand Name */}
@@ -124,21 +107,16 @@ export const TopBar: React.FC = () => {
 
         {/* Right Side: Theme Toggle & Google Auth */}
         <div className="flex items-center gap-2 sm:gap-2.5 pointer-events-auto" ref={menuRef}>
-          {/* Dark Mode / Light Mode Toggle Button */}
-          <button
-            type="button"
-            id="theme-toggle-btn"
-            onClick={handleToggleTheme}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-10 h-10 rounded-[15px] bg-[#FFFFFF] dark:bg-[#27272a] border border-[#401D1A]/20 dark:border-white/10 shadow-xs hover:border-[#401D1A] dark:hover:border-[#E4E0D3] hover:shadow-md hover:shadow-[#401D1A]/10 active:scale-95 transition-all duration-200 flex items-center justify-center p-2 text-[#401D1A] dark:text-[#E4E0D3] group cursor-pointer"
-          >
-            {theme === 'dark' ? (
-              <IconSun className="w-5 h-5 text-[#E4E0D3] group-hover:rotate-45 transition-transform duration-300" />
-            ) : (
-              <IconMoon className="w-4.5 h-4.5 text-[#401D1A] group-hover:-rotate-12 transition-transform duration-300" />
-            )}
-          </button>
+          {/* View Mode Toggle: Detail vs Gallery (Exact replica of Image 1) */}
+          {onToggleCardInfo && (
+            <ViewModeToggle
+              isDetail={!!showCardInfo}
+              onToggle={onToggleCardInfo}
+            />
+          )}
+
+          {/* Segmented Light / Dark Mode Toggle */}
+          <ThemeToggle />
 
           {/* If NOT logged in: Direct Google Sign In Button */}
           {!loading && !user && (

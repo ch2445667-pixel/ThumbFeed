@@ -91,6 +91,9 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                 src={item.imageUrl}
                 alt={item.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                }}
               />
             </div>
             <div className="min-w-0 flex-1">

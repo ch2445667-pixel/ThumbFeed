@@ -20,6 +20,8 @@ import {
   subscribeCategories
 } from '../lib/categories';
 
+import { ViewModeToggle } from './ViewModeToggle';
+
 interface FilterPillBarProps {
   isVisible: boolean;
   filters: FilterState;
@@ -28,6 +30,8 @@ interface FilterPillBarProps {
   onResetFilters: () => void;
   onClose: () => void;
   categoryCounts?: Record<string, number>;
+  showCardInfo?: boolean;
+  onToggleCardInfo?: () => void;
 }
 
 export const FilterPillBar: React.FC<FilterPillBarProps> = ({
@@ -37,7 +41,9 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   onToggleSort,
   onResetFilters,
   onClose,
-  categoryCounts = {}
+  categoryCounts = {},
+  showCardInfo = false,
+  onToggleCardInfo
 }) => {
   const [categories, setCategories] = useState<string[]>(['All', 'IRL', 'Business', 'Tech', 'Entertainment', 'Gaming', 'Sports', 'Documentary', 'Educational', 'Podcast', 'Interviews', 'Football', 'Mindset', 'Self-Improvement', 'Lifestyle', 'Entrepreneurship', 'Geopolitics', 'Military', 'Nfl', 'Psychology', 'Soccer', 'Video Games', 'Vlog', 'War']);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
@@ -151,6 +157,14 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                       <span>Shuffle</span>
                     </button>
                   </div>
+
+                  {/* View Mode Toggle: Detail vs Gallery (Exact replica of Image 1) */}
+                  {onToggleCardInfo && (
+                    <ViewModeToggle
+                      isDetail={!!showCardInfo}
+                      onToggle={onToggleCardInfo}
+                    />
+                  )}
 
                   <button
                     onClick={onClose}

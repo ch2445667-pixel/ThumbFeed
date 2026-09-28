@@ -33,6 +33,8 @@ export interface ThumbnailItem {
   emotion?: 'Shocked' | 'Intense' | 'Curious' | 'Happy' | 'Mysterious' | 'Urgent' | 'Confident';
   breakdownNotes?: string;
   viewsEstimate?: string;
+  subscribersCount?: string;
+  publishedTime?: string;
   source: 'pinterest' | 'youtube' | 'upload' | 'curated' | 'supabase-storage';
   createdAt: string;
   likesCount?: number;

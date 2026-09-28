@@ -46,6 +46,13 @@ export default function RootLayout({
                 } catch (e) {
                   document.documentElement.classList.add('dark');
                 }
+
+                // Prevent benign 404/network image load events from bubbling to global window error listeners
+                window.addEventListener('error', function(e) {
+                  if (e && e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'LINK' || e.target.tagName === 'VIDEO')) {
+                    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                  }
+                }, true);
               })();
             `,
           }}

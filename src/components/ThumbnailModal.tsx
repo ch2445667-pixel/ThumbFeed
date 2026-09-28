@@ -183,6 +183,9 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                 src={item.imageUrl}
                 alt={item.title || 'Thumbnail Preview'}
                 className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                }}
               />
             </div>
           </motion.div>

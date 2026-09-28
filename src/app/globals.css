@@ -56,7 +56,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-overflow-scrolling: touch;
   text-rendering: optimizeLegibility;
-  transition: background-color var(--duration-fast) var(--ease-fluid), color var(--duration-fast) var(--ease-fluid);
+}
+
+/* Butter-Smooth Theme Switch Across Elements */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition-delay: 0s !important;
 }
 
 /* Custom smooth scrollbar */
@@ -193,11 +204,6 @@ input[type='range'].custom-slider::-webkit-slider-thumb:active {
   animation: smoothFadeIn var(--duration-normal) var(--ease-fluid) forwards;
 }
 
-/* Bottom Fade Mask */
-.bottom-fade-mask {
-  mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0) 100%);
-  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0) 100%);
-}
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {

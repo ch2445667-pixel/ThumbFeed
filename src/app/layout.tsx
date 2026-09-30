@@ -1,6 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/authContext";
+
+const geistSans = Outfit({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+const geistMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+  weight: ["400", "500", "600"],
+});
 
 export const metadata: Metadata = {
   title: "ThumbFeed",
@@ -9,16 +23,21 @@ export const metadata: Metadata = {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
       { url: "/icon.png", type: "image/png" },
-      { url: "/icon.svg", type: "image/svg+xml" }
+      { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: [
-      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" }
-    ]
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     title: "ThumbFeed",
     description: "High-CTR YouTube and Pinterest thumbnail inspiration gallery with multi-image clipboard paste, bulk extraction, cloud auto-sync, and smart tagging.",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#E4E0D3" },
+    { media: "(prefers-color-scheme: dark)", color: "#161110" },
+  ],
 };
 
 export default function RootLayout({
@@ -27,7 +46,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} dark`}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -58,12 +81,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-background text-[#401D1A] dark:text-[#FFFFFF] min-h-screen antialiased selection:bg-[#401D1A] selection:text-[#FFFFFF]">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body className="bg-canvas text-ink antialiased">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
-

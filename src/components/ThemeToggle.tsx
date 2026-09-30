@@ -20,15 +20,19 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '' }) => {
     });
   }, []);
 
+  // Single state path: applyTheme notifies subscribers synchronously, which
+  // drives setTheme. Setting state here as well caused a second render pass
+  // on every toggle.
   const handleToggle = (isDark: boolean) => {
-    const nextTheme: ThemeMode = isDark ? 'dark' : 'light';
-    applyTheme(nextTheme);
-    setTheme(nextTheme);
+    applyTheme(isDark ? 'dark' : 'light');
   };
 
   if (!mounted) {
     return (
-      <div className={`h-8 w-14 rounded-full bg-black/5 dark:bg-white/10 animate-pulse ${className}`} />
+      <div
+        aria-hidden="true"
+        className={`h-[30px] w-[58px] rounded-full border border-line bg-surface-raised ${className}`}
+      />
     );
   }
 

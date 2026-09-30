@@ -22,14 +22,16 @@ export type SlateChipSwitchProps = Readonly<
   >
 >;
 
+/* Geometry only. All colour comes from the token layer, so the switch follows
+   the theme instead of carrying its own blue. */
 const CHIP_FRAME =
-  "relative inline-flex items-center rounded-full p-1 text-xl bg-gradient-to-b bg-linear-to-b from-[#eceff3] to-[#d9dee5] dark:from-[#2c2d33] dark:to-[#1f2025] shadow-[0_1px_1px_rgba(255,255,255,0.75)] dark:shadow-[0_1px_1px_rgba(255,255,255,0.08)] border border-black/5 dark:border-white/10";
+  "relative inline-flex items-center rounded-full border border-line bg-surface-raised p-0.5";
 
 const CHIP_TRACK =
-  "relative h-[1.45em] w-[2.85em] rounded-full bg-[#c7ced8] dark:bg-[#3a3b43] shadow-[inset_0_1px_3px_rgba(0,0,0,0.18)] transition-[background-color,box-shadow] duration-300 ease-out motion-reduce:transition-none peer-checked:bg-sky-500 peer-checked:shadow-[inset_0_1px_3px_rgba(0,0,0,0.12),0_0_0_1px_rgba(14,116,144,0.25)] peer-checked:[&>span]:translate-x-[1.35em]";
+  "relative h-[1.5em] w-[2.9em] rounded-full bg-line-strong transition-colors duration-300 ease-fluid motion-reduce:transition-none peer-checked:bg-accent peer-checked:[&>span]:translate-x-[1.36em]";
 
 const CHIP_THUMB =
-  "absolute left-[0.08em] top-1/2 size-[1.22em] -translate-y-1/2 rounded-full bg-white shadow-[0_2px_5px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none flex items-center justify-center pointer-events-none select-none";
+  "absolute left-[0.1em] top-1/2 grid h-[1.24em] w-[1.24em] -translate-y-1/2 place-items-center rounded-full bg-accent-on text-accent shadow-card transition-transform duration-300 ease-fluid motion-reduce:transition-none pointer-events-none select-none";
 
 export const SlateChipSwitch = forwardRef<
   HTMLInputElement,
@@ -67,7 +69,7 @@ export const SlateChipSwitch = forwardRef<
         data-state={isOn ? "on" : "off"}
         className={cn(
           CHIP_FRAME,
-          "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-sky-400",
+          "group/chip",
           disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
           className,
         )}
@@ -88,19 +90,12 @@ export const SlateChipSwitch = forwardRef<
 
         <span aria-hidden="true" data-layer="chip-track" className={CHIP_TRACK}>
           <span data-layer="chip-thumb" className={CHIP_THUMB}>
-            {showIcons && (
-              isOn ? (
-                <Moon
-                  className="size-[0.68em] text-slate-800 dark:text-slate-900 transition-transform duration-300"
-                  strokeWidth={2.4}
-                />
+            {showIcons &&
+              (isOn ? (
+                <Moon className="h-[0.7em] w-[0.7em]" strokeWidth={2.2} />
               ) : (
-                <Sun
-                  className="size-[0.72em] text-amber-500 transition-transform duration-300"
-                  strokeWidth={2.4}
-                />
-              )
-            )}
+                <Sun className="h-[0.74em] w-[0.74em]" strokeWidth={2.2} />
+              ))}
           </span>
         </span>
       </label>

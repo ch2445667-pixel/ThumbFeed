@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
-import { IconMaximize, IconTrash } from './icons/AppIcons';
+import { IconTrash } from './icons/AppIcons';
 import { ThumbnailItem } from '../lib/types';
-import { markImageLoaded } from '../lib/imageCache';
 import { getCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
 
 interface ThumbnailCardProps {
   item: ThumbnailItem;
-  onInspect: () => void;
+  onInspect: (item: ThumbnailItem) => void;
   onDelete?: (item: ThumbnailItem) => void;
   index?: number;
   showCardInfo?: boolean;
@@ -45,6 +44,11 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
     setMounted(true);
   }, []);
 
+  // Native lazy loading is cheaper than a per-card observer: the browser
+  // batches visibility tracking internally instead of running one
+  // IntersectionObserver per tile.
+  const [imgReady, setImgReady] = React.useState(index < 6);
+
   const cachedYT = mounted ? getCachedYouTubeDetail(item) : null;
 
   // Normalize creator: if missing, 'TanzeelGFX', 'tanzeegfx', or 'YouTube Creator', display 'Unknown'
@@ -64,7 +68,9 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   const displayTitle =
     rawTitle && rawTitle !== 'YouTube Thumbnail' && rawTitle !== 'Untitled Thumbnail'
       ? rawTitle.replace(/^https?:\/\/(?:www\.)?youtube\.com\/[^\s]+\s*/i, '').trim()
-      : (displayCreator !== 'Unknown' ? `${displayCreator} Thumbnail` : '');
+      : displayCreator !== 'Unknown'
+        ? `${displayCreator} Thumbnail`
+        : '';
 
   // Views information
   let displayViews = cachedYT?.views || item.viewsEstimate || '';
@@ -81,31 +87,27 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
     item.publishedTime ||
     formatTimeAgo(item.createdAt);
 
-  // Check if there is meaningful metadata to show
-  const hasMetadataToShow = Boolean(
-    displayTitle ||
-    (displayCreator && displayCreator !== 'Unknown') ||
-    displayViews ||
-    displaySubs
-  );
+  // An unrecognised creator carries no information, so it is dropped rather
+  // than repeated as "Unknown" on every tile in the grid.
+  const showCreator = displayCreator !== 'Unknown';
+
+  const hasMetadataToShow = Boolean(displayTitle || showCreator || displayViews || displaySubs);
 
   const shouldRenderFooter = showCardInfo && hasMetadataToShow;
 
   return (
     <div
-      onClick={onInspect}
+      onClick={() => onInspect(item)}
       suppressHydrationWarning
-      className={`group relative w-full cursor-pointer select-none rounded-2xl bg-[#0D0E12] border border-[#202228] shadow-[0_4px_20px_rgba(0,0,0,0.35)] hover:border-[#383A44] hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out hover:scale-[1.015] active:scale-[0.985] ${
-        shouldRenderFooter
-          ? 'p-2.5 sm:p-3 flex flex-col'
-          : 'overflow-hidden aspect-video'
+      className={`group relative w-full cursor-pointer select-none rounded-lg border border-line bg-surface shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.03] hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] ${
+        shouldRenderFooter ? 'p-2 flex flex-col' : 'overflow-hidden'
       }`}
-      style={!shouldRenderFooter ? { aspectRatio: '16/9', width: '100%', maxWidth: '100%' } : undefined}
     >
-      {/* 16:9 Thumbnail Image Container */}
+      {/* Thumbnail. The stage behind the art is neutral in both themes so the
+          artwork is the only saturated element on screen. */}
       <div
-        className={`relative aspect-video w-full overflow-hidden bg-[#0A0A0C] ${
-          shouldRenderFooter ? 'rounded-xl' : 'rounded-none'
+        className={`thumb-stage relative aspect-video w-full overflow-hidden ${
+          shouldRenderFooter ? 'rounded-sm' : 'rounded-t-[13px]'
         }`}
         style={{ aspectRatio: '16/9' }}
       >
@@ -114,103 +116,74 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
           src={item.imageUrl}
           alt={displayTitle || item.title}
           suppressHydrationWarning
-          className="w-full h-full object-cover object-center block"
+          className={`block h-full w-full object-cover object-center transition-opacity duration-300 ease-fluid ${
+            imgReady ? 'opacity-100' : 'opacity-0'
+          }`}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           loading={index < 6 ? 'eager' : 'lazy'}
           decoding="async"
-          onLoad={() => {
-            markImageLoaded(item.imageUrl);
-          }}
+          fetchPriority={index < 6 ? 'high' : 'auto'}
+          onLoad={() => setImgReady(true)}
           onError={(e) => {
-            markImageLoaded(item.imageUrl);
             e.currentTarget.onerror = null;
+            setImgReady(true);
           }}
         />
 
-        {/* Hover Overlay Dark Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
-
-        {/* Top-Right Delete Action Button */}
+        {/* Delete (admin only). No hover scrim and no inspect button: the tile
+            itself opens the inspection modal, and the artwork is never dimmed. */}
         {onDelete && (
-          <div className="absolute top-2.5 right-2.5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 -translate-y-1">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(item);
-              }}
-              title="Delete thumbnail permanently"
-              className="p-1.5 rounded-[8px] bg-[#1A181C]/90 text-white hover:text-red-400 hover:bg-black/90 active:scale-95 backdrop-blur-md shadow-sm border border-white/15 transition-all duration-150 flex items-center justify-center cursor-pointer"
-            >
-              <IconTrash className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-        {/* Bottom-Right Expand Icon (only on hover) */}
-        <div className="absolute bottom-2.5 right-2.5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 translate-y-1">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onInspect();
+              onDelete(item);
             }}
-            title="Inspect thumbnail"
-            className="p-1.5 rounded-[8px] bg-[#1A181C]/90 text-white hover:text-white hover:bg-black/90 active:scale-95 backdrop-blur-md shadow-sm border border-white/15 transition-all duration-150 flex items-center justify-center cursor-pointer"
+            title="Delete thumbnail permanently"
+            aria-label="Delete thumbnail permanently"
+            className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-sm border border-white/15 bg-black/55 text-white opacity-0 transition-opacity duration-200 ease-fluid hover:bg-danger hover:border-transparent focus-visible:opacity-100 group-hover:opacity-100 active:scale-95"
           >
-            <IconMaximize className="w-3.5 h-3.5" />
+            <IconTrash className="h-3.5 w-3.5" />
           </button>
-        </div>
+        )}
       </div>
 
-      {/* Card Information Below Thumbnail (Exact match to Image 2 design) */}
       {shouldRenderFooter && (
-        <div className="pt-3 pb-0.5 flex flex-col justify-start" suppressHydrationWarning>
-          {/* Video Title */}
+        <div className="flex flex-col pt-3" suppressHydrationWarning>
           {displayTitle && (
             <h4
               title={displayTitle}
               suppressHydrationWarning
-              className="font-bold text-sm sm:text-[15px] leading-snug text-white line-clamp-2"
+              className="line-clamp-2 text-sm font-semibold leading-snug text-ink"
             >
               {displayTitle}
             </h4>
           )}
 
-          {/* Meta line: Channel • Subs • Views • Time */}
-          <div className="mt-2 flex items-center flex-wrap gap-y-0.5 text-xs text-[#8E8F99]" suppressHydrationWarning>
-            {/* Channel Name */}
-            <span
-              className="font-medium text-[#C8C8D0] hover:text-white transition-colors truncate max-w-[150px]"
+          {showCreator && (
+            <p
+              className="mt-1.5 truncate text-[13px] text-ink-muted"
               title={displayCreator}
             >
               {displayCreator}
-            </span>
+            </p>
+          )}
 
-            {/* Middle dot and Subscribers */}
-            {displaySubs && (
-              <>
-                <span className="mx-1.5 text-[#555660]">•</span>
-                <span className="truncate">{displaySubs}</span>
-              </>
-            )}
-
-            {/* Middle dot and Views */}
-            {displayViews && (
-              <>
-                <span className="mx-1.5 text-[#555660]">•</span>
-                <span className="truncate">{displayViews}</span>
-              </>
-            )}
-
-            {/* Middle dot and Published Time */}
-            {displayTime && (
-              <>
-                <span className="mx-1.5 text-[#555660]">•</span>
-                <span className="truncate">{displayTime}</span>
-              </>
-            )}
-          </div>
+          {/* One separator maximum, tabular figures for the numbers to line up
+              down the grid. */}
+          {(displayViews || displaySubs || displayTime) && (
+            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-ink-faint tabular">
+              {displaySubs && <span className="truncate">{displaySubs}</span>}
+              {displaySubs && (displayViews || displayTime) && (
+                <span aria-hidden="true">·</span>
+              )}
+              {displayViews && <span className="truncate">{displayViews}</span>}
+              {(displaySubs || displayViews) && displayTime && (
+                <span aria-hidden="true">·</span>
+              )}
+              {displayTime && <span className="truncate">{displayTime}</span>}
+            </p>
+          )}
         </div>
       )}
     </div>

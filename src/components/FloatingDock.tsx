@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
   IconArrowUp,
   IconFilter,
@@ -19,6 +18,13 @@ interface FloatingDockProps {
   onShuffle: () => void;
   onOpenAdd?: () => void;
 }
+
+/* Plain buttons with CSS feedback. The previous version wrapped every control
+   in framer-motion, which ran JS-driven transforms on each render of a
+   component that re-renders with the page. A press scale via CSS costs a
+   single composited frame. */
+const BTN =
+  'grid h-8 w-8 cursor-pointer place-items-center rounded-sm text-accent-on-dim transition-[background-color,color,transform] duration-150 ease-fluid hover:bg-accent-veil hover:text-accent-on active:scale-90 motion-reduce:transition-none motion-reduce:active:scale-100';
 
 export const FloatingDock: React.FC<FloatingDockProps> = ({
   columns,
@@ -38,39 +44,33 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
   };
 
   return (
-    <div className="fixed bottom-6 inset-x-0 z-40 flex justify-center px-4 pointer-events-none">
-      <motion.nav
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        aria-label="Quick actions"
-        className="floating-dock pointer-events-auto flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[15px] text-white select-none transition-all duration-200"
+    <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
+      <nav
+        aria-label="Gallery controls"
+        className="floating-dock animate-fade-blur pointer-events-auto flex select-none items-center gap-1 rounded-lg px-2 py-1.5"
       >
-        {/* 1. Back to Top Trigger */}
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
+        <button
           onClick={handleScrollToTop}
-          title="Back to Top"
-          className="p-2 rounded-[10px] text-white/85 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
+          title="Back to top"
+          aria-label="Back to top"
+          className={BTN}
         >
-          <IconArrowUp className="w-4 h-4" />
-        </motion.button>
+          <IconArrowUp className="h-4 w-4" />
+        </button>
 
-        {/* Hairline Divider */}
-        <div className="w-[0.5px] h-4 bg-white/25 mx-0.5" />
+        <div className="mx-0.5 h-4 w-px bg-accent-on-line" />
 
-        {/* 2. Grid Size / Columns Zoom Slider */}
-        <div className="flex items-center gap-1.5 px-1">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+        {/* Zoom. The column count is tabular so it does not jitter as it moves. */}
+        <div className="flex items-center gap-1 px-0.5">
+          <button
             onClick={() => onColumnsChange(Math.max(3, columns - 1))}
-            className="text-white/85 hover:text-white p-1.5 rounded-[8px] hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
-            title="Zoom In (Fewer columns)"
+            disabled={columns <= 3}
+            aria-label="Fewer columns"
+            title="Fewer columns"
+            className="grid h-7 w-7 cursor-pointer place-items-center rounded-sm text-accent-on-dim transition-[background-color,color,transform] duration-150 ease-fluid hover:bg-accent-veil hover:text-accent-on active:scale-90 disabled:pointer-events-none disabled:opacity-35 motion-reduce:transition-none"
           >
-            <IconPlus className="w-3.5 h-3.5" />
-          </motion.button>
+            <IconPlus className="h-3.5 w-3.5" />
+          </button>
 
           <input
             type="range"
@@ -79,68 +79,60 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
             step="1"
             value={columns}
             onChange={(e) => onColumnsChange(parseInt(e.target.value))}
-            className="custom-slider w-16 sm:w-20 cursor-pointer"
-            title={`Display ${columns} columns`}
+            className="custom-slider w-16 cursor-pointer sm:w-20"
+            title={`${columns} columns`}
+            aria-label={`Grid density, ${columns} columns`}
           />
 
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={() => onColumnsChange(Math.min(6, columns + 1))}
-            className="text-white/85 hover:text-white p-1.5 rounded-[8px] hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
-            title="Zoom Out (More columns)"
+            disabled={columns >= 6}
+            aria-label="More columns"
+            title="More columns"
+            className="grid h-7 w-7 cursor-pointer place-items-center rounded-sm text-accent-on-dim transition-[background-color,color,transform] duration-150 ease-fluid hover:bg-accent-veil hover:text-accent-on active:scale-90 disabled:pointer-events-none disabled:opacity-35 motion-reduce:transition-none"
           >
-            <IconMinus className="w-3.5 h-3.5" />
-          </motion.button>
+            <IconMinus className="h-3.5 w-3.5" />
+          </button>
+
+          <span className="mono w-4 text-center text-[11px] text-accent-on-dim">
+            {columns}
+          </span>
         </div>
 
-        {/* Hairline Divider */}
-        <div className="w-[0.5px] h-4 bg-white/25 mx-0.5" />
+        <div className="mx-0.5 h-4 w-px bg-accent-on-line" />
 
-        {/* 3. Filter Button */}
-        <motion.button
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={onToggleFilter}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors cursor-pointer ${
+          aria-expanded={hasActiveFilters}
+          className={`flex cursor-pointer items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs font-medium transition-[background-color,color,transform] duration-150 ease-fluid active:scale-95 motion-reduce:transition-none ${
             hasActiveFilters
-              ? 'bg-[#FFFFFF] text-[#401D1A] shadow-xs'
-              : 'text-[#FFFFFF]/90 hover:text-[#FFFFFF] hover:bg-[#FFFFFF]/20'
+              ? 'bg-accent-on text-accent'
+              : 'text-accent-on-dim hover:bg-accent-veil hover:text-accent-on'
           }`}
         >
-          <IconFilter className="w-3.5 h-3.5" />
+          <IconFilter className="h-3.5 w-3.5" />
           <span>Filter</span>
-        </motion.button>
+        </button>
 
-        {/* 4. Shuffle / Randomize Button */}
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92, rotate: 180 }}
-          transition={{ duration: 0.25 }}
+        <button
           onClick={onShuffle}
-          title="Shuffle Inspiration"
-          className="p-2 rounded-[10px] text-[#FFFFFF]/85 hover:text-[#FFFFFF] hover:bg-[#FFFFFF]/20 transition-colors flex items-center justify-center cursor-pointer"
+          title="Shuffle"
+          aria-label="Shuffle gallery"
+          className={BTN}
         >
-          <IconShuffle className="w-4 h-4" />
-        </motion.button>
+          <IconShuffle className="h-4 w-4" />
+        </button>
 
-        {/* 5. + Add Button (Only visible when onOpenAdd is provided) */}
         {onOpenAdd && (
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={onOpenAdd}
-            className="flex items-center gap-1.5 pl-3 pr-4 py-1.5 rounded-[8px] border border-[#401D1A]/20 text-xs font-bold text-[#401D1A] bg-[#FFFFFF] hover:bg-[#E4E0D3] transition-colors shadow-xs cursor-pointer"
+            className="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-sm bg-accent-on px-3 py-1.5 text-xs font-medium text-accent transition-[opacity,transform] duration-150 ease-fluid hover:opacity-90 active:scale-95 motion-reduce:transition-none"
           >
-            <IconPlus className="w-3.5 h-3.5 text-[#401D1A]" />
+            <IconPlus className="h-3.5 w-3.5" />
             <span>Add</span>
-          </motion.button>
+          </button>
         )}
-      </motion.nav>
+      </nav>
     </div>
   );
 };
-
-
-
-

@@ -10,7 +10,7 @@ import { SearchModal } from '../components/SearchModal';
 import { AddModal } from '../components/AddModal';
 import { ThumbnailModal } from '../components/ThumbnailModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
-import { IconTrash } from '../components/icons/AppIcons';
+import { IconCheck, IconTrash } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
 import { INITIAL_THUMBNAILS } from '../lib/mockData';
 import { useAuth } from '../lib/authContext';
@@ -22,8 +22,6 @@ import {
   deleteStoredThumbnailPermanently
 } from '../lib/storage';
 import { supabase } from '../lib/supabase';
-import { preloadAllThumbnails, prioritizeUpcomingThumbnails } from '../lib/imageCache';
-import { fetchMissingYouTubeDetails } from '../lib/youtubeMetadataCache';
 
 // Deterministic seeded shuffle using Mulberry32 PRNG so order never drifts automatically
 function seededShuffle<T>(array: T[], seed: number): T[] {
@@ -46,12 +44,16 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 const DEFAULT_SHUFFLE_SEED = 882391;
 const SHUFFLED_INITIAL_THUMBNAILS = seededShuffle(INITIAL_THUMBNAILS, DEFAULT_SHUFFLE_SEED);
 
+// How many tiles mount at once. The library holds 1,400+ items; mounting them
+// all kept thousands of nodes, images and observers alive, which is what made
+// scrolling, filtering and theme switching feel heavy.
+const PAGE_SIZE = 60;
+
 export default function HomePage() {
   const { isAdmin } = useAuth();
 
   // Initialize with pre-shuffled thumbnails for instantaneous shuffled start with zero flash
   const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>(SHUFFLED_INITIAL_THUMBNAILS);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   // UI Grid Zoom / Columns Slider: Default to 3 columns (Maximum zoom with 3 thumbnails on single row)
   const [columns, setColumns] = useState<number>(3);
@@ -272,12 +274,9 @@ export default function HomePage() {
     return result;
   }, [thumbnails, filters, shuffleSeed]);
 
-  // Preload visible & upcoming thumbnail images into memory & browser cache proactively
-  useEffect(() => {
-    if (filteredThumbnails.length > 0) {
-      preloadAllThumbnails(filteredThumbnails.map(t => t.imageUrl), 60);
-    }
-  }, [filteredThumbnails]);
+  // Only a page of tiles mounts at a time. The order is computed over the
+  // full filtered list first, so paging never reshuffles what is on screen.
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
 
   // Shuffle Inspiration - shuffles all items on explicit user button click
   const handleShuffle = useCallback(() => {
@@ -317,7 +316,46 @@ export default function HomePage() {
     }
   }, [isAdmin]);
 
-  const hasActiveFilters = 
+  const visibleThumbnails = useMemo(
+    () => filteredThumbnails.slice(0, visibleCount),
+    [filteredThumbnails, visibleCount]
+  );
+
+  // Start back at the first page whenever the result set itself changes.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filters, shuffleSeed, columns, thumbnails.length]);
+
+  // Infinite scroll sentinel. One shared observer for the whole grid.
+  const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (visibleCount >= filteredThumbnails.length) return;
+    const el = loadMoreRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredThumbnails.length));
+        }
+      },
+      { rootMargin: '900px 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visibleCount, filteredThumbnails.length]);
+
+  // Stable identities so React.memo on ThumbnailCard actually holds. Passing
+  // inline arrows here used to hand every card a new prop object on each
+  // parent render, re-rendering the entire grid every time.
+  const handleInspect = useCallback((item: ThumbnailItem) => {
+    setSelectedItem(item);
+  }, []);
+
+  const handleRequestDelete = useCallback((item: ThumbnailItem) => {
+    setThumbnailToDelete(item);
+  }, []);
+
+  const hasActiveFilters =
     Boolean(filters.searchQuery) ||
     filters.selectedNiche !== 'All';
 
@@ -348,46 +386,67 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E4E0D3] dark:bg-[#18181b] text-[#401D1A] dark:text-[#FFFFFF] flex flex-col pt-16 pb-32 transition-colors duration-200">
-      
-      {/* Top Header - Transparent & Hides on scroll */}
+    <div className="flex min-h-[100dvh] flex-col bg-canvas pb-28 text-ink transition-colors duration-200 pt-16">
+
+      {/* Top Header */}
       <TopBar showCardInfo={showCardInfo} onToggleCardInfo={handleToggleCardInfo} />
 
-      {/* Main Grid Canvas */}
-      <main className="flex-1 w-full px-6 sm:px-10 py-6">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-28 text-center animate-fade-blur">
-            <div className="w-8 h-8 rounded-full border-3 border-[#401D1A] dark:border-[#E4E0D3] border-t-transparent animate-spin mb-3" />
-            <p className="text-xs font-medium text-[#401D1A]/70 dark:text-[#E4E0D3]/70">Loading thumbnails...</p>
-          </div>
-        ) : filteredThumbnails.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-28 text-center animate-fade-blur">
-            <p className="text-sm font-semibold text-[#401D1A] dark:text-[#FFFFFF]">No thumbnails found.</p>
+      <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-5 sm:px-6 lg:px-8">
+        {filteredThumbnails.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface">
+              <IconTrash className="h-4 w-4 text-ink-faint" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-ink">Nothing matches those filters</p>
+            <p className="mt-1 max-w-[34ch] text-sm text-ink-muted">
+              Widen the niche or clear the search to see the rest of the gallery.
+            </p>
             <button
               onClick={resetFilters}
-              className="mt-3 px-4 py-2 rounded-[12px] text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-[0.97] transition-all shadow-sm cursor-pointer"
+              className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
             >
-              Reset Filters
+              Reset filters
             </button>
           </div>
         ) : (
-          <div className={`grid ${getGridColsClass()} gap-4 sm:gap-5`}>
-            {filteredThumbnails.map((item, index) => (
-              <ThumbnailCard
-                key={item.id}
-                item={item}
-                index={index}
-                showCardInfo={showCardInfo}
-                onInspect={() => setSelectedItem(item)}
-                onDelete={isAdmin ? () => setThumbnailToDelete(item) : undefined}
-              />
-            ))}
-          </div>
+          <>
+            <div className={`grid ${getGridColsClass()} gap-3 sm:gap-4`}>
+              {visibleThumbnails.map((item, index) => (
+                <ThumbnailCard
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  showCardInfo={showCardInfo}
+                  onInspect={handleInspect}
+                  onDelete={isAdmin ? handleRequestDelete : undefined}
+                />
+              ))}
+            </div>
+
+            {/* Paging footer: infinite scroll with an explicit control. */}
+            {visibleCount < filteredThumbnails.length && (
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <div ref={loadMoreRef} aria-hidden="true" className="h-1 w-full" />
+                <p className="text-xs text-ink-faint tabular">
+                  Showing {visibleThumbnails.length} of {filteredThumbnails.length}
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredThumbnails.length))
+                  }
+                  className="cursor-pointer rounded-md border border-line bg-surface px-4 py-2 text-xs font-medium text-ink shadow-card transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised active:scale-[0.98]"
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
 
-      {/* Progressive Blur at Bottom (Soft optical blur falloff at the very bottom edge) */}
-      <ProgressiveBlur direction="bottom" height="h-16 sm:h-20" maxBlur={10} zIndex={25} />
+      {/* Soft optical falloff at the bottom edge */}
+      <ProgressiveBlur direction="bottom" height="h-14 sm:h-16" maxBlur={8} zIndex={25} />
 
 
       {/* Filter Pill Popover - Appears directly above the floating dock only when Filter is clicked */}
@@ -453,13 +512,15 @@ export default function HomePage() {
         />
       )}
 
-      {/* Deletion Toast Notification */}
+      {/* Deletion confirmation */}
       {toastMessage && (
         <div
           id="deletion-toast-banner"
-          className="fixed bottom-24 sm:bottom-28 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-slate-900/95 dark:bg-slate-100/95 text-white dark:text-slate-900 text-xs font-semibold shadow-xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200"
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-surface-raised px-4 py-2 text-xs font-medium text-ink shadow-elevated sm:bottom-28"
         >
-          <div className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+          <IconCheck className="h-3.5 w-3.5 text-ink-faint" />
           <span>{toastMessage}</span>
         </div>
       )}

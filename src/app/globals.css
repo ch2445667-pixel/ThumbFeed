@@ -2,55 +2,147 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #E4E0D3;
-  --foreground: #401D1A;
-  --surface: #FFFFFF;
-  --brand: #401D1A;
-  --brand-blue: #401D1A;
-  --brand-orange: #401D1A;
+/* ==========================================================================
+   ThumbFeed design tokens
+   --------------------------------------------------------------------------
+   Single source of truth. Brand values (#401D1A espresso / #E4E0D3 cream) are
+   fixed and must not drift. Everything else is derived from them so surfaces
+   can be re-tinted without touching a component.
 
-  /* Refined Dynamic Easing Curves */
+   Radius rule (Shape Consistency Lock): 6px chips / 10px controls /
+   14px cards+panels / 18px sheets / full for pills.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Brand (locked) */
+  --espresso: #401D1A;
+  --cream: #E4E0D3;
+
+  /* Surfaces: light is a cream tonal ladder, not flat cream + white */
+  --canvas: #E4E0D3;
+  --surface: #EDEADE;
+  --surface-raised: #F6F4EC;
+  --surface-sunken: #DCD8C9;
+
+  /* Ink. Alphas are floored so the faintest step still clears WCAG AA (4.5:1)
+     against its own surface. Hierarchy comes from size and weight too. */
+  --ink: #401D1A;
+  --ink-2: rgba(64, 29, 26, 0.78);
+  --ink-3: rgba(64, 29, 26, 0.68);
+
+  /* Accent is the brand ink. One accent, used everywhere. */
+  --accent: #401D1A;
+  --accent-hover: #4E2723;
+  --on-accent: #F6F4EC;
+  /* Alpha variants declared as tokens. Tailwind cannot apply an /opacity
+     modifier to a var() color, so these are pre-resolved. */
+  --on-accent-dim: rgba(246, 244, 236, 0.78);
+  --on-accent-line: rgba(246, 244, 236, 0.24);
+  --accent-veil: rgba(246, 244, 236, 0.14);
+
+  /* Hairlines */
+  --line: rgba(64, 29, 26, 0.14);
+  --line-2: rgba(64, 29, 26, 0.26);
+
+  /* Focus ring, used by every interactive element */
+  --focus: #401D1A;
+
+  /* Semantic (destructive actions only, never decoration) */
+  --danger: #9A2B25;
+  --danger-soft: rgba(154, 43, 37, 0.10);
+  --danger-line: rgba(154, 43, 37, 0.28);
+  --on-danger: #FDF7F5;
+
+  /* Image stage behind every thumbnail, both modes */
+  --stage: #14110F;
+
+  /* Legacy aliases kept so existing utility classes resolve identically */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --brand: var(--accent);
+  --brand-blue: var(--accent);
+  --brand-orange: var(--accent);
+
+  /* Motion */
   --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth: cubic-bezier(0.42, 0, 0.58, 1);
   --ease-out: cubic-bezier(0.17, 1, 0.32, 1);
   --ease-spring: cubic-bezier(0.35, 1.55, 0.65, 1);
   --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
-
-  /* Design Tokens */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 15px;
-  --radius-xl: 18px;
-
   --duration-fast: 150ms;
   --duration-normal: 220ms;
   --duration-slow: 320ms;
 
-  /* Layered Shadow Stacks using #401D1A tone */
-  --shadow-card: 0 1px 3px rgba(64, 29, 26, 0.05), 0 4px 12px rgba(64, 29, 26, 0.03), 0 0 0 0.5px rgba(64, 29, 26, 0.08);
-  --shadow-card-hover: 0 12px 28px -6px rgba(64, 29, 26, 0.18), 0 4px 10px -2px rgba(64, 29, 26, 0.08), 0 0 0 1px rgba(64, 29, 26, 0.25);
-  --shadow-dock: 0 16px 36px -6px rgba(64, 29, 26, 0.45), 0 4px 12px -2px rgba(64, 29, 26, 0.2), 0 0 0 1px rgba(228, 224, 211, 0.25);
-  --shadow-elevated: 0 4px 8px rgba(64, 29, 26, 0.04), 0 8px 12px rgba(64, 29, 26, 0.04), 0 0 0 0.5px rgba(64, 29, 26, 0.08);
+  /* Shape */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+
+  /* Elevation, tinted to the espresso hue. Never pure black on cream. */
+  --shadow-card: 0 1px 2px rgba(64, 29, 26, 0.05), 0 0 0 0.5px rgba(64, 29, 26, 0.10);
+  --shadow-card-hover: 0 6px 18px -6px rgba(64, 29, 26, 0.22), 0 0 0 0.5px rgba(64, 29, 26, 0.24);
+  --shadow-elevated: 0 2px 6px rgba(64, 29, 26, 0.06), 0 12px 32px -10px rgba(64, 29, 26, 0.24);
+  --shadow-dock: 0 2px 8px rgba(64, 29, 26, 0.10), 0 18px 40px -12px rgba(64, 29, 26, 0.38);
 }
 
 .dark {
-  --background: #18181b;
-  --foreground: #FFFFFF;
-  --surface: #18181b;
-  --brand: #E4E0D3;
-  --brand-blue: #E4E0D3;
-  --brand-orange: #E4E0D3;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(228, 224, 211, 0.15);
-  --shadow-card-hover: 0 12px 28px -6px rgba(0, 0, 0, 0.8), 0 4px 10px -2px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(228, 224, 211, 0.35);
-  --shadow-dock: 0 16px 36px -6px rgba(0, 0, 0, 0.85), 0 4px 14px -2px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(228, 224, 211, 0.25);
-  --shadow-elevated: 0 4px 8px rgba(0, 0, 0, 0.6), 0 8px 12px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(228, 224, 211, 0.15);
+  color-scheme: dark;
+
+  /* Warm-tinted darks so the espresso accent reads as intentional,
+     not as a brown smear on cold zinc. */
+  --canvas: #161110;
+  --surface: #1E1815;
+  --surface-raised: #2A221E;
+  --surface-sunken: #120D0C;
+
+  --ink: #F1ECE1;
+  --ink-2: rgba(241, 236, 225, 0.70);
+  --ink-3: rgba(241, 236, 225, 0.52);
+
+  /* Lifted clay. Lightened to clear 3:1 against the canvas, which WCAG 1.4.11
+     requires for a non-text UI boundary such as the dock. */
+  --accent: #9A5646;
+  --accent-hover: #A8614E;
+  --on-accent: #F8F3EA;
+  --on-accent-dim: rgba(248, 243, 234, 0.92);
+  --on-accent-line: rgba(248, 243, 234, 0.24);
+  --accent-veil: rgba(248, 243, 234, 0.14);
+
+  --line: rgba(241, 236, 225, 0.12);
+  --line-2: rgba(241, 236, 225, 0.22);
+  --focus: #F1ECE1;
+
+  --danger: #E0776E;
+  --danger-soft: rgba(224, 119, 110, 0.14);
+  --danger-line: rgba(224, 119, 110, 0.32);
+  --on-danger: #1A1210;
+
+  --stage: #0D0A09;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(241, 236, 225, 0.10);
+  --shadow-card-hover: 0 8px 22px -8px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(241, 236, 225, 0.24);
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.55), 0 18px 44px -12px rgba(0, 0, 0, 0.7);
+  --shadow-dock: 0 2px 10px rgba(0, 0, 0, 0.5), 0 20px 44px -12px rgba(0, 0, 0, 0.75);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  border-color: var(--line);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
+    system-ui, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -58,135 +150,214 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Butter-Smooth Theme Switch Across Elements */
-html.theme-transition,
-html.theme-transition *,
-html.theme-transition *::before,
-html.theme-transition *::after {
-  transition: background-color 240ms cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 240ms cubic-bezier(0.16, 1, 0.3, 1),
-              color 240ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1) !important;
-  transition-delay: 0s !important;
+/* One focus treatment for the whole app. Previously every control invented
+   its own (or had none), which is both inconsistent and an a11y failure. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
 }
 
-/* Custom smooth scrollbar */
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Thumbnails, hex codes, counts, zoom levels. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+
+@layer components {
+  /* Floating dock: the one accent surface in the app. */
+  .floating-dock {
+    background: var(--accent);
+    color: var(--on-accent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-dock);
+    transform: translateZ(0);
+    transition: box-shadow var(--duration-normal) var(--ease-fluid);
+  }
+
+  .floating-dock:hover {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12),
+      0 24px 52px -12px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Thumbnail stage. Neutral in both themes so the artwork is the only
+     saturated thing on screen. */
+  .thumb-stage {
+    background: var(--stage);
+  }
+
+  /* Skeleton: matches the card silhouette, no spinner. */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--surface) 0%,
+      var(--surface-raised) 50%,
+      var(--surface) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-sweep 1.4s var(--ease-smooth) infinite;
+  }
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ==========================================================================
+   Chrome
+   ========================================================================== */
+
+/* The root element carries the canvas colour so overscroll regions and the
+   scrollbar gutter never flash the browser default during a theme swap. */
+html {
+  background: var(--canvas);
+}
+
+/* Backdrop for the transition pseudo-tree. Kills any default backdrop flash
+   while the snapshots are mounted. */
+::view-transition {
+  background: var(--canvas);
+}
+
+/* Theme switch. A single dissolve: the old snapshot holds fully opaque while
+   the new one fades in over it. Every frame is a true blend of the two end
+   states, so there is no intermediate luminance dip (the dip is what reads as
+   flicker). Composited once, so cost is independent of card count. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: none;
+  }
+  ::view-transition-new(root) {
+    animation: vt-fade-in 450ms var(--ease-fluid) both;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Applied to <html> for the duration of a theme commit (see lib/theme.ts).
+   Any element with a colour transition would otherwise start animating its
+   theme colours at commit time, and the "new" snapshot would capture those
+   mid-flight start values instead of the final colours. When the snapshots
+   lift, the live page would no longer match them: a visible jump. Suppressing
+   transitions during the commit keeps both snapshots faithful; the snapshots
+   themselves carry the fade, so nothing is lost.
+   The toggle knob is exempt so it keeps sliding while the page dissolves. */
+.vt-theme-swap *,
+.vt-theme-swap *::before,
+.vt-theme-swap *::after {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .vt-theme-swap [data-layer="chip-track"] {
+    transition: background-color 300ms var(--ease-fluid) !important;
+  }
+  .vt-theme-swap [data-layer="chip-thumb"] {
+    transition: transform 300ms var(--ease-fluid) !important;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #401D1A;
+  background: var(--ink-3);
   border-radius: 9999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  opacity: 0.3;
-  transition: background var(--duration-fast) var(--ease-fluid);
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #401D1A;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: var(--ink-2);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #E4E0D3;
-  opacity: 0.3;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #FFFFFF;
-}
-
-/* High-Performance Rendering & Composite Layers */
 .thumbnail-card-container {
   content-visibility: auto;
   contain-intrinsic-size: auto 200px;
 }
 
-/* GPU Acceleration Helper */
+/* NOTE: content-visibility is deliberately NOT applied to thumbnail cards.
+   It prevents off-screen images from being fetched, so combined with
+   loading="lazy" it left whole tiles blank until they were scrolled into view.
+   The 16:9 aspect-ratio box on each card already reserves layout space. */
+
 .gpu-layer {
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
 }
 
-/* Refined Floating Dock in Palette Color */
-.floating-dock {
-  background: #401D1A;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 16px 36px -6px rgba(64, 29, 26, 0.5), 0 4px 14px -2px rgba(64, 29, 26, 0.3), 0 0 0 1px rgba(228, 224, 211, 0.35);
-  border: 0.5px solid rgba(228, 224, 211, 0.35);
-  transition: all var(--duration-normal) var(--ease-fluid);
-  transform: translateZ(0);
-}
-
-.floating-dock:hover {
-  box-shadow: 0 20px 42px -6px rgba(64, 29, 26, 0.6), 0 6px 18px -2px rgba(64, 29, 26, 0.4), 0 0 0 1px rgba(228, 224, 211, 0.5);
-}
-
-/* Smooth Interactive Elements */
-button, input, select, a {
+button,
+input,
+select,
+a {
   transition-timing-function: var(--ease-fluid);
 }
 
-/* Slider Custom Styling */
+/* Zoom slider, retinted to the dock it lives in. */
 input[type='range'].custom-slider {
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(228, 224, 211, 0.35);
+  background: color-mix(in srgb, var(--on-accent) 28%, transparent);
   border-radius: 9999px;
   outline: none;
-  height: 4px;
-  transition: background var(--duration-fast) var(--ease-fluid);
+  height: 3px;
 }
-
 input[type='range'].custom-slider:hover {
-  background: rgba(228, 224, 211, 0.6);
+  background: color-mix(in srgb, var(--on-accent) 48%, transparent);
 }
-
 input[type='range'].custom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #FFFFFF;
+  background: var(--on-accent);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(64, 29, 26, 0.35), 0 0 0 0.5px rgba(228, 224, 211, 0.2);
-  transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-fluid);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform var(--duration-fast) var(--ease-spring);
 }
-
 input[type='range'].custom-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 2px 6px rgba(64, 29, 26, 0.45);
+  transform: scale(1.18);
 }
 
-input[type='range'].custom-slider::-webkit-slider-thumb:active {
-  transform: scale(1.05);
-}
-
-/* Polish Entrance Animations with Blur */
 @keyframes smoothBlurIn {
   from {
     opacity: 0;
     transform: translateY(8px) scale(0.98);
-    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0px);
   }
 }
-
 .animate-blur-in {
   animation: smoothBlurIn var(--duration-slow) var(--ease-fluid) forwards;
 }
@@ -199,19 +370,20 @@ input[type='range'].custom-slider::-webkit-slider-thumb:active {
     opacity: 1;
   }
 }
-
 .animate-fade-blur {
   animation: smoothFadeIn var(--duration-normal) var(--ease-fluid) forwards;
 }
 
-
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *,
+  ::before,
+  ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .skeleton {
+    animation: none !important;
+  }
 }
-

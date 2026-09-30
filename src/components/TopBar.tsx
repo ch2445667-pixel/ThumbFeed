@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { LogOut, X, AlertCircle } from 'lucide-react';
+import { LogOut, X, AlertCircle, UserRound } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { ViewModeToggle } from './ViewModeToggle';
 import { useAuth } from '../lib/authContext';
 
-// Authentic 4-color Google G Icon
+// Google brand mark. Kept as literal brand geometry, not a hand-drawn icon.
 const GoogleGIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
   <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path
@@ -43,7 +43,6 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
 
   const { user, isAdmin, loading, signingIn, signIn, signOut, error, clearError } = useAuth();
 
-  // Close account menu on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -56,7 +55,7 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMenuOpen]);
 
-  // Smooth hide on scroll down, show on scroll up with RAF & hysteresis
+  // Hide on scroll down, reveal on scroll up. rAF-throttled with hysteresis.
   useEffect(() => {
     const handleScroll = () => {
       if (!ticking.current) {
@@ -67,11 +66,9 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
           if (currentScrollY <= 20) {
             setIsVisible(true);
           } else if (delta > 10 && currentScrollY > 70) {
-            // Scrolling DOWN -> Hide
             setIsVisible(false);
             setIsMenuOpen(false);
           } else if (delta < -10) {
-            // Scrolling UP -> Show
             setIsVisible(true);
           }
 
@@ -94,232 +91,156 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
   return (
     <>
       <header
-        className={`fixed top-0 inset-x-0 z-30 px-6 sm:px-10 h-16 flex items-center justify-between transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none bg-transparent ${
+        className={`pointer-events-none fixed inset-x-0 top-0 z-30 transition-all duration-300 ease-fluid ${
           isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
         }`}
       >
-        {/* Brand Name */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <span className="font-extrabold text-xl tracking-tight text-[#401D1A] dark:text-[#FFFFFF] select-none">
-            Thumb<span className="text-[#401D1A] dark:text-[#E4E0D3]">Feed</span>
-          </span>
-        </div>
+        {/* Scrim. The bar is transparent, so without this the wordmark and
+            grid collide the moment the page moves. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-canvas via-canvas/85 to-transparent"
+        />
 
-        {/* Right Side: Theme Toggle & Google Auth */}
-        <div className="flex items-center gap-2 sm:gap-2.5 pointer-events-auto" ref={menuRef}>
-          {/* View Mode Toggle: Detail vs Gallery (Exact replica of Image 1) */}
-          {onToggleCardInfo && (
-            <ViewModeToggle
-              isDetail={!!showCardInfo}
-              onToggle={onToggleCardInfo}
-            />
-          )}
+        <div className="relative flex h-16 items-center justify-between px-4 sm:px-6 lg:px-10">
+          <div className="pointer-events-auto flex items-center gap-2.5">
+            <span className="select-none text-lg font-semibold tracking-tight text-ink">
+              Thumb<span className="text-ink-muted">Feed</span>
+            </span>
+          </div>
 
-          {/* Segmented Light / Dark Mode Toggle */}
-          <ThemeToggle />
-
-          {/* If NOT logged in: Direct Google Sign In Button */}
-          {!loading && !user && (
-            <button
-              type="button"
-              id="google-signin-btn"
-              onClick={() => signIn()}
-              disabled={signingIn}
-              title="Sign in with Google"
-              className="h-10 px-3 sm:px-3.5 rounded-[15px] bg-[#FFFFFF] dark:bg-[#27272a] border border-[#401D1A]/20 dark:border-white/10 shadow-xs hover:border-[#401D1A] dark:hover:border-[#E4E0D3] hover:shadow-md hover:shadow-[#401D1A]/10 active:scale-95 transition-all duration-200 flex items-center gap-2 text-xs font-semibold text-[#401D1A] dark:text-[#FFFFFF] cursor-pointer disabled:opacity-60"
-            >
-              {signingIn ? (
-                <div className="w-4 h-4 border-2 border-[#401D1A] dark:border-white border-t-transparent rounded-full animate-spin shrink-0" />
-              ) : (
-                <GoogleGIcon className="w-4 h-4 shrink-0" />
-              )}
-              <span>{signingIn ? 'Signing in...' : 'Sign in'}</span>
-            </button>
-          )}
-
-          {/* Profile Avatar Button */}
-          <div className="relative">
-            <button
-              type="button"
-              id="profile-avatar-btn"
-              onClick={() => {
-                if (user) {
-                  setIsMenuOpen((prev) => !prev);
-                } else {
-                  signIn();
-                }
-              }}
-              title={user ? `${user.displayName || user.email || 'User'} (Google Account)` : 'Sign in with Google'}
-              className="w-10 h-10 rounded-[15px] bg-[#FFFFFF] dark:bg-[#27272a] border border-[#401D1A]/20 dark:border-white/10 shadow-xs hover:border-[#401D1A] dark:hover:border-[#E4E0D3] hover:shadow-md hover:shadow-[#401D1A]/10 active:scale-95 transition-all duration-200 flex items-center justify-center overflow-hidden cursor-pointer relative"
-            >
-              {user?.photoURL ? (
-                /* Authenticated Google Profile Picture */
-                <Image
-                  src={user.photoURL}
-                  alt={user.displayName || 'Google Profile'}
-                  width={40}
-                  height={40}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover rounded-[13px]"
-                />
-              ) : user ? (
-                /* Authenticated User Initial */
-                <span className="font-bold text-sm text-[#401D1A] dark:text-[#E4E0D3]">
-                  {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
-                </span>
-              ) : (
-                /* Unauthenticated Avatar Line Art */
-                <div className="p-1.5 w-full h-full flex items-center justify-center">
-                  <svg
-                    viewBox="0 0 32 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-full h-full text-[#401D1A] dark:text-[#E4E0D3] transition-colors"
-                  >
-                    <path
-                      d="M10 13.5C10 9.5 12.5 6.5 16 6.5C19.5 6.5 22 9.5 22 13.5"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M12 13.5H15M17 13.5H20"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M16 13.5V16.5H17"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M14 18.5C14.8 19.5 17.2 19.5 18 18.5"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M11 14C11 18.2 13.2 21.5 16 21.5C18.8 21.5 21 18.2 21 14"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M14.5 21.5V23.5M17.5 21.5V23.5"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M7.5 29C8.2 25.5 11.5 23.5 16 23.5C20.5 23.5 23.8 25.5 24.5 29"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="23" cy="9" r="1.5" fill="#401D1A" className="dark:fill-[#E4E0D3]" />
-                  </svg>
-                </div>
-              )}
-
-              {/* Online / Active Indicator if Signed In */}
-              {user && (
-                <span className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#27272a] rounded-full" />
-              )}
-            </button>
-
-            {/* User Account Popover Menu */}
-            {isMenuOpen && user && (
-              <div
-                id="account-dropdown-menu"
-                className="absolute right-0 mt-2 w-72 p-4 rounded-2xl bg-[#FFFFFF] dark:bg-[#202023] border border-[#401D1A]/15 dark:border-white/10 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150"
-              >
-                {/* User Header */}
-                <div className="flex items-center gap-3 pb-3 border-b border-[#401D1A]/10 dark:border-white/10">
-                  {user.photoURL ? (
-                    <Image
-                      src={user.photoURL}
-                      alt={user.displayName || 'Google Profile'}
-                      width={44}
-                      height={44}
-                      referrerPolicy="no-referrer"
-                      className="w-11 h-11 rounded-full object-cover border border-[#401D1A]/15 dark:border-white/15 shrink-0"
-                    />
-                  ) : (
-                    <div className="w-11 h-11 rounded-full bg-[#401D1A] dark:bg-[#E4E0D3] text-white dark:text-[#401D1A] flex items-center justify-center font-bold text-base shrink-0">
-                      {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm text-[#401D1A] dark:text-[#FFFFFF] truncate">
-                      {user.displayName || 'Google User'}
-                    </p>
-                    <p className="text-xs text-[#401D1A]/60 dark:text-[#FFFFFF]/60 truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Account Role / Status */}
-                {isAdmin ? (
-                  <div className="mt-3 py-1.5 px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Owner / Admin</span>
-                    </div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded text-emerald-700 dark:text-emerald-300">
-                      Add & Delete Enabled
-                    </span>
-                  </div>
-                ) : (
-                  <div className="mt-3 py-1.5 px-2.5 rounded-lg bg-[#E4E0D3]/40 dark:bg-white/5 flex items-center justify-between text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
-                    <div className="flex items-center gap-1.5">
-                      <GoogleGIcon className="w-3 h-3 shrink-0" />
-                      <span>Viewer</span>
-                    </div>
-                    <span className="text-[10px] text-[#401D1A]/50 dark:text-[#FFFFFF]/50">
-                      Read-only
-                    </span>
-                  </div>
-                )}
-
-                {/* Sign Out Action */}
-                <div className="mt-3 pt-2 border-t border-[#401D1A]/10 dark:border-white/10">
-                  <button
-                    type="button"
-                    id="signout-btn"
-                    onClick={handleSignOutClick}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </div>
+          <div ref={menuRef} className="pointer-events-auto flex items-center gap-2">
+            {onToggleCardInfo && (
+              <ViewModeToggle isDetail={!!showCardInfo} onToggle={onToggleCardInfo} />
             )}
+
+            <ThemeToggle />
+
+            {!loading && !user && (
+              <button
+                type="button"
+                id="google-signin-btn"
+                onClick={() => signIn()}
+                disabled={signingIn}
+                title="Sign in with Google"
+                className="flex h-9 items-center gap-2 rounded-md border border-line bg-surface px-3 text-xs font-medium text-ink shadow-card transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised active:scale-[0.98] disabled:opacity-60"
+              >
+                {signingIn ? (
+                  <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <GoogleGIcon className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span>{signingIn ? 'Signing in' : 'Sign in'}</span>
+              </button>
+            )}
+
+            <div className="relative">
+              <button
+                type="button"
+                id="profile-avatar-btn"
+                onClick={() => {
+                  if (user) {
+                    setIsMenuOpen((prev) => !prev);
+                  } else {
+                    signIn();
+                  }
+                }}
+                title={user ? (user.displayName || user.email || 'User') : 'Sign in with Google'}
+                aria-label={user ? 'Account menu' : 'Sign in with Google'}
+                aria-expanded={isMenuOpen}
+                className="grid h-9 w-9 place-items-center overflow-hidden rounded-md border border-line bg-surface text-ink-muted shadow-card transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised hover:text-ink active:scale-[0.98]"
+              >
+                {user?.photoURL ? (
+                  <Image
+                    src={user.photoURL}
+                    alt={user.displayName || 'Google Profile'}
+                    width={36}
+                    height={36}
+                    referrerPolicy="no-referrer"
+                    className="h-full w-full object-cover"
+                  />
+                ) : user ? (
+                  <span className="text-sm font-medium text-ink">
+                    {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <UserRound className="h-4 w-4" strokeWidth={1.75} />
+                )}
+              </button>
+
+              {isMenuOpen && user && (
+                <div
+                  id="account-dropdown-menu"
+                  className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-line bg-surface-raised p-3 shadow-elevated"
+                >
+                  <div className="flex items-center gap-3 pb-3">
+                    {user.photoURL ? (
+                      <Image
+                        src={user.photoURL}
+                        alt={user.displayName || 'Google Profile'}
+                        width={40}
+                        height={40}
+                        referrerPolicy="no-referrer"
+                        className="h-10 w-10 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-sm font-medium text-accent-on">
+                        {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {user.displayName || 'Google User'}
+                      </p>
+                      <p className="truncate text-xs text-ink-faint">{user.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Role is real account state, so it gets a labelled chip
+                      rather than an unlaboured green dot. */}
+                  <div className="flex items-center justify-between border-t border-line pt-3">
+                    <span className="text-xs text-ink-muted">
+                      {isAdmin ? 'Owner' : 'Viewer'}
+                    </span>
+                    <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] text-ink-faint">
+                      {isAdmin ? 'Can edit' : 'Read only'}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 border-t border-line pt-2">
+                    <button
+                      type="button"
+                      id="signout-btn"
+                      onClick={handleSignOutClick}
+                      className="flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-danger transition-colors duration-200 hover:bg-danger-soft"
+                    >
+                      <LogOut className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Floating Auth Notification / Error Toast if any */}
       {error && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
-          <div className="bg-rose-50 dark:bg-[#2a1717] border border-rose-200 dark:border-rose-900/50 p-3.5 rounded-xl shadow-lg flex items-start gap-3 text-xs text-rose-900 dark:text-rose-200">
-            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+        <div className="fixed left-1/2 top-20 z-50 w-full max-w-md -translate-x-1/2 px-4">
+          <div className="flex items-start gap-3 rounded-md border border-danger-line bg-danger-soft p-3.5 text-xs text-danger shadow-elevated">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
             <div className="flex-1">
-              <p className="font-semibold text-rose-700 dark:text-rose-300">Sign-in Notice</p>
+              <p className="font-medium">Sign-in notice</p>
               <p className="mt-0.5 opacity-90">{error}</p>
             </div>
             <button
               type="button"
               onClick={clearError}
               aria-label="Dismiss error"
-              className="text-rose-600 dark:text-rose-400 hover:opacity-75 cursor-pointer p-0.5"
+              className="cursor-pointer p-0.5 transition-opacity hover:opacity-70"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -327,5 +248,3 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
     </>
   );
 };
-
-

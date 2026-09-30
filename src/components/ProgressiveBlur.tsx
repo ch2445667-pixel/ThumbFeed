@@ -7,70 +7,42 @@ interface ProgressiveBlurProps {
   className?: string;
   height?: string;
   zIndex?: number;
+  /** Retained for call-site compatibility. No longer used: the effect is now
+   *  a single gradient rather than stacked backdrop filters. */
   maxBlur?: number;
 }
 
 /**
- * Progressive Blur component based on multi-layered backdrop-filter
- * with progressive gradient masks, inspired by native iOS and expo-backdrop.
- * Provides a clean, subtle optical blur falloff without any muddy color overlay.
+ * Soft falloff at the viewport edge.
+ *
+ * The previous version stacked eight full-width `backdrop-filter: blur()`
+ * layers. Because the element is `position: fixed` and sits over scrolling
+ * content, the browser had to re-blur the backdrop eight times on every frame
+ * of a scroll, which dominated the frame budget and made the grid feel heavy.
+ *
+ * A single composited gradient is visually near-identical and costs nothing.
  */
 export const ProgressiveBlur: React.FC<ProgressiveBlurProps> = ({
   direction = 'bottom',
   className = '',
-  height = 'h-16 sm:h-20',
+  height = 'h-14 sm:h-16',
   zIndex = 25,
-  maxBlur = 10,
 }) => {
-  // Soft, reduced blur progression curve
-  const blurRatios = [0.08, 0.16, 0.28, 0.42, 0.58, 0.74, 0.88, 1.0];
-  const masks = [
-    [0, 15, 28, 42],
-    [15, 28, 42, 55],
-    [28, 42, 55, 68],
-    [42, 55, 68, 80],
-    [55, 68, 80, 90],
-    [68, 80, 90, 100],
-    [80, 90, 100, 100],
-    [90, 100, 100, 100],
-  ];
-
-  const layers = blurRatios.map((ratio, i) => ({
-    blur: Math.max(0.5, Number((ratio * maxBlur).toFixed(1))),
-    mask: masks[i],
-  }));
-
-  const dir = direction === 'top' ? 'to top' : 'to bottom';
+  const isTop = direction === 'top';
 
   return (
     <div
       aria-hidden="true"
-      style={{ zIndex }}
-      className={`pointer-events-none fixed inset-x-0 ${
-        direction === 'top' ? 'top-0' : 'bottom-0'
-      } ${height} select-none overflow-hidden ${className}`}
-    >
-      {layers.map((layer, index) => {
-        const [p1, p2, p3, p4] = layer.mask;
-        const maskGradient =
-          p3 === p4
-            ? `linear-gradient(${dir}, rgba(0, 0, 0, 0) ${p1}%, rgba(0, 0, 0, 1) ${p2}%, rgba(0, 0, 0, 1) ${p3}%)`
-            : `linear-gradient(${dir}, rgba(0, 0, 0, 0) ${p1}%, rgba(0, 0, 0, 1) ${p2}%, rgba(0, 0, 0, 1) ${p3}%, rgba(0, 0, 0, 0) ${p4}%)`;
-
-        return (
-          <div
-            key={index}
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backdropFilter: `blur(${layer.blur}px)`,
-              WebkitBackdropFilter: `blur(${layer.blur}px)`,
-              maskImage: maskGradient,
-              WebkitMaskImage: maskGradient,
-            }}
-          />
-        );
-      })}
-    </div>
+      className={`pointer-events-none fixed inset-x-0 ${height} select-none ${className}`}
+      style={{
+        zIndex,
+        top: isTop ? 0 : undefined,
+        bottom: isTop ? undefined : 0,
+        // Canvas at the very edge, fading to nothing towards the content, so
+        // the grid dissolves into the page rather than being covered by a band.
+        background: `linear-gradient(to ${isTop ? 'bottom' : 'top'}, var(--canvas) 0%, color-mix(in srgb, var(--canvas) 45%, transparent) 45%, transparent 100%)`,
+      }}
+    />
   );
 };
 

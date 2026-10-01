@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { LogOut, X, AlertCircle, UserRound } from 'lucide-react';
+import Link from 'next/link';
+import { LogOut, X, AlertCircle, Search, Info, ShieldCheck, FileText, Minus, Plus, Shuffle, SlidersHorizontal } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { ViewModeToggle } from './ViewModeToggle';
 import { useAuth } from '../lib/authContext';
 
 // Google brand mark. Kept as literal brand geometry, not a hand-drawn icon.
@@ -30,18 +30,133 @@ const GoogleGIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }
 );
 
 interface TopBarProps {
-  showCardInfo?: boolean;
-  onToggleCardInfo?: () => void;
+  query?: string;
+  onQueryChange?: (q: string) => void;
+  resultCount?: number;
+  columns?: number;
+  onColumnsChange?: (cols: number) => void;
+  onShuffle?: () => void;
+  onToggleFilter?: () => void;
+  isFilterOpen?: boolean;
+  activeFilterCount?: number;
+  onOpenAdd?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCardInfo }) => {
+interface SearchFieldProps {
+  id: string;
+  query: string;
+  onQueryChange: (q: string) => void;
+  resultCount: number;
+  autoFocus?: boolean;
+  onEscape?: () => void;
+}
+
+// Single search control used by both the desktop pill and the mobile row, so
+// the two can never drift apart visually or behaviourally.
+const SearchField: React.FC<SearchFieldProps> = ({
+  id,
+  query,
+  onQueryChange,
+  resultCount,
+  autoFocus = false,
+  onEscape,
+}) => (
+  <div className="flex h-9 items-center gap-2 rounded-md border border-line bg-surface px-2.5 shadow-card transition-colors duration-200 focus-within:border-line-strong focus-within:bg-surface-raised">
+    <Search className="h-3.5 w-3.5 shrink-0 text-ink-faint" strokeWidth={2} />
+    <input
+      id={id}
+      type="text"
+      role="searchbox"
+      value={query}
+      autoFocus={autoFocus}
+      onChange={(e) => onQueryChange(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          if (query) {
+            onQueryChange('');
+          } else {
+            e.currentTarget.blur();
+            onEscape?.();
+          }
+        }
+      }}
+      placeholder="Search topics, creators, hooks"
+      aria-label="Search thumbnails"
+      autoComplete="off"
+      spellCheck={false}
+      className="min-w-0 flex-1 bg-transparent text-[13px] text-ink outline-none placeholder:text-ink-faint"
+    />
+    {query ? (
+      <span className="flex shrink-0 items-center gap-1.5">
+        <span className="text-[11px] text-ink-faint tabular" title={`${resultCount} matching thumbnails`}>
+          {resultCount}
+        </span>
+        <button
+          type="button"
+          onClick={() => onQueryChange('')}
+          aria-label="Clear search"
+          className="grid h-5 w-5 cursor-pointer place-items-center rounded-sm text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
+        >
+          <X className="h-3 w-3" strokeWidth={2.25} />
+        </button>
+      </span>
+    ) : (
+      <kbd className="hidden shrink-0 items-center gap-0.5 rounded-sm border border-line bg-surface-sunken px-1.5 py-0.5 font-mono text-[10px] text-ink-faint lg:inline-flex">
+        <span>Ctrl</span>
+        <span>K</span>
+      </kbd>
+    )}
+  </div>
+);
+
+const RESOURCE_LINKS = [
+  { href: '/about', label: 'About', Icon: Info },
+  { href: '/privacy', label: 'Privacy Policy', Icon: ShieldCheck },
+  { href: '/terms', label: 'Terms of Service', Icon: FileText },
+];
+
+export const TopBar: React.FC<TopBarProps> = ({
+  query = '',
+  onQueryChange,
+  resultCount = 0,
+  columns = 3,
+  onColumnsChange,
+  onShuffle,
+  onToggleFilter,
+  isFilterOpen = false,
+  activeFilterCount = 0,
+  onOpenAdd,
+}) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
   const { user, isAdmin, loading, signingIn, signIn, signOut, error, clearError } = useAuth();
+
+  const searchEnabled = typeof onQueryChange === 'function';
+
+  // Global Ctrl/Cmd+K focuses search from anywhere on the page.
+  useEffect(() => {
+    if (!searchEnabled) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (window.innerWidth < 768) {
+          setIsMobileSearchOpen(true);
+          window.requestAnimationFrame(() => {
+            document.getElementById('topbar-search-mobile')?.focus();
+          });
+        } else {
+          document.getElementById('topbar-search')?.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [searchEnabled]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -102,16 +217,113 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
           className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-canvas via-canvas/85 to-transparent"
         />
 
-        <div className="relative flex h-16 items-center justify-between px-4 sm:px-6 lg:px-10">
-          <div className="pointer-events-auto flex items-center gap-2.5">
-            <span className="select-none text-lg font-semibold tracking-tight text-ink">
+        <div className="relative flex h-16 items-center justify-between gap-2 px-4 sm:px-6 lg:px-10">
+          <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
+            <span className="font-brand select-none text-[22px] leading-none tracking-tight text-ink">
               Thumb<span className="text-ink-muted">Feed</span>
             </span>
           </div>
 
-          <div ref={menuRef} className="pointer-events-auto flex items-center gap-2">
-            {onToggleCardInfo && (
-              <ViewModeToggle isDetail={!!showCardInfo} onToggle={onToggleCardInfo} />
+          {/* Center search pill on tablet and desktop */}
+          {searchEnabled && (
+            <div className="pointer-events-auto hidden min-w-0 flex-1 justify-center px-2 md:flex">
+              <div className="w-full max-w-md">
+                <SearchField
+                  id="topbar-search"
+                  query={query}
+                  onQueryChange={onQueryChange}
+                  resultCount={resultCount}
+                />
+              </div>
+            </div>
+          )}
+
+          <div ref={menuRef} className="pointer-events-auto flex shrink-0 items-center gap-2">
+            {/* Mobile search trigger */}
+            {searchEnabled && (
+              <button
+                type="button"
+                onClick={() => setIsMobileSearchOpen((v) => !v)}
+                aria-label="Search thumbnails"
+                aria-expanded={isMobileSearchOpen}
+                className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-line bg-surface text-ink-muted shadow-card transition-colors duration-200 hover:border-line-strong hover:text-ink md:hidden"
+              >
+                <Search className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+            )}
+
+            {/* Grid density stepper. Compact enough to live in the bar. */}
+            {onColumnsChange && (
+              <div
+                className="hidden h-9 items-center gap-0.5 rounded-md border border-line bg-surface px-1 shadow-card sm:flex"
+                role="group"
+                aria-label="Grid density"
+              >
+                <button
+                  type="button"
+                  onClick={() => onColumnsChange(Math.max(3, columns - 1))}
+                  disabled={columns <= 3}
+                  aria-label="Fewer columns"
+                  className="grid h-7 w-6 cursor-pointer place-items-center rounded-sm text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink disabled:pointer-events-none disabled:opacity-30"
+                >
+                  <Minus className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+                <span className="mono w-4 text-center text-[11px] text-ink-muted tabular">
+                  {columns}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onColumnsChange(Math.min(6, columns + 1))}
+                  disabled={columns >= 6}
+                  aria-label="More columns"
+                  className="grid h-7 w-6 cursor-pointer place-items-center rounded-sm text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink disabled:pointer-events-none disabled:opacity-30"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+              </div>
+            )}
+
+            {onShuffle && (
+              <button
+                type="button"
+                onClick={onShuffle}
+                title="Shuffle gallery"
+                aria-label="Shuffle gallery"
+                className="hidden h-9 w-9 cursor-pointer place-items-center rounded-md border border-line bg-surface text-ink-muted shadow-card transition-colors duration-200 hover:border-line-strong hover:text-ink active:scale-95 sm:grid"
+              >
+                <Shuffle className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+            )}
+
+            {onToggleFilter && (
+              <button
+                type="button"
+                onClick={onToggleFilter}
+                title="Filters"
+                aria-label="Open filters"
+                aria-expanded={isFilterOpen}
+                className="flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium text-ink-muted shadow-card transition-colors duration-200 hover:border-line-strong hover:text-ink active:scale-[0.98]"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={1.75} />
+                <span className="hidden sm:inline">Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className="grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-on tabular">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {onOpenAdd && (
+              <button
+                type="button"
+                onClick={onOpenAdd}
+                title="Add thumbnails"
+                className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-on shadow-card transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                <span className="hidden sm:inline">Add</span>
+              </button>
             )}
 
             <ThemeToggle />
@@ -134,23 +346,20 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
               </button>
             )}
 
+            {/* Profile entry appears only after sign-in. Signed-out visitors
+                get the Sign in button alone. */}
+            {user && (
             <div className="relative">
               <button
                 type="button"
                 id="profile-avatar-btn"
-                onClick={() => {
-                  if (user) {
-                    setIsMenuOpen((prev) => !prev);
-                  } else {
-                    signIn();
-                  }
-                }}
-                title={user ? (user.displayName || user.email || 'User') : 'Sign in with Google'}
-                aria-label={user ? 'Account menu' : 'Sign in with Google'}
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                title={user.displayName || user.email || 'User'}
+                aria-label="Account menu"
                 aria-expanded={isMenuOpen}
                 className="grid h-9 w-9 place-items-center overflow-hidden rounded-md border border-line bg-surface text-ink-muted shadow-card transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised hover:text-ink active:scale-[0.98]"
               >
-                {user?.photoURL ? (
+                {user.photoURL ? (
                   <Image
                     src={user.photoURL}
                     alt={user.displayName || 'Google Profile'}
@@ -159,12 +368,10 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
                     referrerPolicy="no-referrer"
                     className="h-full w-full object-cover"
                   />
-                ) : user ? (
+                ) : (
                   <span className="text-sm font-medium text-ink">
                     {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
                   </span>
-                ) : (
-                  <UserRound className="h-4 w-4" strokeWidth={1.75} />
                 )}
               </button>
 
@@ -181,10 +388,10 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
                         width={40}
                         height={40}
                         referrerPolicy="no-referrer"
-                        className="h-10 w-10 shrink-0 rounded-full object-cover"
+                        className="h-9 w-9 shrink-0 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-sm font-medium text-accent-on">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-sm font-medium text-accent-on">
                         {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -208,6 +415,20 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
                     </span>
                   </div>
 
+                  <nav aria-label="Resources" className="mt-2 border-t border-line pt-2">
+                    {RESOURCE_LINKS.map(({ href, label, Icon }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-ink-muted transition-colors duration-200 hover:bg-surface hover:text-ink"
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                        <span>{label}</span>
+                      </Link>
+                    ))}
+                  </nav>
+
                   <div className="mt-2 border-t border-line pt-2">
                     <button
                       type="button"
@@ -222,8 +443,23 @@ export const TopBar: React.FC<TopBarProps> = ({ showCardInfo = false, onToggleCa
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
+
+        {/* Full-width search row on phones */}
+        {searchEnabled && isMobileSearchOpen && (
+          <div className="pointer-events-auto relative px-4 pb-3 md:hidden">
+            <SearchField
+              id="topbar-search-mobile"
+              query={query}
+              onQueryChange={onQueryChange}
+              resultCount={resultCount}
+              autoFocus
+              onEscape={() => setIsMobileSearchOpen(false)}
+            />
+          </div>
+        )}
       </header>
 
       {error && (

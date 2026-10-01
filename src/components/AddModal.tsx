@@ -13,7 +13,8 @@ import {
   IconTag,
   IconPinterest,
   IconClipboardPaste,
-  IconImage
+  IconImage,
+  IconFilm
 } from './icons/AppIcons';
 import { ThumbnailItem, NicheCategory } from '../lib/types';
 import { convertToJpg, getYoutubeJpgUrl } from '../lib/imageOptimizer';
@@ -32,6 +33,8 @@ interface AddModalProps {
 }
 
 type AddTabMode = 'upload' | 'youtube' | 'pinterest';
+
+type AddMediaKind = 'thumbnail' | 'poster';
 
 interface QueuedImageItem {
   id: string;
@@ -195,7 +198,6 @@ interface UnifiedCategoryBarProps {
   selectedCategories: string[];
   onToggleCategory: (category: string) => void;
   onCategoryCreated: (newCategory: string) => void;
-  accentColor?: string;
 }
 
 const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
@@ -205,7 +207,6 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
   selectedCategories,
   onToggleCategory,
   onCategoryCreated,
-  accentColor = '#401D1A'
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newCatInput, setNewCatInput] = useState('');
@@ -224,23 +225,22 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
   };
 
   return (
-    <div className="p-3 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl space-y-2">
+    <div className="p-3 bg-surface-raised border border-line rounded-xl space-y-2">
       <div className="flex items-center justify-between text-xs flex-wrap gap-2">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-semibold text-[#401D1A] dark:text-[#E4E0D3] text-[11px]">
+          <span className="font-semibold text-ink text-[11px]">
             {label} ({itemCount} {itemCount === 1 ? 'item' : 'items'}):
           </span>
           {selectedCategories.map(cat => (
             <span
               key={cat}
-              className="px-2 py-0.5 rounded text-[11px] font-bold text-[#FFFFFF] shadow-xs inline-flex items-center gap-1"
-              style={{ backgroundColor: accentColor }}
+              className="px-2 py-0.5 rounded text-[11px] font-bold text-accent-on bg-accent shadow-xs inline-flex items-center gap-1"
             >
               <span>{cat}</span>
               <button
                 type="button"
                 onClick={() => onToggleCategory(cat)}
-                className="hover:opacity-80 text-white/90 hover:text-white cursor-pointer leading-none text-xs"
+                className="hover:opacity-80 text-accent-on hover:text-accent-on cursor-pointer leading-none text-xs"
                 title={`Remove ${cat} from all`}
               >
                 ×
@@ -248,7 +248,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
             </span>
           ))}
           {selectedCategories.length === 0 && (
-            <span className="text-[11px] text-[#401D1A]/50 dark:text-[#E4E0D3]/50 italic">None selected (click a category below to apply)</span>
+            <span className="text-[11px] text-ink-faint italic">None selected (click a category below to apply)</span>
           )}
         </div>
 
@@ -256,7 +256,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
           <button
             type="button"
             onClick={() => setIsAdding(true)}
-            className="text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:opacity-80 flex items-center gap-1 cursor-pointer transition-colors"
+            className="text-[11px] font-semibold text-ink hover:opacity-80 flex items-center gap-1 cursor-pointer transition-colors"
           >
             <IconPlus className="w-3 h-3" />
             <span>+ New Category</span>
@@ -266,19 +266,19 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
 
       {/* Inline Add New Category Box */}
       {isAdding && (
-        <form onSubmit={handleAdd} className="flex items-center gap-2 p-2 bg-[#E4E0D3]/30 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-lg">
+        <form onSubmit={handleAdd} className="flex items-center gap-2 p-2 bg-surface border border-line rounded-lg">
           <input
             type="text"
             value={newCatInput}
             onChange={(e) => setNewCatInput(e.target.value)}
             placeholder="Category name (e.g. Finance, Anime)..."
-            className="flex-1 bg-transparent text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none"
+            className="flex-1 bg-transparent text-xs text-ink placeholder:text-ink-faint focus:outline-none"
             autoFocus
           />
           <button
             type="submit"
             disabled={!newCatInput.trim()}
-            className="px-2.5 py-1 rounded bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-40 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+            className="px-2.5 py-1 rounded bg-accent hover:opacity-90 disabled:opacity-40 text-accent-on font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
           >
             <IconCheck className="w-3 h-3" />
             <span>Add to Filters</span>
@@ -286,7 +286,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
           <button
             type="button"
             onClick={() => { setIsAdding(false); setNewCatInput(''); }}
-            className="p-1 text-[#401D1A]/60 dark:text-[#E4E0D3]/60 hover:text-[#401D1A] dark:hover:text-[#FFFFFF] cursor-pointer"
+            className="p-1 text-ink-faint hover:text-ink cursor-pointer"
           >
             <IconClose className="w-3.5 h-3.5" />
           </button>
@@ -304,10 +304,9 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
               onClick={() => onToggleCategory(cat)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                 isSelected
-                  ? 'text-white font-bold shadow-xs'
-                  : 'bg-[#E4E0D3]/40 dark:bg-[#FFFFFF]/10 hover:bg-[#E4E0D3] text-[#401D1A] dark:text-[#E4E0D3] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
+                  ? 'bg-accent text-accent-on font-bold shadow-xs'
+                  : 'bg-surface hover:bg-surface-raised text-ink border border-line'
               }`}
-              style={isSelected ? { backgroundColor: accentColor } : undefined}
             >
               <span>{isSelected ? '✓ ' : '+ '}</span>
               <span>{cat}</span>
@@ -324,15 +323,13 @@ interface ItemCategoryMultiSelectProps {
   availableCategories: string[];
   onChange: (categories: string[]) => void;
   onCategoryCreated?: (newCategory: string) => void;
-  accentColor?: string;
 }
 
 const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
   selectedCategories,
   availableCategories,
   onChange,
-  onCategoryCreated,
-  accentColor = '#401D1A'
+  onCategoryCreated
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -390,14 +387,13 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
       {selectedCategories.map(cat => (
         <span
           key={cat}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold text-white shadow-2xs border border-white/10"
-          style={{ backgroundColor: accentColor }}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-accent text-accent-on shadow-2xs"
         >
           <span>{cat}</span>
           <button
             type="button"
             onClick={(e) => handleRemove(e, cat)}
-            className="text-white/80 hover:text-white cursor-pointer leading-none text-xs ml-0.5"
+            className="text-accent-on hover:text-accent-on cursor-pointer leading-none text-xs ml-0.5"
             title={`Remove ${cat}`}
           >
             ×
@@ -405,14 +401,14 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
         </span>
       ))}
       {selectedCategories.length === 0 && (
-        <span className="text-[11px] text-[#401D1A]/50 dark:text-[#E4E0D3]/50 italic mr-1">None</span>
+        <span className="text-[11px] text-ink-faint italic mr-1">None</span>
       )}
 
       {/* Button to open multi-select popover */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#E4E0D3]/40 hover:bg-[#E4E0D3] dark:bg-[#FFFFFF]/10 text-[#401D1A] dark:text-[#E4E0D3] hover:text-[#401D1A] dark:hover:text-[#FFFFFF] border border-[#401D1A]/20 dark:border-[#E4E0D3]/20 flex items-center gap-1 cursor-pointer transition-colors"
+        className="px-2 py-0.5 rounded text-[11px] font-semibold bg-surface hover:bg-surface-raised text-ink hover:text-ink border border-line flex items-center gap-1 cursor-pointer transition-colors"
       >
         <IconPlus className="w-3 h-3" />
         <span>Category</span>
@@ -420,32 +416,32 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
 
       {/* Popover Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/25 rounded-xl shadow-2xl p-2.5 space-y-2">
-          <div className="flex items-center justify-between pb-1.5 border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 text-xs">
-            <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF] text-[11px]">Select Categories</span>
+        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-surface-raised border border-line rounded-xl shadow-2xl p-2.5 space-y-2">
+          <div className="flex items-center justify-between pb-1.5 border-b border-line text-xs">
+            <span className="font-bold text-ink text-[11px]">Select Categories</span>
             <button
               type="button"
               onClick={() => setIsAddingNew(!isAddingNew)}
-              className="text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:underline cursor-pointer"
+              className="text-[11px] font-semibold text-ink hover:underline cursor-pointer"
             >
               {isAddingNew ? 'Cancel' : '+ New Category'}
             </button>
           </div>
 
           {isAddingNew && (
-            <form onSubmit={handleCreateNew} className="flex items-center gap-1.5 p-1.5 bg-[#E4E0D3]/30 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-lg">
+            <form onSubmit={handleCreateNew} className="flex items-center gap-1.5 p-1.5 bg-surface border border-line rounded-lg">
               <input
                 type="text"
                 value={newCatInput}
                 onChange={(e) => setNewCatInput(e.target.value)}
                 placeholder="Category name..."
-                className="flex-1 bg-transparent text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none"
+                className="flex-1 bg-transparent text-xs text-ink placeholder:text-ink-faint focus:outline-none"
                 autoFocus
               />
               <button
                 type="submit"
                 disabled={!newCatInput.trim()}
-                className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-40 cursor-pointer"
+                className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-accent-on disabled:opacity-40 cursor-pointer"
               >
                 Add
               </button>
@@ -458,7 +454,7 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search categories..."
-              className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-lg text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
+              className="w-full px-2 py-1 bg-surface border border-line rounded-lg text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
             />
           </div>
 
@@ -472,15 +468,14 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
                   onClick={() => handleToggle(cat)}
                   className={`w-full flex items-center justify-between px-2 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors text-left ${
                     isSelected
-                      ? 'bg-[#E4E0D3]/60 dark:bg-[#FFFFFF]/15 text-[#401D1A] dark:text-[#FFFFFF] font-semibold'
-                      : 'hover:bg-[#E4E0D3]/30 dark:hover:bg-[#FFFFFF]/5 text-[#401D1A] dark:text-[#E4E0D3]'
+                      ? 'bg-surface text-ink font-semibold'
+                      : 'hover:bg-surface-raised text-ink'
                   }`}
                 >
                   <span>{cat}</span>
                   {isSelected && (
                     <span
-                      className="w-3.5 h-3.5 rounded flex items-center justify-center text-white text-[10px]"
-                      style={{ backgroundColor: accentColor }}
+                      className="w-3.5 h-3.5 rounded flex items-center justify-center bg-accent text-accent-on text-[10px]"
                     >
                       ✓
                     </span>
@@ -489,7 +484,7 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
               );
             })}
             {filtered.length === 0 && (
-              <div className="text-center py-2 text-[11px] text-[#401D1A]/50 dark:text-[#E4E0D3]/50">
+              <div className="text-center py-2 text-[11px] text-ink-faint">
                 No matching category found
               </div>
             )}
@@ -507,6 +502,11 @@ export const AddModal: React.FC<AddModalProps> = ({
   onAddMultipleThumbnails
 }) => {
   const [activeTab, setActiveTab] = useState<AddTabMode>('upload');
+  // What is being added. Posters skip the YouTube tab and land in the
+  // posters wall with kind: 'poster' instead of the thumbnails gallery.
+  const [mediaKind, setMediaKind] = useState<AddMediaKind>('thumbnail');
+  // Human word for the media being added, used across button and fallback copy.
+  const unitWord = mediaKind === 'poster' ? 'Poster' : 'Thumbnail';
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // Selected Categories per section (supports multiple categories, defaults to none)
@@ -559,6 +559,8 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadCategories([]);
       setYoutubeCategories([]);
       setPinterestCategories([]);
+      setMediaKind('thumbnail');
+      setActiveTab('upload');
       setIsUploadingToCloud(false);
       setUploadStatusText('');
     }
@@ -567,15 +569,16 @@ export const AddModal: React.FC<AddModalProps> = ({
   // Process a File or Blob into a QueuedImageItem
   const processImageFile = useCallback(async (file: File | Blob, customName?: string): Promise<QueuedImageItem | null> => {
     try {
-      const jpgDataUrl = await convertToJpg(file, 0.9);
-      const rawName = (file instanceof File && file.name) ? file.name : (customName || `Thumbnail ${Date.now().toString().slice(-4)}`);
+      // Portraits keep a black matte; thumbnails keep the brand matte.
+      const jpgDataUrl = await convertToJpg(file, 0.9, 1920, mediaKind === 'poster' ? '#000000' : '#401D1A');
+      const rawName = (file instanceof File && file.name) ? file.name : (customName || `${unitWord} ${Date.now().toString().slice(-4)}`);
       const cleanTitle = rawName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
       const chosenCategories = [...uploadCategories];
 
       return {
         id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         dataUrl: jpgDataUrl,
-        title: cleanTitle || 'Curated Thumbnail',
+        title: cleanTitle || `Curated ${unitWord}`,
         creator: 'You',
         niche: (chosenCategories[0] || '') as NicheCategory,
         tags: [...chosenCategories]
@@ -584,7 +587,7 @@ export const AddModal: React.FC<AddModalProps> = ({
       console.warn('Error converting image:', err);
       return null;
     }
-  }, [uploadCategories]);
+  }, [uploadCategories, unitWord]);
 
   // Handle multiple files selected via browse or drop
   const handleMultipleFiles = useCallback(async (files: FileList | File[]) => {
@@ -639,7 +642,7 @@ export const AddModal: React.FC<AddModalProps> = ({
       setIsProcessingFiles(true);
       const newItems: QueuedImageItem[] = [];
       for (const file of filesToProcess) {
-        const processed = await processImageFile(file, `Pasted Thumbnail ${queuedImages.length + newItems.length + 1}`);
+        const processed = await processImageFile(file, `Pasted ${unitWord} ${queuedImages.length + newItems.length + 1}`);
         if (processed) {
           newItems.push(processed);
         }
@@ -660,7 +663,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         try {
           const res = await fetch(text);
           const blob = await res.blob();
-          const processed = await processImageFile(blob, `Pasted Image ${queuedImages.length + 1}`);
+          const processed = await processImageFile(blob, `Pasted ${unitWord} ${queuedImages.length + 1}`);
           if (processed) {
             setQueuedImages(prev => [...prev, processed]);
           }
@@ -672,7 +675,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             {
               id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
               dataUrl: text,
-              title: `Pasted Thumbnail ${prev.length + 1}`,
+              title: `Pasted ${unitWord} ${prev.length + 1}`,
               creator: 'You',
               niche: (chosenCategories[0] || '') as NicheCategory,
               tags: [...chosenCategories]
@@ -683,7 +686,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         }
       }
     }
-  }, [isOpen, activeTab, processImageFile, queuedImages.length, uploadCategories]);
+  }, [isOpen, activeTab, processImageFile, queuedImages.length, uploadCategories, unitWord]);
 
   // Attach global paste listener
   useEffect(() => {
@@ -737,7 +740,7 @@ export const AddModal: React.FC<AddModalProps> = ({
               try {
                 const res = await fetch(text);
                 const blob = await res.blob();
-                const processed = await processImageFile(blob, `Pasted Thumbnail ${queuedImages.length + 1}`);
+                const processed = await processImageFile(blob, `Pasted ${unitWord} ${queuedImages.length + 1}`);
                 if (processed) {
                   setQueuedImages(prev => [...prev, processed]);
                   setPasteNotice({ text: 'Pasted image URL added to queue!' });
@@ -880,7 +883,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         return {
           id: item.id,
           imageUrl: item.dataUrl,
-          title: item.title || 'Curated Thumbnail',
+          title: item.title || `Curated ${unitWord}`,
           creator: item.creator || 'Creator',
           niche: (itemCategories[0] || '') as NicheCategory,
           tags: itemCategories
@@ -908,7 +911,8 @@ export const AddModal: React.FC<AddModalProps> = ({
           const itemCategories = img.tags || [];
           return {
             id: img.id,
-            title: img.title || 'Curated Thumbnail',
+            kind: mediaKind,
+            title: img.title || `Curated ${unitWord}`,
             creator: img.creator || 'Creator',
             imageUrl: uploadedMap.get(img.id) || img.dataUrl,
             sourceUrl: uploadedMap.get(img.id) || img.dataUrl,
@@ -918,7 +922,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             colors: [],
             ocrText: '',
             emotion: 'Curious',
-            breakdownNotes: 'Uploaded thumbnail design.',
+            breakdownNotes: mediaKind === 'poster' ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
             source: 'supabase-storage',
             createdAt: new Date().toISOString(),
             likesCount: Math.floor(Math.random() * 80) + 40
@@ -933,7 +937,8 @@ export const AddModal: React.FC<AddModalProps> = ({
         const itemCategories = img.tags || [];
         return {
           id: img.id,
-          title: img.title || 'Curated Thumbnail',
+          kind: mediaKind,
+          title: img.title || `Curated ${unitWord}`,
           creator: img.creator || 'Creator',
           imageUrl: img.dataUrl,
           sourceUrl: img.dataUrl,
@@ -943,7 +948,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           colors: [],
           ocrText: '',
           emotion: 'Curious',
-          breakdownNotes: 'Uploaded thumbnail design.',
+          breakdownNotes: mediaKind === 'poster' ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
           source: 'supabase-storage',
           createdAt: new Date().toISOString(),
           likesCount: Math.floor(Math.random() * 80) + 40
@@ -1160,6 +1165,7 @@ export const AddModal: React.FC<AddModalProps> = ({
       const chosenCategories = item.tags || [];
       return {
         id: item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`),
+        kind: mediaKind,
         title: item.title,
         creator: item.creator,
         imageUrl: item.imageUrl,
@@ -1170,7 +1176,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         colors: [],
         ocrText: '',
         emotion: 'Curious',
-        breakdownNotes: 'Auto-extracted inspiration thumbnail.',
+        breakdownNotes: mediaKind === 'poster' ? 'Imported movie poster.' : 'Auto-extracted inspiration thumbnail.',
         source: 'supabase-storage',
         createdAt: new Date().toISOString(),
         likesCount: Math.floor(Math.random() * 150) + 40
@@ -1244,17 +1250,21 @@ export const AddModal: React.FC<AddModalProps> = ({
       {/* Main Modal Box - Clean Multi-surface */}
       <div
         id="add-modal-content"
-        className="relative w-full max-w-2xl bg-[#FFFFFF] dark:bg-[#401D1A] text-[#401D1A] dark:text-[#E4E0D3] rounded-[20px] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.5)] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in"
+        className="relative w-full max-w-2xl bg-surface-raised text-ink rounded-xl shadow-elevated border border-line overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 bg-[#FFFFFF] dark:bg-[#401D1A]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-surface-raised">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#401D1A]/10 dark:bg-[#E4E0D3]/20 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 flex items-center justify-center text-[#401D1A] dark:text-[#E4E0D3]">
+            <div className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink">
               <IconPlus className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-[#401D1A] dark:text-[#FFFFFF] tracking-tight">Add Thumbnails</h2>
-              <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">Import from files, clipboard paste, YouTube, or Pinterest</p>
+              <h2 className="font-bold text-sm text-ink tracking-tight">Add {mediaKind === 'poster' ? 'Posters' : 'Thumbnails'}</h2>
+              <p className="text-[11px] text-ink-muted">
+                {mediaKind === 'poster'
+                  ? 'Import movie posters from files, clipboard or Pinterest'
+                  : 'Import from files, clipboard paste, YouTube, or Pinterest'}
+              </p>
             </div>
           </div>
 
@@ -1262,24 +1272,59 @@ export const AddModal: React.FC<AddModalProps> = ({
             type="button"
             id="add-modal-close-btn"
             onClick={onClose}
-            className="p-2 rounded-xl text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 active:scale-95 transition-all cursor-pointer"
+            className="p-2 rounded-xl text-ink-faint hover:text-ink dark:hover:text-ink hover:bg-surface-raised active:scale-95 transition-all cursor-pointer"
             title="Close"
           >
             <IconClose className="w-4 h-4" />
           </button>
         </div>
 
+        {/* What is being added */}
+        <div className="px-5 pt-3">
+          <div
+            className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface p-1"
+            role="tablist"
+            aria-label="What are you adding?"
+          >
+            {(
+              [
+                { key: 'thumbnail', label: 'Thumbnails', Icon: IconImage },
+                { key: 'poster', label: 'Posters', Icon: IconFilm },
+              ] as const
+            ).map(({ key, label, Icon }) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={mediaKind === key}
+                onClick={() => {
+                  setMediaKind(key);
+                  if (key === 'poster' && activeTab === 'youtube') setActiveTab('upload');
+                }}
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
+                  mediaKind === key
+                    ? 'bg-accent text-accent-on shadow-xs'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Minimalist Tab Switcher */}
-        <div className="px-5 pt-3 pb-2 border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 bg-[#FFFFFF] dark:bg-[#401D1A]">
-          <div className="flex items-center p-1 bg-[#E4E0D3]/30 dark:bg-[#401D1A]/80 rounded-xl border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 text-xs font-semibold gap-1">
+        <div className="px-5 pt-3 pb-2 border-b border-line bg-surface-raised">
+          <div className="flex items-center p-1 bg-surface rounded-xl border border-line text-xs font-semibold gap-1">
             <button
               type="button"
               id="tab-upload-images"
               onClick={() => setActiveTab('upload')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'upload'
-                  ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs font-bold'
-                  : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
+                  ? 'bg-accent text-accent-on shadow-xs font-bold'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               <IconUploadCloud className="w-3.5 h-3.5" />
@@ -1287,27 +1332,30 @@ export const AddModal: React.FC<AddModalProps> = ({
               {queuedImages.length > 0 && (
                 <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
                   activeTab === 'upload'
-                    ? 'bg-[#FFFFFF] text-[#401D1A] dark:bg-[#401D1A] dark:text-[#FFFFFF]'
-                    : 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A]'
+                    ? 'bg-accent-on text-accent'
+                    : 'bg-accent text-accent-on'
                 }`}>
                   {queuedImages.length}
                 </span>
               )}
             </button>
 
+            {/* YouTube has no posters, so this source only applies to thumbnails */}
+            {mediaKind === 'thumbnail' && (
             <button
               type="button"
               id="tab-youtube-import"
               onClick={() => setActiveTab('youtube')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'youtube'
-                  ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs font-bold'
-                  : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
+                  ? 'bg-accent text-accent-on shadow-xs font-bold'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               <IconYoutube className="w-3.5 h-3.5" />
               <span>YouTube</span>
             </button>
+            )}
 
             <button
               type="button"
@@ -1315,8 +1363,8 @@ export const AddModal: React.FC<AddModalProps> = ({
               onClick={() => setActiveTab('pinterest')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'pinterest'
-                  ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs font-bold'
-                  : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
+                  ? 'bg-accent text-accent-on shadow-xs font-bold'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               <IconPinterest className="w-3.5 h-3.5" />
@@ -1341,14 +1389,14 @@ export const AddModal: React.FC<AddModalProps> = ({
                   id="paste-image-from-clipboard-btn"
                   onClick={handlePasteButtonClick}
                   disabled={isProcessingFiles}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#FFFFFF] hover:bg-[#E4E0D3]/20 dark:bg-[#401D1A] dark:hover:bg-[#FFFFFF]/5 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 hover:border-[#401D1A] dark:hover:border-[#E4E0D3] text-[#401D1A] dark:text-[#FFFFFF] font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface border border-line hover:border-line-strong text-ink font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-[#401D1A]/10 text-[#401D1A] group-hover:bg-[#401D1A] group-hover:text-white dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3] dark:group-hover:bg-[#E4E0D3] dark:group-hover:text-[#401D1A] flex items-center justify-center transition-colors">
+                  <div className="w-6 h-6 rounded-lg bg-surface text-ink-muted group-hover:bg-accent group-hover:text-accent-on flex items-center justify-center transition-colors">
                     <IconClipboardPaste className="w-3.5 h-3.5" />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold text-xs text-[#401D1A] dark:text-[#FFFFFF]">Paste Thumbnail Image</div>
-                    <div className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 font-normal">Click to paste or press Ctrl + V</div>
+                    <div className="font-bold text-xs text-ink">Paste Thumbnail Image</div>
+                    <div className="text-[10px] text-ink-faint font-normal">Click to paste or press Ctrl + V</div>
                   </div>
                 </button>
 
@@ -1357,14 +1405,14 @@ export const AddModal: React.FC<AddModalProps> = ({
                   id="browse-bulk-images-btn"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isProcessingFiles}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#FFFFFF] hover:bg-[#E4E0D3]/20 dark:bg-[#401D1A] dark:hover:bg-[#FFFFFF]/5 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 hover:border-[#401D1A] dark:hover:border-[#E4E0D3] text-[#401D1A] dark:text-[#FFFFFF] font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface border border-line hover:border-line-strong text-ink font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-[#401D1A]/10 text-[#401D1A] group-hover:bg-[#401D1A] group-hover:text-white dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3] dark:group-hover:bg-[#E4E0D3] dark:group-hover:text-[#401D1A] flex items-center justify-center transition-colors">
+                  <div className="w-6 h-6 rounded-lg bg-surface text-ink-muted group-hover:bg-accent group-hover:text-accent-on flex items-center justify-center transition-colors">
                     <IconUploadCloud className="w-3.5 h-3.5" />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold text-xs text-[#401D1A] dark:text-[#FFFFFF]">Browse Images (Bulk)</div>
-                    <div className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 font-normal">Select multiple files at once</div>
+                    <div className="font-bold text-xs text-ink">Browse Images (Bulk)</div>
+                    <div className="text-[10px] text-ink-faint font-normal">Select multiple files at once</div>
                   </div>
                 </button>
               </div>
@@ -1374,15 +1422,15 @@ export const AddModal: React.FC<AddModalProps> = ({
                 <div
                   className={`p-2.5 rounded-xl text-xs flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150 ${
                     pasteNotice.isError
-                      ? 'bg-[#401D1A]/10 border border-[#401D1A]/30 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:border-[#E4E0D3]/40 dark:text-[#E4E0D3]'
-                      : 'bg-[#E4E0D3]/40 border border-[#401D1A]/20 text-[#401D1A] dark:bg-[#FFFFFF]/10 dark:border-[#E4E0D3]/30 dark:text-[#FFFFFF]'
+                      ? 'bg-danger-soft border border-danger-line text-danger'
+                      : 'bg-surface border border-line text-ink'
                   }`}
                 >
                   <span>{pasteNotice.text}</span>
                   <button
                     type="button"
                     onClick={() => setPasteNotice(null)}
-                    className="text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF] text-sm leading-none"
+                    className="text-ink-faint hover:text-ink dark:hover:text-ink text-sm leading-none"
                   >
                     &times;
                   </button>
@@ -1397,8 +1445,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className={`relative flex flex-col items-center justify-center p-6 sm:p-7 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center group select-none ${
                   dragOver
-                    ? 'border-[#401D1A] bg-[#401D1A]/10 dark:border-[#E4E0D3] dark:bg-[#E4E0D3]/20 scale-[0.99]'
-                    : 'border-[#401D1A]/20 dark:border-[#E4E0D3]/25 bg-[#E4E0D3]/20 hover:border-[#401D1A]/40 hover:bg-[#E4E0D3]/30 dark:bg-[#FFFFFF]/5 dark:hover:bg-[#FFFFFF]/10'
+                    ? 'border-line-strong bg-surface scale-[0.99]'
+                    : 'border-line bg-surface hover:bg-surface-raised hover:border-line-strong dark:bg-surface dark:hover:bg-surface-raised'
                 }`}
               >
                 <input
@@ -1412,22 +1460,24 @@ export const AddModal: React.FC<AddModalProps> = ({
                   className="hidden"
                 />
 
-                <div className="w-10 h-10 rounded-xl bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/25 text-[#401D1A] dark:text-[#E4E0D3] flex items-center justify-center mb-2.5 group-hover:scale-105 transition-all shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-surface-raised border border-line text-ink flex items-center justify-center mb-2.5 group-hover:scale-105 transition-all shadow-sm">
                   {isProcessingFiles ? (
-                    <IconSpinner className="w-5 h-5 animate-spin text-[#401D1A] dark:text-[#E4E0D3]" />
+                    <IconSpinner className="w-5 h-5 animate-spin text-ink" />
                   ) : (
                     <IconImage className="w-5 h-5" />
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-[#401D1A] dark:text-[#FFFFFF]">
+                  <p className="text-xs font-bold text-ink">
                     {isProcessingFiles
                       ? 'Processing and formatting images...'
                       : 'Or drop image files here directly'}
                   </p>
-                  <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
-                    Auto-converts PNG / JPG / WebP into standard 16:9 thumbnail format
+                  <p className="text-[11px] text-ink-muted">
+                    {mediaKind === 'poster'
+                      ? 'Keeps the original portrait ratio, compressed for fast loading'
+                      : 'Auto-converts PNG / JPG / WebP into standard 16:9 thumbnail format'}
                   </p>
                 </div>
               </div>
@@ -1436,20 +1486,20 @@ export const AddModal: React.FC<AddModalProps> = ({
               {queuedImages.length > 0 && (
                 <div className="space-y-3 pt-2">
                   {/* Queue Header with Quick Batch Actions */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[#E4E0D3]/30 dark:bg-[#401D1A]/80 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-surface border border-line rounded-xl text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF]">
+                      <span className="font-bold text-ink">
                         {queuedImages.length} {queuedImages.length === 1 ? 'image' : 'images'} ready
                       </span>
-                      <span className="text-[11px] text-[#401D1A]/40 dark:text-[#E4E0D3]/40">•</span>
-                      <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">You can still paste more or click browse</span>
+                      <span className="text-[11px] text-ink-faint">•</span>
+                      <span className="text-[11px] text-ink-muted">You can still paste more or click browse</span>
                     </div>
 
                     <div className="flex items-center gap-2 self-end sm:self-auto">
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] dark:bg-[#401D1A] hover:bg-[#E4E0D3] dark:hover:bg-[#FFFFFF]/10 text-[#401D1A] dark:text-[#E4E0D3] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-surface-raised hover:bg-surface-raised text-ink border border-line text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer"
                       >
                         <IconPlus className="w-3 h-3" />
                         <span>Add more</span>
@@ -1458,7 +1508,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setQueuedImages([])}
-                        className="px-2 py-1 rounded-lg text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF] text-[11px] transition-colors cursor-pointer"
+                        className="px-2 py-1 rounded-lg text-ink-faint hover:text-ink dark:hover:text-ink text-[11px] transition-colors cursor-pointer"
                       >
                         Clear all
                       </button>
@@ -1473,7 +1523,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                     selectedCategories={uploadCategories}
                     onToggleCategory={handleToggleUploadCategory}
                     onCategoryCreated={handleCategoryCreated}
-                    accentColor="#401D1A"
                   />
 
                   {/* Queued Cards Grid */}
@@ -1481,10 +1530,10 @@ export const AddModal: React.FC<AddModalProps> = ({
                     {queuedImages.map((img, index) => (
                       <div
                         key={img.id}
-                        className="p-3 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl flex items-start gap-3 relative group hover:border-[#401D1A]/30 dark:hover:border-[#E4E0D3]/40 transition-all"
+                        className="p-3 bg-surface-raised border border-line rounded-xl flex items-start gap-3 relative group hover:border-line-strong transition-all"
                       >
                         {/* Aspect 16:9 Preview */}
-                        <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-[#401D1A]/15 dark:border-[#E4E0D3]/20">
+                        <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-stage shrink-0 relative border border-line">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={img.dataUrl}
@@ -1503,11 +1552,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                               setQueuedImages(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
                             }}
                             placeholder="Thumbnail Title"
-                            className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-md text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
+                            className="w-full px-2 py-1 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
                           />
 
                           <div className="space-y-1">
-                            <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Categories:</span>
+                            <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
                             <ItemCategoryMultiSelect
                               selectedCategories={img.tags || []}
                               availableCategories={availableCategories}
@@ -1519,7 +1568,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                                 } : p));
                               }}
                               onCategoryCreated={handleCategoryCreated}
-                              accentColor="#401D1A"
                             />
                           </div>
                         </div>
@@ -1528,7 +1576,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setQueuedImages(prev => prev.filter((_, i) => i !== index))}
-                          className="p-1 text-[#401D1A]/50 hover:text-[#401D1A] dark:text-[#E4E0D3]/50 dark:hover:text-[#FFFFFF] rounded-md transition-colors cursor-pointer"
+                          className="p-1 text-ink-faint hover:text-ink dark:hover:text-ink rounded-md transition-colors cursor-pointer"
                           title="Remove image"
                         >
                           <IconTrash className="w-3.5 h-3.5" />
@@ -1538,12 +1586,12 @@ export const AddModal: React.FC<AddModalProps> = ({
                   </div>
 
                   {/* Bottom Action for Queued Images */}
-                  <div className="pt-3 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 flex items-center justify-between">
+                  <div className="pt-3 border-t border-line flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setQueuedImages([])}
                       disabled={isUploadingToCloud}
-                      className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#401D1A]/70 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold text-ink-faint hover:text-ink dark:hover:text-ink transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -1553,7 +1601,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       id="save-all-queued-images-btn"
                       onClick={handleUploadQueuedImages}
                       disabled={isUploadingToCloud || queuedImages.length === 0}
-                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-[#FFFFFF] bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] active:scale-[0.97] disabled:opacity-50 transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-accent-on bg-accent hover:opacity-90 active:scale-[0.97] disabled:opacity-50 transition-all shadow-md flex items-center gap-2 cursor-pointer"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -1564,7 +1612,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <>
                           <IconCheck className="w-4 h-4" />
                           <span>
-                            Upload {queuedImages.length} {queuedImages.length === 1 ? 'Thumbnail' : 'Thumbnails'} to Cloud
+                            Upload {queuedImages.length} {queuedImages.length === 1 ? unitWord : `${unitWord}s`} to Cloud
                           </span>
                         </>
                       )}
@@ -1578,10 +1626,10 @@ export const AddModal: React.FC<AddModalProps> = ({
           {/* ========================================================= */}
           {/* TAB 2: YOUTUBE IMPORT (Single / Multiple Links / Channel) */}
           {/* ========================================================= */}
-          {activeTab === 'youtube' && (
+          {activeTab === 'youtube' && mediaKind === 'thumbnail' && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
                   <IconYoutube className="w-4 h-4" />
                   <span>Paste YouTube Video Links or Channel Handle</span>
                 </label>
@@ -1600,13 +1648,13 @@ export const AddModal: React.FC<AddModalProps> = ({
                     }
                   }}
                   placeholder="Paste one or multiple YouTube URLs (one per line) or channel @handle (e.g. @MrBeast)..."
-                  className="w-full px-3 py-2.5 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3] resize-none"
+                  className="w-full px-3 py-2.5 bg-surface-raised border border-line rounded-xl text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong resize-none"
                 />
 
                 {/* Channel Limit Selector if channel entered */}
                 {isChannelInput(youtubeInput) && (
-                  <div className="flex items-center justify-between p-2.5 bg-[#E4E0D3]/30 dark:bg-[#401D1A]/80 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs">
-                    <span className="text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Channel extract count:</span>
+                  <div className="flex items-center justify-between p-2.5 bg-surface border border-line rounded-xl text-xs">
+                    <span className="text-ink-muted font-medium">Channel extract count:</span>
                     <div className="flex items-center gap-1.5">
                       {[30, 50, 100].map(limit => (
                         <button
@@ -1615,8 +1663,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                           onClick={() => setYoutubeChannelLimit(limit)}
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                             youtubeChannelLimit === limit
-                              ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-xs'
-                              : 'bg-[#FFFFFF] dark:bg-[#401D1A] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
+                              ? 'bg-accent text-accent-on shadow-xs'
+                              : 'bg-surface-raised text-ink-muted hover:text-ink border border-line'
                           }`}
                         >
                           {limit} videos
@@ -1627,7 +1675,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                 )}
 
                 <div className="flex items-center justify-between pt-1">
-                  <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
+                  <p className="text-[11px] text-ink-muted">
                     Supports bulk extraction of thumbnails in maximum resolution
                   </p>
 
@@ -1635,7 +1683,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                     type="button"
                     onClick={handleExtractYoutube}
                     disabled={isYoutubeLoading || !youtubeInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-[#401D1A] text-[#FFFFFF] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-accent text-accent-on hover:opacity-90 disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     {isYoutubeLoading ? (
                       <>
@@ -1652,7 +1700,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                 </div>
 
                 {youtubeError && (
-                  <div className="p-3 bg-[#401D1A]/10 border border-[#401D1A]/30 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:border-[#E4E0D3]/40 dark:text-[#E4E0D3] rounded-xl text-xs">
+                  <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
                     {youtubeError}
                   </div>
                 )}
@@ -1660,9 +1708,9 @@ export const AddModal: React.FC<AddModalProps> = ({
 
               {/* YouTube Extracted Result List */}
               {youtubeItems.length > 0 && (
-                <div className="space-y-3 pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
+                <div className="space-y-3 pt-2 border-t border-line">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF]">
+                    <span className="font-bold text-ink">
                       Found {youtubeItems.length} thumbnails
                     </span>
 
@@ -1672,7 +1720,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         const allSelected = youtubeItems.every(i => i.selected !== false);
                         setYoutubeItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
                       }}
-                      className="px-2.5 py-1 bg-[#FFFFFF] dark:bg-[#401D1A] hover:bg-[#E4E0D3] dark:hover:bg-[#FFFFFF]/10 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-lg text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] cursor-pointer"
+                      className="px-2.5 py-1 bg-surface-raised hover:bg-surface-raised border border-line rounded-lg text-[11px] font-semibold text-ink cursor-pointer"
                     >
                       {youtubeItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
                     </button>
@@ -1686,7 +1734,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                     selectedCategories={youtubeCategories}
                     onToggleCategory={handleToggleYoutubeCategory}
                     onCategoryCreated={handleCategoryCreated}
-                    accentColor="#401D1A"
                   />
 
                   {/* YouTube Cards List */}
@@ -1696,8 +1743,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                         key={item.id}
                         className={`p-3 rounded-xl border transition-all ${
                           item.selected !== false
-                            ? 'bg-[#FFFFFF] dark:bg-[#401D1A] border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
-                            : 'bg-[#E4E0D3]/20 dark:bg-[#401D1A]/40 border-[#401D1A]/10 dark:border-[#E4E0D3]/10 opacity-50'
+                            ? 'bg-surface-raised border-line'
+                            : 'bg-surface border-line opacity-50'
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -1708,14 +1755,14 @@ export const AddModal: React.FC<AddModalProps> = ({
                             }}
                             className={`w-4 h-4 mt-1 rounded flex items-center justify-center shrink-0 border cursor-pointer ${
                               item.selected !== false
-                                ? 'bg-[#401D1A] border-[#401D1A] text-white dark:bg-[#E4E0D3] dark:border-[#E4E0D3] dark:text-[#401D1A]'
-                                : 'border-[#401D1A]/30 dark:border-[#E4E0D3]/30 bg-[#FFFFFF] dark:bg-[#401D1A]'
+                                ? 'bg-accent border-accent text-accent-on'
+                                : 'border-line bg-surface-raised'
                             }`}
                           >
                             {item.selected !== false && <IconCheck className="w-3 h-3" />}
                           </button>
 
-                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-[#401D1A]/15 dark:border-[#E4E0D3]/20">
+                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-stage shrink-0 relative border border-line">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                           </div>
@@ -1729,13 +1776,13 @@ export const AddModal: React.FC<AddModalProps> = ({
                                 setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
                               }}
                               placeholder="Thumbnail Title"
-                              className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-md text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
+                              className="w-full px-2 py-1 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
                             />
 
                             <div className="space-y-1">
                               <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Categories:</span>
-                                <span className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 truncate max-w-[140px]">
+                                <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
+                                <span className="text-[10px] text-ink-faint truncate max-w-[140px]">
                                   • {item.creator}
                                 </span>
                               </div>
@@ -1750,7 +1797,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                                   } : p));
                                 }}
                                 onCategoryCreated={handleCategoryCreated}
-                                accentColor="#401D1A"
                               />
                             </div>
                           </div>
@@ -1758,7 +1804,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                           <button
                             type="button"
                             onClick={() => setYoutubeItems(prev => prev.filter((_, i) => i !== index))}
-                            className="p-1 text-[#401D1A]/50 hover:text-[#401D1A] dark:text-[#E4E0D3]/50 dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
+                            className="p-1 text-ink-faint hover:text-ink dark:hover:text-ink transition-colors cursor-pointer"
                             title="Remove"
                           >
                             <IconTrash className="w-3.5 h-3.5" />
@@ -1768,11 +1814,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 flex items-center justify-between">
+                  <div className="pt-2 border-t border-line flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setYoutubeItems([])}
-                      className="px-3.5 py-2 text-xs text-[#401D1A]/70 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF]"
+                      className="px-3.5 py-2 text-xs text-ink-faint hover:text-ink dark:hover:text-ink"
                     >
                       Clear
                     </button>
@@ -1781,7 +1827,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       type="button"
                       onClick={() => handleSaveBatchItems(youtubeItems)}
                       disabled={isUploadingToCloud || youtubeItems.filter(i => i.selected !== false).length === 0}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-[#FFFFFF] bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-accent-on bg-accent hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -1809,7 +1855,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           {activeTab === 'pinterest' && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
                   <IconPinterest className="w-4 h-4" />
                   <span>Paste Pinterest Pin Links or Board URL</span>
                 </label>
@@ -1828,11 +1874,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     }
                   }}
                   placeholder="Paste Pinterest links (e.g. https://pin.it/4k6G4P6 or https://www.pinterest.com/pin/515873332295753837/)..."
-                  className="w-full px-3 py-2.5 bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3] resize-none"
+                  className="w-full px-3 py-2.5 bg-surface-raised border border-line rounded-xl text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong resize-none"
                 />
 
                 <div className="flex items-center justify-between pt-1">
-                  <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
+                  <p className="text-[11px] text-ink-muted">
                     Paste one or multiple Pinterest links to extract high-definition images
                   </p>
 
@@ -1840,7 +1886,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                     type="button"
                     onClick={handleExtractPinterest}
                     disabled={isPinterestLoading || !pinterestInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-[#401D1A] text-[#FFFFFF] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-accent text-accent-on hover:opacity-90 disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     {isPinterestLoading ? (
                       <>
@@ -1857,7 +1903,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                 </div>
 
                 {pinterestError && (
-                  <div className="p-3 bg-[#401D1A]/10 border border-[#401D1A]/30 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:border-[#E4E0D3]/40 dark:text-[#E4E0D3] rounded-xl text-xs">
+                  <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
                     {pinterestError}
                   </div>
                 )}
@@ -1865,9 +1911,9 @@ export const AddModal: React.FC<AddModalProps> = ({
 
               {/* Pinterest Extracted Result List */}
               {pinterestItems.length > 0 && (
-                <div className="space-y-3 pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
+                <div className="space-y-3 pt-2 border-t border-line">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#401D1A] dark:text-[#FFFFFF]">
+                    <span className="font-bold text-ink">
                       Found {pinterestItems.length} Pinterest pins
                     </span>
 
@@ -1877,7 +1923,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         const allSelected = pinterestItems.every(i => i.selected !== false);
                         setPinterestItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
                       }}
-                      className="px-2.5 py-1 bg-[#FFFFFF] dark:bg-[#401D1A] hover:bg-[#E4E0D3] dark:hover:bg-[#FFFFFF]/10 border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-lg text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] cursor-pointer"
+                      className="px-2.5 py-1 bg-surface-raised hover:bg-surface-raised border border-line rounded-lg text-[11px] font-semibold text-ink cursor-pointer"
                     >
                       {pinterestItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
                     </button>
@@ -1891,7 +1937,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                     selectedCategories={pinterestCategories}
                     onToggleCategory={handleTogglePinterestCategory}
                     onCategoryCreated={handleCategoryCreated}
-                    accentColor="#401D1A"
                   />
 
                   {/* Pinterest Cards List */}
@@ -1901,8 +1946,8 @@ export const AddModal: React.FC<AddModalProps> = ({
                         key={item.id}
                         className={`p-3 rounded-xl border transition-all ${
                           item.selected !== false
-                            ? 'bg-[#FFFFFF] dark:bg-[#401D1A] border-[#401D1A]/15 dark:border-[#E4E0D3]/20'
-                            : 'bg-[#E4E0D3]/20 dark:bg-[#401D1A]/40 border-[#401D1A]/10 dark:border-[#E4E0D3]/10 opacity-50'
+                            ? 'bg-surface-raised border-line'
+                            : 'bg-surface border-line opacity-50'
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -1913,14 +1958,14 @@ export const AddModal: React.FC<AddModalProps> = ({
                             }}
                             className={`w-4 h-4 mt-1 rounded flex items-center justify-center shrink-0 border cursor-pointer ${
                               item.selected !== false
-                                ? 'bg-[#401D1A] border-[#401D1A] text-white dark:bg-[#E4E0D3] dark:border-[#E4E0D3] dark:text-[#401D1A]'
-                                : 'border-[#401D1A]/30 dark:border-[#E4E0D3]/30 bg-[#FFFFFF] dark:bg-[#401D1A]'
+                                ? 'bg-accent border-accent text-accent-on'
+                                : 'border-line bg-surface-raised'
                             }`}
                           >
                             {item.selected !== false && <IconCheck className="w-3 h-3" />}
                           </button>
 
-                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-black shrink-0 relative border border-[#401D1A]/15 dark:border-[#E4E0D3]/20">
+                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-stage shrink-0 relative border border-line">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                           </div>
@@ -1934,13 +1979,13 @@ export const AddModal: React.FC<AddModalProps> = ({
                                 setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
                               }}
                               placeholder="Pin Title"
-                              className="w-full px-2 py-1 bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 rounded-md text-xs text-[#401D1A] dark:text-[#FFFFFF] placeholder-[#401D1A]/50 dark:placeholder-[#E4E0D3]/50 focus:outline-none focus:border-[#401D1A] dark:focus:border-[#E4E0D3]"
+                              className="w-full px-2 py-1 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
                             />
 
                             <div className="space-y-1">
                               <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 font-medium">Categories:</span>
-                                <span className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60 truncate max-w-[140px]">
+                                <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
+                                <span className="text-[10px] text-ink-faint truncate max-w-[140px]">
                                   • {item.creator}
                                 </span>
                               </div>
@@ -1955,7 +2000,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                                   } : p));
                                 }}
                                 onCategoryCreated={handleCategoryCreated}
-                                accentColor="#401D1A"
                               />
                             </div>
                           </div>
@@ -1963,7 +2007,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                           <button
                             type="button"
                             onClick={() => setPinterestItems(prev => prev.filter((_, i) => i !== index))}
-                            className="p-1 text-[#401D1A]/50 hover:text-[#401D1A] dark:text-[#E4E0D3]/50 dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
+                            className="p-1 text-ink-faint hover:text-ink dark:hover:text-ink transition-colors cursor-pointer"
                             title="Remove"
                           >
                             <IconTrash className="w-3.5 h-3.5" />
@@ -1973,11 +2017,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 flex items-center justify-between">
+                  <div className="pt-2 border-t border-line flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setPinterestItems([])}
-                      className="px-3.5 py-2 text-xs text-[#401D1A]/70 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF]"
+                      className="px-3.5 py-2 text-xs text-ink-faint hover:text-ink dark:hover:text-ink"
                     >
                       Clear
                     </button>
@@ -1986,7 +2030,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       type="button"
                       onClick={() => handleSaveBatchItems(pinterestItems)}
                       disabled={isUploadingToCloud || pinterestItems.filter(i => i.selected !== false).length === 0}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-[#FFFFFF] bg-[#401D1A] hover:opacity-90 dark:bg-[#E4E0D3] dark:text-[#401D1A] disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-accent-on bg-accent hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -1997,7 +2041,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <>
                           <IconCheck className="w-4 h-4" />
                           <span>
-                            Import {pinterestItems.filter(i => i.selected !== false).length} Pins
+                            Import {pinterestItems.filter(i => i.selected !== false).length} {mediaKind === 'poster' ? 'Posters' : 'Pins'}
                           </span>
                         </>
                       )}

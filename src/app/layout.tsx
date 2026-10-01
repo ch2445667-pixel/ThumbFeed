@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/lib/authContext";
 
@@ -14,6 +15,13 @@ const geistMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   display: "swap",
   weight: ["400", "500", "600"],
+});
+
+// Brand wordmark face. Self-hosted display font, applied to the logo only.
+const brandFont = localFont({
+  src: "./fonts/Coconat-Regular.otf",
+  variable: "--font-brand",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -48,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark`}
+      className={`${geistSans.variable} ${geistMono.variable} ${brandFont.variable} dark`}
       suppressHydrationWarning
     >
       <head>

@@ -19,8 +19,12 @@ export type VisualStyle =
   | 'No-Text / Visual Hook'
   | 'High-Contrast Glow';
 
+export type MediaKind = 'thumbnail' | 'poster';
+
 export interface ThumbnailItem {
   id: string;
+  // Absent means 'thumbnail'. Only posters carry kind: 'poster'.
+  kind?: MediaKind;
   title: string;
   creator?: string;
   imageUrl: string;

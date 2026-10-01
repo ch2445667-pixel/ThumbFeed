@@ -1,14 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  IconFilter,
   IconClose,
   IconRotateCcw,
-  IconSparkles,
-  IconTrending,
-  IconClock,
   IconPlus
 } from './icons/AppIcons';
 import { NicheCategory, FilterState } from '../lib/types';
@@ -20,35 +15,47 @@ import {
   subscribeCategories
 } from '../lib/categories';
 
-import { ViewModeToggle } from './ViewModeToggle';
-
 interface FilterPillBarProps {
   isVisible: boolean;
   filters: FilterState;
   onSelectCategory: (category: NicheCategory | 'All') => void;
-  onToggleSort: (sort: 'latest' | 'popular' | 'random') => void;
   onResetFilters: () => void;
   onClose: () => void;
   categoryCounts?: Record<string, number>;
-  showCardInfo?: boolean;
-  onToggleCardInfo?: () => void;
+  resultCount?: number;
+  // The posters wall has no niche taxonomy, so its category section hides.
+  showCategories?: boolean;
+}
+
+function PanelSection({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section>
+      <div className="mb-2 flex items-center justify-between">
+        <h5 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
+          {title}
+        </h5>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   isVisible,
   filters,
   onSelectCategory,
-  onToggleSort,
   onResetFilters,
   onClose,
   categoryCounts = {},
-  showCardInfo = false,
-  onToggleCardInfo
+  resultCount = 0,
+  showCategories = true,
 }) => {
-  const [categories, setCategories] = useState<string[]>(['All', 'IRL', 'Business', 'Tech', 'Entertainment', 'Gaming', 'Sports', 'Documentary', 'Educational', 'Podcast', 'Interviews', 'Football', 'Mindset', 'Self-Improvement', 'Lifestyle', 'Entrepreneurship', 'Geopolitics', 'Military', 'Nfl', 'Psychology', 'Soccer', 'Video Games', 'Vlog', 'War']);
+  const [categories, setCategories] = useState<string[]>(['All']);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newCatInput, setNewCatInput] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const update = () => {
@@ -59,6 +66,27 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
     update();
     return subscribeCategories(update);
   }, []);
+
+  // Dismiss on Escape or outside click while open.
+  useEffect(() => {
+    if (!isVisible) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    const onPointer = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onPointer);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onPointer);
+    };
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
 
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,211 +106,168 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
     }
   };
 
-  const hasActiveFilters =
-    filters.selectedNiche !== 'All' ||
-    (filters.sortBy !== 'latest' && filters.sortBy !== 'random') ||
-    Boolean(filters.searchQuery);
+  const activeCount =
+    (filters.selectedNiche !== 'All' ? 1 : 0) +
+    (filters.searchQuery.trim() ? 1 : 0) +
+    filters.selectedStyles.length +
+    (filters.selectedColor ? 1 : 0) +
+    (filters.selectedEmotion ? 1 : 0);
+
+  const sortControlClass = (active: boolean) =>
+    `flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors duration-150 active:scale-[0.98] ${
+      active
+        ? 'bg-accent text-accent-on shadow-card'
+        : 'text-ink-muted hover:bg-surface-raised hover:text-ink'
+    }`;
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <>
-          {/* Invisible Backdrop to easily click anywhere outside to dismiss */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-30 pointer-events-auto"
-            onClick={onClose}
-          />
-
-          <div className="fixed bottom-[74px] sm:bottom-[80px] inset-x-0 z-40 flex justify-center px-4 pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.96 }}
-              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto bg-[#FFFFFF]/95 dark:bg-[#401D1A]/95 backdrop-blur-2xl border border-[#401D1A]/15 dark:border-[#E4E0D3]/25 text-[#401D1A] dark:text-[#FFFFFF] p-4 rounded-[18px] shadow-[0_20px_48px_-8px_rgba(64,29,26,0.25)] dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.95)] max-w-lg w-full space-y-3.5 relative select-none gpu-layer"
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-label="Gallery filters"
+      className="animate-blur-in fixed right-3 top-[72px] z-40 flex max-h-[calc(100dvh-96px)] w-[min(540px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl border border-line bg-surface-raised shadow-elevated sm:right-6 lg:right-10"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-line px-4 py-3">
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-semibold text-ink">Filters</h4>
+          {activeCount > 0 && (
+            <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-accent-on tabular">
+              {activeCount} active
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {activeCount > 0 && (
+            <button
+              type="button"
+              onClick={onResetFilters}
+              className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-surface hover:text-ink"
             >
-              {/* Header Row: Title & Sort Options */}
-              <div className="flex items-center justify-between border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-[8px] bg-[#401D1A]/10 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 flex items-center justify-center">
-                    <IconFilter className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#401D1A] dark:text-[#FFFFFF] tracking-wide">Filter & Browse</h4>
-                    <p className="text-[10px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">Select or create any tag category</p>
-                  </div>
-                </div>
+              <IconRotateCcw className="h-3 w-3" />
+              <span>Reset</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close filters"
+            className="grid h-7 w-7 cursor-pointer place-items-center rounded-md text-ink-muted transition-colors hover:bg-surface hover:text-ink"
+          >
+            <IconClose className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
 
-                <div className="flex items-center gap-2">
-                  {/* Sort Toggles */}
-                  <div className="flex items-center bg-[#E4E0D3]/50 dark:bg-[#401D1A] p-0.5 rounded-[10px] text-[11px] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25">
-                    <button
-                      onClick={() => onToggleSort('latest')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-[8px] font-medium active:scale-[0.96] transition-all duration-150 cursor-pointer ${
-                        filters.sortBy === 'latest'
-                          ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] font-bold shadow-xs'
-                          : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
-                      }`}
-                      title="Sort by latest additions"
-                    >
-                      <IconClock className="w-3 h-3" />
-                      <span>Latest</span>
-                    </button>
-                    <button
-                      onClick={() => onToggleSort('popular')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-[8px] font-medium active:scale-[0.96] transition-all duration-150 cursor-pointer ${
-                        filters.sortBy === 'popular'
-                          ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] font-bold shadow-xs'
-                          : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
-                      }`}
-                      title="Sort by top rated likes"
-                    >
-                      <IconTrending className="w-3 h-3" />
-                      <span>Top</span>
-                    </button>
-                    <button
-                      onClick={() => onToggleSort('random')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-[8px] font-medium active:scale-[0.96] transition-all duration-150 cursor-pointer ${
-                        filters.sortBy === 'random'
-                          ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] font-bold shadow-xs'
-                          : 'text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF]'
-                      }`}
-                      title="Random shuffle"
-                    >
-                      <IconSparkles className="w-3 h-3" />
-                      <span>Shuffle</span>
-                    </button>
-                  </div>
-
-                  {/* View Mode Toggle: Detail vs Gallery (Exact replica of Image 1) */}
-                  {onToggleCardInfo && (
-                    <ViewModeToggle
-                      isDetail={!!showCardInfo}
-                      onToggle={onToggleCardInfo}
-                    />
+      {/* Body */}
+      <div className="space-y-5 overflow-y-auto px-4 py-4">
+        {showCategories && (
+        <PanelSection
+          title="Category"
+          action={
+            !isAddingNew ? (
+              <button
+                type="button"
+                onClick={() => setIsAddingNew(true)}
+                className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-ink-muted transition-colors hover:bg-surface hover:text-ink"
+              >
+                <IconPlus className="h-3 w-3" />
+                <span>New</span>
+              </button>
+            ) : undefined
+          }
+        >
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => {
+              const isSelected = filters.selectedNiche === cat;
+              const count = categoryCounts[cat];
+              const isCustom = customCategories.some(
+                (c) => c.toLowerCase() === cat.toLowerCase()
+              );
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => onSelectCategory(cat)}
+                  aria-pressed={isSelected}
+                  className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors duration-150 active:scale-[0.97] ${
+                    isSelected
+                      ? 'border-transparent bg-accent text-accent-on shadow-card'
+                      : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
+                  }`}
+                >
+                  <span>{cat}</span>
+                  {count !== undefined && count > 0 && (
+                    <span className="text-[11px] tabular opacity-70">{count}</span>
                   )}
-
-                  <button
-                    onClick={onClose}
-                    className="p-1 rounded-[8px] text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 active:scale-[0.92] transition-all duration-150 flex items-center justify-center cursor-pointer"
-                    title="Close filter menu"
-                  >
-                    <IconClose className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Category Pills & Add Category */}
-              <div className="flex flex-wrap gap-1.5 pt-0.5 max-h-48 overflow-y-auto pr-1">
-                {categories.map((cat) => {
-                  const isSelected = filters.selectedNiche === cat;
-                  const count = categoryCounts[cat];
-                  const isCustom = customCategories.some(c => c.toLowerCase() === cat.toLowerCase());
-
-                  return (
-                    <div key={cat} className="relative group inline-flex">
-                      <button
-                        id={`filter-pill-${cat.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
-                        onClick={() => onSelectCategory(cat)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold whitespace-nowrap active:scale-[0.96] transition-all duration-150 select-none cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] shadow-md ring-1 ring-[#401D1A] dark:ring-[#E4E0D3]'
-                            : 'bg-[#E4E0D3]/50 dark:bg-[#FFFFFF]/10 text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#401D1A]/10 dark:hover:bg-[#E4E0D3]/20 hover:text-[#401D1A] dark:hover:text-[#FFFFFF] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25'
-                        }`}
-                      >
-                        <span>{cat}</span>
-                        {count !== undefined && count > 0 && (
-                          <span
-                            className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                              isSelected
-                                ? 'bg-[#FFFFFF]/25 text-[#FFFFFF] dark:bg-[#401D1A]/25 dark:text-[#401D1A]'
-                                : 'bg-[#401D1A]/10 text-[#401D1A] dark:bg-[#E4E0D3]/20 dark:text-[#E4E0D3]'
-                            }`}
-                          >
-                            {count}
-                          </span>
-                        )}
-                        {isCustom && (
-                          <span
-                            onClick={(e) => handleRemoveCategory(cat, e)}
-                            title="Remove category"
-                            className="ml-0.5 p-0.5 rounded-full hover:bg-black/20 dark:hover:bg-white/20 text-xs font-bold leading-none cursor-pointer"
-                          >
-                            &times;
-                          </span>
-                        )}
-                      </button>
-                    </div>
-                  );
-                })}
-
-                {/* Add Category Button / Inline Form */}
-                {isAddingNew ? (
-                  <form onSubmit={handleAddCategory} className="inline-flex items-center gap-1">
-                    <input
-                      type="text"
-                      autoFocus
-                      value={newCatInput}
-                      onChange={(e) => setNewCatInput(e.target.value)}
-                      placeholder="New category..."
-                      className="px-2.5 py-1 text-xs rounded-[9px] bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A] dark:border-[#E4E0D3] text-[#401D1A] dark:text-[#FFFFFF] focus:outline-none w-28"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newCatInput.trim()}
-                      className="px-2 py-1 text-[11px] font-bold bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] rounded-[8px] disabled:opacity-50 cursor-pointer"
-                    >
-                      Add
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setIsAddingNew(false); setNewCatInput(''); }}
-                      className="px-1.5 py-1 text-[11px] text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] cursor-pointer"
+                  {isCustom && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Remove ${cat}`}
+                      onClick={(e) => handleRemoveCategory(cat, e)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleRemoveCategory(cat, e as unknown as React.MouseEvent);
+                        }
+                      }}
+                      title="Remove category"
+                      className="grid h-4 w-4 cursor-pointer place-items-center rounded-full text-xs leading-none opacity-60 hover:bg-black/15 hover:opacity-100 dark:hover:bg-white/20"
                     >
                       &times;
-                    </button>
-                  </form>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingNew(true)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-medium text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#401D1A]/10 dark:hover:bg-[#E4E0D3]/20 border border-dashed border-[#401D1A]/40 dark:border-[#E4E0D3]/40 transition-all cursor-pointer"
-                  >
-                    <IconPlus className="w-3 h-3" />
-                    <span>New Category</span>
-                  </button>
-                )}
-              </div>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
 
-              {/* Footer info & Reset button */}
-              {hasActiveFilters && (
-                <div className="flex items-center justify-between pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 text-xs">
-                  <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
-                    Active: <span className="text-[#401D1A] dark:text-[#E4E0D3] font-semibold">{filters.selectedNiche}</span>
-                    {filters.sortBy !== 'latest' && filters.sortBy !== 'random' && ` • ${filters.sortBy}`}
-                  </span>
-                  <button
-                    onClick={onResetFilters}
-                    className="text-[11px] font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:underline flex items-center gap-1 py-0.5 px-2 rounded-[8px] hover:bg-[#E4E0D3]/50 dark:hover:bg-[#FFFFFF]/10 active:scale-[0.96] transition-all duration-150 cursor-pointer"
-                  >
-                    <IconRotateCcw className="w-3 h-3" />
-                    <span>Reset all</span>
-                  </button>
-                </div>
-              )}
-
-            </motion.div>
+            {isAddingNew && (
+              <form onSubmit={handleAddCategory} className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  autoFocus
+                  value={newCatInput}
+                  onChange={(e) => setNewCatInput(e.target.value)}
+                  placeholder="Category name"
+                  aria-label="New category name"
+                  className="h-8 w-32 rounded-md border border-line bg-surface px-2.5 text-xs text-ink outline-none placeholder:text-ink-faint focus:border-line-strong"
+                />
+                <button
+                  type="submit"
+                  disabled={!newCatInput.trim()}
+                  className="h-8 cursor-pointer rounded-md bg-accent px-2.5 text-xs font-medium text-accent-on transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingNew(false);
+                    setNewCatInput('');
+                  }}
+                  aria-label="Cancel"
+                  className="grid h-8 w-8 cursor-pointer place-items-center rounded-md text-ink-muted transition-colors hover:bg-surface hover:text-ink"
+                >
+                  <IconClose className="h-3.5 w-3.5" />
+                </button>
+              </form>
+            )}
           </div>
+        </PanelSection>
+        )}
+      </div>
 
-        </>
-      )}
-    </AnimatePresence>
+      {/* Footer */}
+      <div className="border-t border-line bg-surface-raised px-4 py-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full cursor-pointer rounded-md bg-accent py-2.5 text-xs font-semibold text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.99]"
+        >
+          Show {resultCount} {resultCount === 1 ? 'result' : 'results'}
+        </button>
+      </div>
+    </div>
   );
 };
-
-
-

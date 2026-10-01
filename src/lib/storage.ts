@@ -1,5 +1,6 @@
 import { ThumbnailItem, CollectionBoard } from './types';
 import { INITIAL_THUMBNAILS } from './mockData';
+import { INITIAL_POSTERS } from './posters';
 import { supabase, isSupabaseConfigured } from './supabase';
 
 const USER_IMPORTED_KEY = 'thumbvault_user_imported_v3';
@@ -720,6 +721,45 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
 
 export function saveStoredThumbnail(item: ThumbnailItem): ThumbnailItem[] {
   return saveStoredThumbnails([item]);
+}
+
+/**
+ * Posters wall persistence. Posters live in their own local collection and
+ * never touch the thumbnails Supabase table, which has no kind column.
+ */
+const POSTERS_KEY = 'thumbfeed_posters_v1';
+
+export function getStoredPosters(): ThumbnailItem[] {
+  if (typeof window === 'undefined') return INITIAL_POSTERS;
+  try {
+    const raw = localStorage.getItem(POSTERS_KEY);
+    if (!raw) return INITIAL_POSTERS;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_POSTERS;
+    return parsed.filter((p) => p && p.id && p.imageUrl);
+  } catch {
+    return INITIAL_POSTERS;
+  }
+}
+
+export function saveStoredPosters(newItems: ThumbnailItem[]): ThumbnailItem[] {
+  if (typeof window === 'undefined') return newItems;
+  const withKind = newItems.map((t) => ({ ...t, kind: 'poster' as const }));
+  const current = getStoredPosters();
+  const seen = new Set(current.map((t) => t.id));
+  const fresh = withKind.filter((t) => !seen.has(t.id));
+  const merged = [...fresh, ...current];
+  persistPosterList(merged);
+  return merged;
+}
+
+export function persistPosterList(list: ThumbnailItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(POSTERS_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.warn('LocalStorage poster save warning:', e);
+  }
 }
 
 export function getStoredCollections(): CollectionBoard[] {

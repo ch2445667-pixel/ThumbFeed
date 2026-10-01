@@ -173,6 +173,11 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Brand wordmark. Display face, logo only. */
+.font-brand {
+  font-family: var(--font-brand), var(--font-geist-sans), system-ui, sans-serif;
+}
+
 /* ==========================================================================
    Components
    ========================================================================== */

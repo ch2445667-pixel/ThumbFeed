@@ -18,7 +18,7 @@ export const ViewModeToggle: React.FC<ViewModeToggleProps> = ({
     <div
       role="group"
       aria-label="Thumbnail display mode"
-      className={`inline-flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 shadow-card ${className}`}
+      className={`inline-flex items-center gap-0.5 rounded-lg border border-line bg-surface p-1 shadow-card ${className}`}
     >
       <button
         type="button"
@@ -26,14 +26,14 @@ export const ViewModeToggle: React.FC<ViewModeToggleProps> = ({
           if (!isDetail) onToggle();
         }}
         aria-pressed={isDetail}
-        className={`flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
+        className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
           isDetail
             ? 'bg-accent text-accent-on'
             : 'text-ink-muted hover:bg-surface-raised hover:text-ink'
         }`}
       >
         <LayoutGrid className="h-3.5 w-3.5" strokeWidth={1.75} />
-        <span>Detail</span>
+        <span>Details</span>
       </button>
 
       <button
@@ -42,14 +42,14 @@ export const ViewModeToggle: React.FC<ViewModeToggleProps> = ({
           if (isDetail) onToggle();
         }}
         aria-pressed={!isDetail}
-        className={`flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
+        className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
           !isDetail
             ? 'bg-accent text-accent-on'
             : 'text-ink-muted hover:bg-surface-raised hover:text-ink'
         }`}
       >
         <Images className="h-3.5 w-3.5" strokeWidth={1.75} />
-        <span>Gallery</span>
+        <span>Compact</span>
       </button>
     </div>
   );

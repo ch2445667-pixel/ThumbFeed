@@ -24,7 +24,10 @@ export function getYoutubeJpgUrl(videoId: string, quality: 'maxres' | 'hq' = 'ma
 export async function convertToJpg(
   source: File | Blob | string,
   quality: number = 0.88,
-  maxDimension: number = 1920
+  maxDimension: number = 1920,
+  // Matte fill behind transparent pixels. Posters pass black so portrait
+  // artwork never inherits the espresso thumbnail matte.
+  fill: string = '#401D1A'
 ): Promise<string> {
   if (typeof window === 'undefined') {
     return typeof source === 'string' ? source : '';
@@ -96,8 +99,8 @@ export async function convertToJpg(
           return;
         }
 
-        // Fill background with solid #401D1A in case source PNG had transparency
-        ctx.fillStyle = '#401D1A';
+        // Fill background in case source PNG had transparency
+        ctx.fillStyle = fill;
         ctx.fillRect(0, 0, width, height);
 
         // Draw image onto canvas

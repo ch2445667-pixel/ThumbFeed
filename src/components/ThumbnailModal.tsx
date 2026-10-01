@@ -2,34 +2,41 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconClose, IconDownload, IconTrash, IconSpinner } from './icons/AppIcons';
+import { Pencil, Check, X as XIcon } from 'lucide-react';
+import { IconClose, IconDownload, IconTrash } from './icons/AppIcons';
 import { ThumbnailItem } from '../lib/types';
 
 interface ThumbnailModalProps {
   item: ThumbnailItem | null;
   onClose: () => void;
-  onDelete?: (item: ThumbnailItem) => Promise<void> | void;
+  onDelete?: (item: ThumbnailItem) => void;
+  onEditTitle?: (item: ThumbnailItem, title: string) => void;
 }
 
 export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   item,
   onClose,
-  onDelete
+  onDelete,
+  onEditTitle
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
 
-  // Reset confirmation state whenever a new item is selected or closed
+  // Reset transient state whenever a new item is selected or closed
   useEffect(() => {
     setIsConfirmingDelete(false);
-    setIsDeleting(false);
+    setIsEditingTitle(false);
+    setDraftTitle('');
   }, [item]);
 
-  // Close on Escape key
+  // Close on Escape key. While editing, Escape cancels the edit first.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isConfirmingDelete) {
+        if (isEditingTitle) {
+          setIsEditingTitle(false);
+        } else if (isConfirmingDelete) {
           setIsConfirmingDelete(false);
         } else {
           onClose();
@@ -38,18 +45,22 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, isConfirmingDelete]);
+  }, [onClose, isConfirmingDelete, isEditingTitle]);
 
-  const handleConfirmDelete = async () => {
+  // Synchronous: the caller drops the tile from state (which unmounts this
+  // modal) while the database work continues in the background.
+  const handleConfirmDelete = () => {
     if (!item || !onDelete) return;
-    setIsDeleting(true);
-    try {
-      await onDelete(item);
-      onClose();
-    } catch (err) {
-      console.error('Failed to delete thumbnail:', err);
-      setIsDeleting(false);
+    onDelete(item);
+  };
+
+  const handleSaveTitle = () => {
+    if (!item || !onEditTitle) return;
+    const next = draftTitle.trim();
+    if (next && next !== item.title) {
+      onEditTitle(item, next);
     }
+    setIsEditingTitle(false);
   };
 
   return (
@@ -79,11 +90,62 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
             className="relative w-full max-w-4xl bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-[18px] shadow-[0_25px_50px_-12px_rgba(64,29,26,0.35)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95)] overflow-hidden z-10 my-auto flex flex-col p-4 sm:p-6 gap-3 gpu-layer"
           >
             {/* Floating Close & Download Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 max-w-[65%]">
-                <h3 className="text-xs sm:text-sm font-bold text-[#401D1A] dark:text-[#FFFFFF] truncate">
-                  {item.title}
-                </h3>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                {onEditTitle && isEditingTitle ? (
+                  <>
+                    <input
+                      type="text"
+                      value={draftTitle}
+                      autoFocus
+                      onChange={(e) => setDraftTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveTitle();
+                      }}
+                      aria-label="Edit video title"
+                      maxLength={140}
+                      className="min-w-0 flex-1 rounded-[8px] border border-[#401D1A]/30 dark:border-[#E4E0D3]/40 bg-transparent px-2 py-1 text-xs sm:text-sm font-semibold text-[#401D1A] dark:text-[#FFFFFF] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveTitle}
+                      title="Save title"
+                      aria-label="Save title"
+                      className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-[8px] bg-[#401D1A] text-[#FFFFFF] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-95"
+                    >
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingTitle(false)}
+                      title="Cancel"
+                      aria-label="Cancel editing"
+                      className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-[8px] text-[#401D1A]/70 hover:bg-[#E4E0D3]/40 dark:text-[#E4E0D3]/70 dark:hover:bg-[#FFFFFF]/10 active:scale-95"
+                    >
+                      <XIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="truncate text-xs sm:text-sm font-bold text-[#401D1A] dark:text-[#FFFFFF]">
+                      {item.title}
+                    </h3>
+                    {onEditTitle && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDraftTitle(item.title);
+                          setIsEditingTitle(true);
+                        }}
+                        title="Edit title"
+                        aria-label="Edit video title"
+                        className="grid h-6 w-6 shrink-0 cursor-pointer place-items-center rounded-[6px] text-[#401D1A]/50 hover:bg-[#E4E0D3]/40 hover:text-[#401D1A] dark:text-[#E4E0D3]/50 dark:hover:bg-[#FFFFFF]/10 dark:hover:text-[#FFFFFF] active:scale-95"
+                      >
+                        <Pencil className="h-3 w-3" strokeWidth={2} />
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -147,7 +209,6 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                 <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
                   <button
                     type="button"
-                    disabled={isDeleting}
                     onClick={() => setIsConfirmingDelete(false)}
                     className="px-3 py-1.5 rounded-[8px] text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 transition-colors cursor-pointer"
                   >
@@ -156,21 +217,11 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   <button
                     id="confirm-delete-permanent-btn"
                     type="button"
-                    disabled={isDeleting}
                     onClick={handleConfirmDelete}
-                    className="px-3.5 py-1.5 rounded-[8px] text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-95 disabled:opacity-60 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-[8px] text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                   >
-                    {isDeleting ? (
-                      <>
-                        <IconSpinner className="w-3.5 h-3.5 animate-spin text-white" />
-                        <span>Deleting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <IconTrash className="w-3.5 h-3.5" />
-                        <span>Delete Permanently</span>
-                      </>
-                    )}
+                    <IconTrash className="w-3.5 h-3.5" />
+                    <span>Delete Permanently</span>
                   </button>
                 </div>
               </div>

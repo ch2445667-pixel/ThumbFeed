@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconTrash, IconClose, IconSpinner } from './icons/AppIcons';
+import { IconTrash, IconClose } from './icons/AppIcons';
 import { ThumbnailItem } from '../lib/types';
 
 interface DeleteConfirmModalProps {
   item: ThumbnailItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (item: ThumbnailItem) => Promise<void> | void;
+  onConfirm: (item: ThumbnailItem) => void;
 }
 
 export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
@@ -18,20 +18,12 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   onClose,
   onConfirm
 }) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-
   if (!isOpen || !item) return null;
 
-  const handleConfirm = async () => {
-    setIsDeleting(true);
-    try {
-      await onConfirm(item);
-      onClose();
-    } catch (err) {
-      console.error('Delete confirmation error:', err);
-    } finally {
-      setIsDeleting(false);
-    }
+  // Synchronous: the caller removes the tile from state and closes every
+  // modal at once, while the database work continues in the background.
+  const handleConfirm = () => {
+    onConfirm(item);
   };
 
   return (
@@ -46,7 +38,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
           className="fixed inset-0 bg-black/70 backdrop-blur-xs"
-          onClick={() => !isDeleting && onClose()}
+          onClick={onClose}
         />
 
         <motion.div
@@ -75,8 +67,8 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
 
             <button
               type="button"
-              disabled={isDeleting}
               onClick={onClose}
+              aria-label="Cancel delete"
               className="p-1 rounded-lg text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3]/30 dark:hover:bg-[#FFFFFF]/10 transition-colors"
             >
               <IconClose className="w-4 h-4" />
@@ -115,7 +107,6 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
             <button
               type="button"
-              disabled={isDeleting}
               onClick={onClose}
               className="px-4 py-2 text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 rounded-[10px] transition-colors cursor-pointer"
             >
@@ -124,21 +115,11 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             <button
               id="confirm-delete-action-btn"
               type="button"
-              disabled={isDeleting}
               onClick={handleConfirm}
-              className="px-4 py-2 text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-[0.97] disabled:opacity-50 rounded-[10px] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-[0.97] rounded-[10px] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
-              {isDeleting ? (
-                <>
-                  <IconSpinner className="w-3.5 h-3.5 animate-spin" />
-                  <span>Deleting...</span>
-                </>
-              ) : (
-                <>
-                  <IconTrash className="w-3.5 h-3.5" />
-                  <span>Delete Permanently</span>
-                </>
-              )}
+              <IconTrash className="w-3.5 h-3.5" />
+              <span>Delete Permanently</span>
             </button>
           </div>
         </motion.div>

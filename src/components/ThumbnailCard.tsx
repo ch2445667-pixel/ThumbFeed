@@ -11,6 +11,8 @@ interface ThumbnailCardProps {
   onDelete?: (item: ThumbnailItem) => void;
   index?: number;
   showCardInfo?: boolean;
+  // Posters are pure artwork: portrait frame, never a metadata footer.
+  poster?: boolean;
 }
 
 function formatTimeAgo(dateStr?: string): string {
@@ -37,6 +39,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   onDelete,
   index = 0,
   showCardInfo = false,
+  poster = false,
 }) => {
   const [mounted, setMounted] = React.useState(false);
 
@@ -93,7 +96,11 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
   const hasMetadataToShow = Boolean(displayTitle || showCreator || displayViews || displaySubs);
 
-  const shouldRenderFooter = showCardInfo && hasMetadataToShow;
+  const shouldRenderFooter = showCardInfo && hasMetadataToShow && !poster;
+
+  // Movie posters are 2:3 portrait; thumbnails stay 16:9.
+  const frameAspect = poster ? 'aspect-[2/3]' : 'aspect-video';
+  const frameRatio = poster ? { aspectRatio: '2/3' } : { aspectRatio: '16/9' };
 
   return (
     <div
@@ -106,10 +113,10 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
       {/* Thumbnail. The stage behind the art is neutral in both themes so the
           artwork is the only saturated element on screen. */}
       <div
-        className={`thumb-stage relative aspect-video w-full overflow-hidden ${
-          shouldRenderFooter ? 'rounded-sm' : 'rounded-t-[13px]'
+        className={`thumb-stage relative ${frameAspect} w-full overflow-hidden ${
+          shouldRenderFooter ? 'rounded-sm' : poster ? 'rounded-none' : 'rounded-t-[13px]'
         }`}
-        style={{ aspectRatio: '16/9' }}
+        style={frameRatio}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

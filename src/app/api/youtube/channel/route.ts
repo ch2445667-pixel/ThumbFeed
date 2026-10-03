@@ -186,11 +186,20 @@ function extractAllVideos(obj: any, channelFallbackName: string, seenIds: Set<st
           for (const row of metadataRows) {
             if (Array.isArray(row.metadataParts)) {
               for (const part of row.metadataParts) {
-                const txt = part.text?.content || '';
-                if (txt.toLowerCase().includes('view')) {
-                  viewsText = txt;
-                } else if (txt.toLowerCase().includes('ago') || txt.toLowerCase().includes('stream')) {
-                  publishedText = txt;
+                const txt = (part.text?.content || '').trim();
+                const a11y = (part.accessibilityLabel || '').trim();
+
+                if (a11y.toLowerCase().includes('view') || txt.toLowerCase().includes('view')) {
+                  viewsText = a11y || (txt ? `${txt} views` : '');
+                } else if (
+                  a11y.toLowerCase().includes('ago') ||
+                  txt.toLowerCase().includes('ago') ||
+                  txt.toLowerCase().includes('stream') ||
+                  a11y.toLowerCase().includes('stream')
+                ) {
+                  publishedText = txt || a11y;
+                } else if (!viewsText && /^\d+[\d\.,]*[KMB]?$/i.test(txt)) {
+                  viewsText = `${txt} views`;
                 }
               }
             }

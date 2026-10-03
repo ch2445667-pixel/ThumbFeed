@@ -7,7 +7,7 @@ import { FilterPillBar } from '../components/FilterPillBar';
 import { AddModal } from '../components/AddModal';
 import { ThumbnailModal } from '../components/ThumbnailModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
-import { IconTrash, IconFilm, IconImage } from '../components/icons/AppIcons';
+import { IconTrash, IconFilm, IconImage, IconUploadCloud } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
 import { INITIAL_THUMBNAILS } from '../lib/mockData';
 import { INITIAL_POSTERS } from '../lib/posters';
@@ -17,6 +17,7 @@ import {
   saveStoredThumbnail,
   saveStoredThumbnails,
   fetchLiveSupabaseThumbnails,
+  fetchLiveSupabasePosters,
   getStoredThumbnails,
   getStoredPosters,
   saveStoredPosters,
@@ -103,13 +104,30 @@ export default function HomePage() {
     } catch {}
   }, []);
 
-  // Posters hydrate from their own local collection once.
+  const [isSyncingPosters, setIsSyncingPosters] = useState<boolean>(false);
+
+  const handleSyncPosters = useCallback(async () => {
+    setIsSyncingPosters(true);
+    try {
+      const live = await fetchLiveSupabasePosters();
+      if (live && live.length > 0) {
+        setPosters(live);
+      }
+    } catch (e) {
+      console.warn('Error syncing posters from Supabase:', e);
+    } finally {
+      setIsSyncingPosters(false);
+    }
+  }, []);
+
+  // Posters hydrate from local collection & sync live from Supabase
   useEffect(() => {
     const stored = getStoredPosters();
     if (stored && stored.length > 0) {
       setPosters(stored);
     }
-  }, []);
+    handleSyncPosters();
+  }, [handleSyncPosters]);
 
   // Switching walls resets the category scope, which belongs to thumbnails.
   const handleSectionChange = useCallback((next: 'thumbnails' | 'posters') => {
@@ -124,7 +142,10 @@ export default function HomePage() {
       selectedColor: null,
       selectedEmotion: null,
     }));
-  }, []);
+    if (next === 'posters') {
+      handleSyncPosters();
+    }
+  }, [handleSyncPosters]);
 
   const handleToggleCardInfo = useCallback(() => {
     setShowCardInfo((prev) => {
@@ -192,14 +213,11 @@ export default function HomePage() {
       isFetching = true;
       try {
         const loadedThumbs = await fetchLiveSupabaseThumbnails();
-        if (isMounted && loadedThumbs && loadedThumbs.length > 0) {
+        if (isMounted) {
+          const list = loadedThumbs || [];
           setThumbnails(prev => {
-            const prevIds = new Set(prev.map(p => p.id));
-            const hasNew = loadedThumbs.some(t => !prevIds.has(t.id));
-            const countChanged = prev.length !== loadedThumbs.length;
-
-            if (hasNew || countChanged || prev[0]?.id !== loadedThumbs[0]?.id) {
-              return loadedThumbs;
+            if (prev.length !== list.length || (list.length > 0 && prev[0]?.id !== list[0]?.id)) {
+              return list;
             }
             return prev;
           });
@@ -485,6 +503,21 @@ export default function HomePage() {
     }
   };
 
+  // Dynamic column masonry for posters so each poster preserves its 100% natural original aspect ratio without locking
+  const getPosterColsClass = () => {
+    switch (posterColumns) {
+      case 3:
+        return 'columns-1 sm:columns-2 lg:columns-3';
+      case 4:
+        return 'columns-1 sm:columns-2 md:columns-3 lg:columns-4';
+      case 6:
+        return 'columns-2 sm:columns-3 md:columns-4 lg:columns-6';
+      case 5:
+      default:
+        return 'columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5';
+    }
+  };
+
   return (
     <div className="flex min-h-[100dvh] flex-col bg-canvas pb-12 text-ink transition-colors duration-200 pt-16">
 
@@ -538,40 +571,87 @@ export default function HomePage() {
             {section === 'thumbnails' && (
               <ViewModeToggle isDetail={showCardInfo} onToggle={handleToggleCardInfo} />
             )}
+            {section === 'posters' && (
+              <button
+                type="button"
+                onClick={handleSyncPosters}
+                disabled={isSyncingPosters}
+                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink shadow-card transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised active:scale-[0.98] disabled:opacity-60"
+                title="Import and sync posters from Supabase"
+              >
+                <IconUploadCloud className={`h-3.5 w-3.5 ${isSyncingPosters ? 'animate-spin' : ''}`} />
+                <span>{isSyncingPosters ? 'Syncing...' : 'Sync from Supabase'}</span>
+              </button>
+            )}
           </div>
         </div>
 
         {filteredThumbnails.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface">
-              <IconTrash className="h-4 w-4 text-ink-faint" />
+              {section === 'posters' ? (
+                <IconFilm className="h-4 w-4 text-ink-faint" />
+              ) : (
+                <IconImage className="h-4 w-4 text-ink-faint" />
+              )}
             </div>
-            <p className="mt-4 text-sm font-medium text-ink">Nothing matches those filters</p>
-            <p className="mt-1 max-w-[34ch] text-sm text-ink-muted">
-              Widen the niche or clear the search to see the rest of the gallery.
+            <p className="mt-4 text-sm font-medium text-ink">
+              {section === 'thumbnails' ? 'No thumbnails in vault' : 'No posters found'}
             </p>
-            <button
-              onClick={resetFilters}
-              className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
-            >
-              Reset filters
-            </button>
+            <p className="mt-1 max-w-[34ch] text-sm text-ink-muted">
+              {section === 'thumbnails'
+                ? 'All previous thumbnails have been cleared. Upload or extract YouTube links to add new thumbnails.'
+                : 'No posters match your current search or filters. Sync from Supabase or import new posters.'}
+            </p>
+            {section === 'posters' ? (
+              <button
+                onClick={handleSyncPosters}
+                disabled={isSyncingPosters}
+                className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
+              >
+                {isSyncingPosters ? 'Syncing...' : 'Sync Posters from Supabase'}
+              </button>
+            ) : (
+              <button
+                onClick={resetFilters}
+                className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
+              >
+                Reset filters
+              </button>
+            )}
           </div>
         ) : (
           <>
-            <div className={`grid ${getGridColsClass()} gap-3 sm:gap-4`}>
-              {visibleThumbnails.map((item, index) => (
-                <ThumbnailCard
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  poster={section === 'posters'}
-                  showCardInfo={section === 'thumbnails' && showCardInfo}
-                  onInspect={handleInspect}
-                  onDelete={isAdmin ? handleRequestDelete : undefined}
-                />
-              ))}
-            </div>
+            {section === 'posters' ? (
+              <div className={`${getPosterColsClass()} gap-3 sm:gap-4 space-y-3 sm:space-y-4`}>
+                {visibleThumbnails.map((item, index) => (
+                  <div key={item.id} className="break-inside-avoid mb-3 sm:mb-4">
+                    <ThumbnailCard
+                      item={item}
+                      index={index}
+                      poster={true}
+                      showCardInfo={false}
+                      onInspect={handleInspect}
+                      onDelete={isAdmin ? handleRequestDelete : undefined}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`grid ${getGridColsClass()} gap-3 sm:gap-4`}>
+                {visibleThumbnails.map((item, index) => (
+                  <ThumbnailCard
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    poster={false}
+                    showCardInfo={showCardInfo}
+                    onInspect={handleInspect}
+                    onDelete={isAdmin ? handleRequestDelete : undefined}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Paging footer: infinite scroll with an explicit control. */}
             {visibleCount < filteredThumbnails.length && (

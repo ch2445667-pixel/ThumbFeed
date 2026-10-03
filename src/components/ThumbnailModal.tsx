@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Check, X as XIcon } from 'lucide-react';
+import { Pencil, Check, X as XIcon, Eye, Calendar, ExternalLink, User } from 'lucide-react';
 import { IconClose, IconDownload, IconTrash } from './icons/AppIcons';
 import { ThumbnailItem } from '../lib/types';
 
@@ -227,18 +227,80 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
               </div>
             )}
 
-            {/* Thumbnail Full HD Image View */}
-            <div className="relative aspect-video w-full rounded-[14px] overflow-hidden bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/20 shadow-inner">
+            {/* Thumbnail / Poster Image View */}
+            <div className={`relative w-full rounded-[14px] overflow-hidden bg-[#401D1A]/10 dark:bg-black/60 border border-[#401D1A]/20 dark:border-[#E4E0D3]/20 shadow-inner flex items-center justify-center ${item.kind === 'poster' ? 'max-h-[78vh] py-1' : 'aspect-video bg-[#401D1A]'}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.imageUrl}
-                alt={item.title || 'Thumbnail Preview'}
-                className="w-full h-full object-contain"
+                alt={item.title || 'Preview'}
+                className={`object-contain transition-opacity duration-200 ${item.kind === 'poster' ? 'max-h-[75vh] w-auto max-w-full rounded-lg' : 'w-full h-full'}`}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                 }}
               />
             </div>
+
+            {/* Metadata Footer: Channel name with link, Views count, Upload date */}
+            {(() => {
+              const isTanzeeOrUnknown =
+                !item.creator ||
+                item.creator.trim() === '' ||
+                item.creator.toLowerCase().includes('tanzee') ||
+                item.creator.trim() === 'YouTube Creator' ||
+                item.creator.trim() === 'Unknown';
+
+              const creatorName = isTanzeeOrUnknown ? null : item.creator;
+              const viewsText = item.viewsEstimate
+                ? item.viewsEstimate.toLowerCase().includes('view')
+                  ? item.viewsEstimate
+                  : `${item.viewsEstimate} views`
+                : null;
+              const publishedDate = item.publishedTime || null;
+              const isYouTube =
+                item.sourceUrl &&
+                (item.sourceUrl.includes('youtube.com') || item.sourceUrl.includes('youtu.be'));
+
+              if (!creatorName && !viewsText && !publishedDate && !item.sourceUrl) {
+                return null;
+              }
+
+              return (
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 text-xs text-[#401D1A]/80 dark:text-[#E4E0D3]/80">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {creatorName && (
+                      <div className="flex items-center gap-1.5 font-semibold text-[#401D1A] dark:text-[#FFFFFF]">
+                        <User className="w-3.5 h-3.5 opacity-70" />
+                        <span>{creatorName}</span>
+                      </div>
+                    )}
+                    {viewsText && (
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#401D1A]/5 dark:bg-[#E4E0D3]/10 font-medium text-[#401D1A] dark:text-[#FFFFFF]">
+                        <Eye className="w-3.5 h-3.5 opacity-70" />
+                        <span>{viewsText}</span>
+                      </div>
+                    )}
+                    {publishedDate && (
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#401D1A]/5 dark:bg-[#E4E0D3]/10 text-xs">
+                        <Calendar className="w-3.5 h-3.5 opacity-70" />
+                        <span>{publishedDate}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {item.sourceUrl && (
+                    <a
+                      href={item.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:underline ml-auto"
+                    >
+                      <span>{isYouTube ? 'Watch on YouTube' : 'View Source'}</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
           </motion.div>
         </div>
       )}

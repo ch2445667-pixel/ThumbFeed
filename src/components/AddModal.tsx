@@ -55,6 +55,8 @@ interface BatchExtractedItem {
   imageUrl: string;
   niche: NicheCategory;
   tags: string[];
+  views?: string;
+  publishedTime?: string;
   selected?: boolean;
 }
 
@@ -587,7 +589,7 @@ export const AddModal: React.FC<AddModalProps> = ({
       console.warn('Error converting image:', err);
       return null;
     }
-  }, [uploadCategories, unitWord]);
+  }, [uploadCategories, unitWord, mediaKind]);
 
   // Handle multiple files selected via browse or drop
   const handleMultipleFiles = useCallback(async (files: FileList | File[]) => {
@@ -882,11 +884,12 @@ export const AddModal: React.FC<AddModalProps> = ({
         const itemCategories = item.tags || [];
         return {
           id: item.id,
+          kind: mediaKind,
           imageUrl: item.dataUrl,
           title: item.title || `Curated ${unitWord}`,
-          creator: item.creator || 'Creator',
-          niche: (itemCategories[0] || '') as NicheCategory,
-          tags: itemCategories
+          creator: item.creator || (mediaKind === 'poster' ? 'Cinema' : 'Creator'),
+          niche: (itemCategories[0] || (mediaKind === 'poster' ? 'Cinema' : '')) as NicheCategory,
+          tags: itemCategories.length > 0 ? itemCategories : (mediaKind === 'poster' ? ['Movie Poster', 'Cinema'] : [])
         };
       });
 
@@ -992,35 +995,47 @@ export const AddModal: React.FC<AddModalProps> = ({
       const videoMatches = Array.from(uniqueMap.values());
 
       if (videoMatches.length > 0) {
-        // Extract all matched video links in parallel
+        // Fetch rich YouTube details (views count, date uploaded, channel name, title) via details API
+        const videoIds = videoMatches.map(m => m.id);
+        let detailsMap: Record<string, any> = {};
+        try {
+          const detRes = await fetch('/api/youtube/details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoIds })
+          });
+          if (detRes.ok) {
+            const detData = await detRes.json();
+            detailsMap = detData.details || {};
+          }
+        } catch (detErr) {
+          console.warn('YouTube details fetch note:', detErr);
+        }
+
+        // Extract all matched video links in parallel with fallback to oEmbed if needed
         const items: BatchExtractedItem[] = await Promise.all(
           videoMatches.map(async (match) => {
             const imgUrl = getYoutubeJpgUrl(match.id);
-            let title = 'YouTube Thumbnail';
-            let creator = 'YouTube Creator';
+            const det = detailsMap[match.id];
+            let title = det?.title || 'YouTube Thumbnail';
+            let creator = det?.creator || 'YouTube Creator';
+            let views = det?.views || '';
+            let publishedTime = det?.publishedTime || '';
 
-            try {
-              // Try YouTube's official oEmbed endpoint first
-              const ytOembedRes = await fetch(
-                `https://www.youtube.com/oembed?url=${encodeURIComponent(match.originalUrl)}&format=json`
-              );
-              if (ytOembedRes.ok) {
-                const ytData = await ytOembedRes.json();
-                if (ytData.title) title = ytData.title;
-                if (ytData.author_name) creator = ytData.author_name;
-              } else {
-                // Fallback to noembed
-                const noembedRes = await fetch(
-                  `https://noembed.com/embed?url=${encodeURIComponent(match.originalUrl)}`
+            if (title === 'YouTube Thumbnail' || creator === 'YouTube Creator') {
+              try {
+                // Try YouTube's official oEmbed endpoint as fallback
+                const ytOembedRes = await fetch(
+                  `https://www.youtube.com/oembed?url=${encodeURIComponent(match.originalUrl)}&format=json`
                 );
-                if (noembedRes.ok) {
-                  const odata = await noembedRes.json();
-                  if (odata.title) title = odata.title;
-                  if (odata.author_name) creator = odata.author_name;
+                if (ytOembedRes.ok) {
+                  const ytData = await ytOembedRes.json();
+                  if (ytData.title) title = ytData.title;
+                  if (ytData.author_name) creator = ytData.author_name;
                 }
+              } catch (err) {
+                console.warn('oEmbed lookup error for', match.id, err);
               }
-            } catch (err) {
-              console.warn('oEmbed lookup error for', match.id, err);
             }
 
             const chosenCategories = [...youtubeCategories];
@@ -1033,6 +1048,8 @@ export const AddModal: React.FC<AddModalProps> = ({
               imageUrl: imgUrl,
               niche: (chosenCategories[0] || '') as NicheCategory,
               tags: [...chosenCategories],
+              views,
+              publishedTime,
               selected: true
             };
           })
@@ -1078,6 +1095,8 @@ export const AddModal: React.FC<AddModalProps> = ({
             imageUrl: it.imageUrl || getYoutubeJpgUrl(it.videoId),
             niche: (chosenCategories[0] || '') as NicheCategory,
             tags: [...chosenCategories],
+            views: it.views || '',
+            publishedTime: it.publishedTime || '',
             selected: true
           });
         });
@@ -1177,6 +1196,8 @@ export const AddModal: React.FC<AddModalProps> = ({
         ocrText: '',
         emotion: 'Curious',
         breakdownNotes: mediaKind === 'poster' ? 'Imported movie poster.' : 'Auto-extracted inspiration thumbnail.',
+        viewsEstimate: item.views,
+        publishedTime: item.publishedTime,
         source: 'supabase-storage',
         createdAt: new Date().toISOString(),
         likesCount: Math.floor(Math.random() * 150) + 40
@@ -1190,10 +1211,14 @@ export const AddModal: React.FC<AddModalProps> = ({
           id: item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`),
           videoId: item.videoId,
           imageUrl: item.imageUrl,
+          sourceUrl: item.url,
           title: item.title,
           creator: item.creator,
           niche: (chosenCategories[0] || '') as NicheCategory,
-          tags: chosenCategories
+          tags: chosenCategories,
+          views: item.views,
+          viewsEstimate: item.views,
+          publishedTime: item.publishedTime
         };
       });
 
@@ -1217,7 +1242,9 @@ export const AddModal: React.FC<AddModalProps> = ({
             const supaUrl = (vId ? map.get(vId) : null) || map.get(uniqueItems[idx]?.id);
             return {
               ...item,
-              imageUrl: supaUrl || item.imageUrl
+              imageUrl: supaUrl || item.imageUrl,
+              viewsEstimate: uniqueItems[idx]?.views || item.viewsEstimate,
+              publishedTime: uniqueItems[idx]?.publishedTime || item.publishedTime
             };
           });
         }
@@ -1779,13 +1806,16 @@ export const AddModal: React.FC<AddModalProps> = ({
                               className="w-full px-2 py-1 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
                             />
 
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
-                                <span className="text-[10px] text-ink-faint truncate max-w-[140px]">
-                                  • {item.creator}
-                                </span>
-                              </div>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
+                                  <span
+                                    className="text-[10px] text-ink-faint truncate max-w-[220px]"
+                                    title={`${item.creator}${item.views ? ` • ${item.views}` : ''}${item.publishedTime ? ` • ${item.publishedTime}` : ''}`}
+                                  >
+                                    • {item.creator}{item.views ? ` • ${item.views}` : ''}{item.publishedTime ? ` • ${item.publishedTime}` : ''}
+                                  </span>
+                                </div>
                               <ItemCategoryMultiSelect
                                 selectedCategories={item.tags || []}
                                 availableCategories={availableCategories}

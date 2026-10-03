@@ -60,3 +60,24 @@ CREATE POLICY "Allow public update on collections"
 
 CREATE POLICY "Allow public delete on collections"
   ON public.collections FOR DELETE USING (true);
+
+-- 4. Enable Row Level Security (RLS) on Storage Objects for Thumbnails and Posters
+DO $$
+BEGIN
+  -- Storage object read access
+  DROP POLICY IF EXISTS "Allow public read access on storage objects" ON storage.objects;
+  CREATE POLICY "Allow public read access on storage objects"
+    ON storage.objects FOR SELECT USING (true);
+
+  -- Storage object insert access
+  DROP POLICY IF EXISTS "Allow public insert on storage objects" ON storage.objects;
+  CREATE POLICY "Allow public insert on storage objects"
+    ON storage.objects FOR INSERT WITH CHECK (true);
+
+  -- Storage object delete access
+  DROP POLICY IF EXISTS "Allow public delete on storage objects" ON storage.objects;
+  CREATE POLICY "Allow public delete on storage objects"
+    ON storage.objects FOR DELETE USING (true);
+EXCEPTION WHEN OTHERS THEN
+  NULL;
+END $$;

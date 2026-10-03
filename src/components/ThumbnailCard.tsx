@@ -98,23 +98,22 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
   const shouldRenderFooter = showCardInfo && hasMetadataToShow && !poster;
 
-  // Movie posters are 2:3 portrait; thumbnails stay 16:9.
-  const frameAspect = poster ? 'aspect-[2/3]' : 'aspect-video';
-  const frameRatio = poster ? { aspectRatio: '2/3' } : { aspectRatio: '16/9' };
+  // Thumbnails are 16:9; Posters keep their original natural aspect ratio without being locked to fixed ratio
+  const frameAspect = poster ? 'w-full h-auto' : 'aspect-video';
+  const frameRatio = poster ? undefined : { aspectRatio: '16/9' };
 
   return (
     <div
       onClick={() => onInspect(item)}
       suppressHydrationWarning
-      className={`group relative w-full cursor-pointer select-none rounded-lg border border-line bg-surface shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.03] hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] ${
+      className={`group relative w-full cursor-pointer select-none rounded-lg border border-line bg-surface shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.02] hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] ${
         shouldRenderFooter ? 'p-2 flex flex-col' : 'overflow-hidden'
-      }`}
+      } ${poster ? 'h-auto self-start break-inside-avoid' : ''}`}
     >
-      {/* Thumbnail. The stage behind the art is neutral in both themes so the
-          artwork is the only saturated element on screen. */}
+      {/* Artwork stage. Neutral backdrop preserves true color; posters use natural aspect ratio */}
       <div
         className={`thumb-stage relative ${frameAspect} w-full overflow-hidden ${
-          shouldRenderFooter ? 'rounded-sm' : poster ? 'rounded-none' : 'rounded-t-[13px]'
+          shouldRenderFooter ? 'rounded-sm' : poster ? 'rounded-lg' : 'rounded-t-[13px]'
         }`}
         style={frameRatio}
       >
@@ -123,10 +122,10 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
           src={item.imageUrl}
           alt={displayTitle || item.title}
           suppressHydrationWarning
-          className={`block h-full w-full object-cover object-center transition-opacity duration-300 ease-fluid ${
-            imgReady ? 'opacity-100' : 'opacity-0'
-          }`}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          className={`block w-full transition-opacity duration-300 ease-fluid ${
+            poster ? 'h-auto object-contain w-full' : 'h-full object-cover object-center'
+          } ${imgReady ? 'opacity-100' : 'opacity-0'}`}
+          style={poster ? { width: '100%', height: 'auto', display: 'block', maxHeight: 'none' } : { width: '100%', height: '100%', objectFit: 'cover' }}
           loading={index < 6 ? 'eager' : 'lazy'}
           decoding="async"
           fetchPriority={index < 6 ? 'high' : 'auto'}

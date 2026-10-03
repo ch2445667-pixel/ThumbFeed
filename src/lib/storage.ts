@@ -3,10 +3,26 @@ import { INITIAL_THUMBNAILS } from './mockData';
 import { INITIAL_POSTERS } from './posters';
 import { supabase, isSupabaseConfigured } from './supabase';
 
-const USER_IMPORTED_KEY = 'thumbvault_user_imported_v3';
-const THUMBNAILS_KEY = 'thumbvault_thumbnails_v800_classified';
-const COLLECTIONS_KEY = 'thumbvault_collections_v800';
-const DELETED_KEYS_KEY = 'thumbvault_permanently_deleted_keys_v1';
+const USER_IMPORTED_KEY = 'thumbvault_user_imported_v1000_wiped';
+const THUMBNAILS_KEY = 'thumbvault_thumbnails_v1000_wiped';
+const COLLECTIONS_KEY = 'thumbvault_collections_v1000_clean';
+const DELETED_KEYS_KEY = 'thumbvault_permanently_deleted_keys_v2';
+const POSTERS_KEY = 'thumbfeed_posters_v2';
+
+// Purge any legacy cached thumbnails from previous sessions immediately
+if (typeof window !== 'undefined') {
+  try {
+    const legacyKeys = [
+      'thumbvault_thumbnails_v900_clean',
+      'thumbvault_user_imported_v4_clean',
+      'thumbfeed_thumbnails_v1',
+      'thumbfeed_user_imported_v1',
+      'thumbfeed_thumbnails',
+      'thumbvault_thumbnails'
+    ];
+    legacyKeys.forEach(k => localStorage.removeItem(k));
+  } catch {}
+}
 
 export function getPermanentlyDeletedKeys(): Set<string> {
   if (typeof window === 'undefined') return new Set();
@@ -38,7 +54,7 @@ export const DEFAULT_COLLECTIONS: CollectionBoard[] = [
     id: 'col-1',
     name: '🔥 High CTR Hooks',
     description: 'Thumbnails with bold expressions, curiosity gaps and high engagement',
-    thumbnailIds: [INITIAL_THUMBNAILS[0]?.id || 'thumb-1', INITIAL_THUMBNAILS[1]?.id || 'thumb-2', INITIAL_THUMBNAILS[2]?.id || 'thumb-3'],
+    thumbnailIds: [],
     createdAt: '2026-08-20',
     colorTheme: '#401D1A'
   },
@@ -46,7 +62,7 @@ export const DEFAULT_COLLECTIONS: CollectionBoard[] = [
     id: 'col-2',
     name: '🖤 Dark & Minimalist Tech',
     description: 'Clean Apple-style and sleek documentary lighting references',
-    thumbnailIds: [INITIAL_THUMBNAILS[3]?.id || 'thumb-4', INITIAL_THUMBNAILS[4]?.id || 'thumb-5', INITIAL_THUMBNAILS[5]?.id || 'thumb-6'],
+    thumbnailIds: [],
     createdAt: '2026-08-20',
     colorTheme: '#E4E0D3'
   }
@@ -331,137 +347,46 @@ export function saveUserImportedThumbnails(newItems: ThumbnailItem[]): Thumbnail
 // Fetch live from Supabase Storage Bucket ('Thumbnails') & PostgreSQL database, merging with user imports
 export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
   const userImports = getUserImportedThumbnails();
-  let baseThumbnails: ThumbnailItem[] = INITIAL_THUMBNAILS;
+  let baseThumbnails: ThumbnailItem[] = [];
 
   if (isSupabaseConfigured && supabase) {
     try {
-      // 1. Direct Supabase Storage Bucket Live Sync
-      const { data: bucketFiles, error: bucketError } = await supabase.storage
-        .from('Thumbnails')
-        .list('', {
-          limit: 1500,
-          offset: 0,
-          sortBy: { column: 'created_at', order: 'desc' }
-        });
+      const { data, error } = await supabase
+        .from('thumbnails')
+        .select('*')
+        .not('breakdown_notes', 'ilike', '%poster%')
+        .not('id', 'ilike', 'poster-%')
+        .not('niche', 'eq', 'Cinema')
+        .not('source', 'eq', 'poster')
+        .order('created_at', { ascending: false })
+        .limit(5000);
 
-      // Also query the thumbnails table to get rich titles/tags for chrome extension / user uploads
-      let dbRecordsMap = new Map<string, any>();
-      try {
-        const { data: dbRecords } = await supabase
-          .from('thumbnails')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1000);
-        if (dbRecords && Array.isArray(dbRecords)) {
-          dbRecords.forEach((rec: any) => {
-            if (rec.image_url) dbRecordsMap.set(rec.image_url, rec);
-            if (rec.id) dbRecordsMap.set(rec.id, rec);
-            const fname = decodeURIComponent(rec.image_url.split('/').pop()?.split('?')[0] || '');
-            if (fname) dbRecordsMap.set(fname, rec);
-          });
-        }
-      } catch (dbQueryErr) {
-        console.warn('DB lookup note:', dbQueryErr);
-      }
-
-      if (!bucketError && bucketFiles && bucketFiles.length > 0) {
-        // Filter out folders/empty entries and keep valid image files
-        const imageFiles = bucketFiles.filter(f => f.name && !f.name.startsWith('.') && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(f.name));
-
-        if (imageFiles.length > 0) {
-          const newlyAdded: ThumbnailItem[] = [];
-          const existingLibrary: ThumbnailItem[] = [];
-
-          imageFiles.forEach((file, idx) => {
-            const fileName = file.name;
-            const decodedName = decodeURIComponent(fileName);
-            const { data: pubData } = supabase!.storage.from('Thumbnails').getPublicUrl(fileName);
-            const imageUrl = pubData?.publicUrl || `https://xahchsuffmskbgvnxcgs.supabase.co/storage/v1/object/public/Thumbnails/${encodeURIComponent(fileName)}`;
-
-            const dbRec = dbRecordsMap.get(fileName) || dbRecordsMap.get(decodedName) || dbRecordsMap.get(imageUrl) || (file.id ? dbRecordsMap.get(file.id) : undefined);
-
-            // Check if we have pre-enriched metadata for this file in initialMap
-            const existing =
-              initialMap.get(fileName) ||
-              initialMap.get(decodedName) ||
-              initialMap.get(imageUrl) ||
-              (file.id ? initialMap.get(file.id) : undefined);
-
-            if (existing && !dbRec) {
-              existingLibrary.push({
-                ...existing,
-                id: existing.id || `thumb-${file.id || idx}`,
-                imageUrl,
-                sourceUrl: existing.sourceUrl || imageUrl,
-                createdAt: file.created_at || existing.createdAt
-              });
-              return;
-            }
-
-            // Newly added file in the Supabase bucket (from Chrome Extension or User)!
-            const title = dbRec?.title || formatTitleFromFilename(decodedName) || 'YouTube Thumbnail';
-            const meta = classifyNicheFromFilename(decodedName);
-            const niche = dbRec ? (dbRec.niche ?? '') : meta.niche;
-            const tags = dbRec ? (Array.isArray(dbRec.tags) ? dbRec.tags : []) : meta.tags;
-
-            const newItem: ThumbnailItem = {
-              id: dbRec?.id || `thumb-storage-${file.id || idx}-${fileName.replace(/[^a-zA-Z0-9]/g, '')}`,
-              title,
-              creator: dbRec?.creator && !dbRec.creator.toLowerCase().includes('tanzee') ? dbRec.creator : 'Unknown',
-              imageUrl,
-              sourceUrl: dbRec?.source_url || imageUrl,
-              niche,
-              styles: dbRec?.styles || ['High-Contrast Glow', 'Face Close-up'],
-              tags,
-              colors: dbRec?.colors || ['#401D1A', '#E4E0D3', '#FFFFFF'],
-              ocrText: dbRec?.ocr_text || '',
-              emotion: dbRec?.emotion || 'Curious',
-              breakdownNotes: dbRec?.breakdown_notes || 'Auto-synchronized directly from Supabase Storage bucket.',
-              viewsEstimate: dbRec?.views_estimate || '1.2M',
-              source: 'supabase-storage',
-              createdAt: file.created_at || dbRec?.created_at || new Date().toISOString(),
-              likesCount: dbRec?.likes_count || getDeterministicLikes(fileName)
-            };
-
-            newlyAdded.push(newItem);
-          });
-
-          // Place newly added thumbnails (from Chrome extension or uploads) at top of feed!
-          baseThumbnails = [...newlyAdded, ...existingLibrary];
-        }
+      if (!error && data && data.length > 0) {
+        baseThumbnails = data.map((row: any) => ({
+          id: row.id,
+          title: row.title || 'YouTube Thumbnail',
+          creator: row.creator && !row.creator.toLowerCase().includes('tanzee') ? row.creator : 'Unknown',
+          imageUrl: row.image_url,
+          sourceUrl: row.source_url || row.image_url,
+          niche: row.niche || '',
+          styles: row.styles && row.styles.length > 0 ? row.styles : ['Face Close-up', 'High-Contrast Glow'],
+          tags: Array.isArray(row.tags) ? row.tags : (row.niche ? [row.niche] : []),
+          colors: row.colors && row.colors.length > 0 ? row.colors : ['#401D1A', '#E4E0D3', '#FFFFFF'],
+          ocrText: row.ocr_text || '',
+          emotion: row.emotion || 'Curious',
+          breakdownNotes: row.breakdown_notes || '',
+          viewsEstimate: row.views_estimate || '',
+          publishedTime: row.published_time || (row.breakdown_notes?.match(/Published:\s*([^|]+)/i)?.[1]?.trim()) || undefined,
+          source: row.source || 'supabase-storage',
+          createdAt: row.created_at || new Date().toISOString(),
+          likesCount: row.likes_count || 0
+        }));
       } else {
-        // 2. Database table query fallback
-        const { data, error } = await supabase
-          .from('thumbnails')
-          .select('*')
-          .order('id', { ascending: true })
-          .limit(1500);
-
-        if (!error && data && data.length > 0) {
-          const mapped: ThumbnailItem[] = data.map((row: any) => ({
-            id: row.id,
-            title: row.title || 'YouTube Thumbnail',
-            creator: row.creator && !row.creator.toLowerCase().includes('tanzee') ? row.creator : 'Unknown',
-            imageUrl: row.image_url,
-            sourceUrl: row.source_url || row.image_url,
-            niche: row.niche || '',
-            styles: row.styles && row.styles.length > 0 ? row.styles : ['Face Close-up', 'High-Contrast Glow'],
-            tags: Array.isArray(row.tags) ? row.tags : (row.niche ? [row.niche] : []),
-            colors: row.colors && row.colors.length > 0 ? row.colors : ['#401D1A', '#E4E0D3', '#FFFFFF'],
-            ocrText: row.ocr_text || '',
-            emotion: row.emotion || 'Curious',
-            breakdownNotes: row.breakdown_notes || 'High-CTR YouTube thumbnail design leveraging visual hierarchy.',
-            viewsEstimate: row.views_estimate || '1.5M',
-            source: row.source || 'supabase-storage',
-            createdAt: row.created_at || new Date().toISOString(),
-            likesCount: row.likes_count || 100
-          }));
-
-          baseThumbnails = mapped;
-        }
+        baseThumbnails = [];
       }
     } catch (err) {
       console.warn('Supabase fetch error, using stored dataset:', err);
+      baseThumbnails = [];
     }
   }
 
@@ -705,7 +630,7 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
       colors: item.colors,
       ocr_text: item.ocrText,
       emotion: item.emotion,
-      breakdown_notes: item.breakdownNotes,
+      breakdown_notes: item.publishedTime ? `Published: ${item.publishedTime}${item.breakdownNotes ? ` | ${item.breakdownNotes}` : ''}` : (item.breakdownNotes || ''),
       views_estimate: item.viewsEstimate,
       source: item.source,
       likes_count: item.likesCount || 0
@@ -723,12 +648,6 @@ export function saveStoredThumbnail(item: ThumbnailItem): ThumbnailItem[] {
   return saveStoredThumbnails([item]);
 }
 
-/**
- * Posters wall persistence. Posters live in their own local collection and
- * never touch the thumbnails Supabase table, which has no kind column.
- */
-const POSTERS_KEY = 'thumbfeed_posters_v1';
-
 export function getStoredPosters(): ThumbnailItem[] {
   if (typeof window === 'undefined') return INITIAL_POSTERS;
   try {
@@ -736,20 +655,234 @@ export function getStoredPosters(): ThumbnailItem[] {
     if (!raw) return INITIAL_POSTERS;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_POSTERS;
-    return parsed.filter((p) => p && p.id && p.imageUrl);
+    return parsed.filter((p) => p && p.id && p.imageUrl).map(p => ({ ...p, kind: 'poster' as const }));
   } catch {
     return INITIAL_POSTERS;
   }
 }
 
+/**
+ * Fetch posters live from Supabase (Database table + Storage buckets)
+ */
+export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
+  const localPosters = getStoredPosters();
+  const dbPosters: ThumbnailItem[] = [];
+  const storagePosters: ThumbnailItem[] = [];
+
+  const client = supabase;
+  if (isSupabaseConfigured && client) {
+    try {
+      // 1. Fetch posters from Supabase PostgreSQL database table
+      const { data: dbData, error: dbErr } = await client
+        .from('thumbnails')
+        .select('*')
+        .or('id.ilike.poster-%,breakdown_notes.ilike.%poster%,niche.eq.Cinema,source.eq.poster,image_url.ilike.%/posters/%')
+        .order('created_at', { ascending: false })
+        .limit(1000);
+
+      if (!dbErr && dbData && dbData.length > 0) {
+        dbData.forEach((row: any) => {
+          dbPosters.push({
+            id: row.id.startsWith('poster-') ? row.id : `poster-${row.id}`,
+            kind: 'poster',
+            title: row.title || 'Movie Poster',
+            creator: row.creator && row.creator !== 'YouTube Creator' ? row.creator : 'Cinema',
+            imageUrl: row.image_url,
+            sourceUrl: row.source_url || row.image_url,
+            niche: row.niche || 'Cinema',
+            styles: row.styles || [],
+            tags: Array.isArray(row.tags) && row.tags.length > 0 ? row.tags : ['Movie Poster', 'Cinema'],
+            colors: row.colors || [],
+            ocrText: row.ocr_text || '',
+            emotion: row.emotion || 'Curious',
+            breakdownNotes: row.breakdown_notes || 'Uploaded movie poster.',
+            source: 'supabase-storage',
+            createdAt: row.created_at || new Date().toISOString(),
+            likesCount: row.likes_count || 120
+          });
+        });
+      }
+
+      // 2. Fetch posters from Supabase Storage buckets ('posters', 'Posters', 'Thumbnails')
+      const bucketsToCheck = ['posters', 'Posters', 'Thumbnails'];
+      for (const bName of bucketsToCheck) {
+        try {
+          const { data: files } = await client.storage.from(bName).list('', { limit: 200 });
+          if (files && files.length > 0) {
+            files.forEach((file) => {
+              if (file.name && !file.name.startsWith('.')) {
+                const isExplicitPoster = bName.toLowerCase().includes('poster') ||
+                                         file.name.toLowerCase().includes('poster') ||
+                                         file.name.toLowerCase().includes('movie');
+                if (isExplicitPoster) {
+                  const { data: pubData } = client.storage.from(bName).getPublicUrl(file.name);
+                  const url = pubData?.publicUrl || `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co'}/storage/v1/object/public/${bName}/${encodeURIComponent(file.name)}`;
+                  const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/^poster[_-]/i, '').replace(/^[0-9]+[.\s_-]*/, '').replace(/[_-]+/g, ' ').trim();
+                  storagePosters.push({
+                    id: `poster-storage-${bName}-${encodeURIComponent(file.name)}`,
+                    kind: 'poster',
+                    title: cleanTitle || 'Movie Poster',
+                    creator: 'Cinema',
+                    imageUrl: url,
+                    sourceUrl: url,
+                    niche: 'Cinema',
+                    styles: [],
+                    tags: ['Movie Poster', 'Cinema'],
+                    colors: [],
+                    ocrText: '',
+                    source: 'supabase-storage',
+                    createdAt: file.created_at || new Date().toISOString(),
+                    likesCount: 150
+                  });
+                }
+              }
+            });
+          }
+
+          // Check subfolder posters/ inside Thumbnails bucket
+          if (bName === 'Thumbnails') {
+            const { data: subfiles } = await client.storage.from('Thumbnails').list('posters', { limit: 300 });
+            if (subfiles && subfiles.length > 0) {
+              subfiles.forEach((file) => {
+                if (file.name && !file.name.startsWith('.')) {
+                  const filePath = `posters/${file.name}`;
+                  const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(filePath);
+                  const url = pubData?.publicUrl || `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co'}/storage/v1/object/public/Thumbnails/${filePath}`;
+                  const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/^poster[_-]/i, '').replace(/^[0-9]+[.\s_-]*/, '').replace(/[_-]+/g, ' ').trim();
+                  storagePosters.push({
+                    id: `poster-storage-sub-${encodeURIComponent(file.name)}`,
+                    kind: 'poster',
+                    title: cleanTitle || 'Movie Poster',
+                    creator: 'Cinema',
+                    imageUrl: url,
+                    sourceUrl: url,
+                    niche: 'Cinema',
+                    styles: [],
+                    tags: ['Movie Poster', 'Cinema'],
+                    colors: [],
+                    ocrText: '',
+                    source: 'supabase-storage',
+                    createdAt: file.created_at || new Date().toISOString(),
+                    likesCount: 150
+                  });
+                }
+              });
+            }
+          }
+        } catch {}
+      }
+
+      // Merge all Supabase posters with local and initial posters
+      const allSupabase = [...dbPosters, ...storagePosters];
+      const basePool = localPosters.length > 0 ? localPosters : INITIAL_POSTERS;
+      const seenUrls = new Set<string>();
+      const combined: ThumbnailItem[] = [];
+
+      allSupabase.forEach(p => {
+        if (!seenUrls.has(p.imageUrl)) {
+          seenUrls.add(p.imageUrl);
+          combined.push(p);
+        }
+      });
+
+      basePool.forEach(p => {
+        if (!seenUrls.has(p.imageUrl)) {
+          seenUrls.add(p.imageUrl);
+          combined.push(p);
+        }
+      });
+
+      persistPosterList(combined);
+      return combined;
+    } catch (err) {
+      console.warn('Error fetching live Supabase posters:', err);
+    }
+  }
+
+  return localPosters.length > 0 ? localPosters : INITIAL_POSTERS;
+}
+
 export function saveStoredPosters(newItems: ThumbnailItem[]): ThumbnailItem[] {
   if (typeof window === 'undefined') return newItems;
-  const withKind = newItems.map((t) => ({ ...t, kind: 'poster' as const }));
+  const withKind = newItems.map((t) => ({
+    ...t,
+    kind: 'poster' as const,
+    id: t.id.startsWith('poster-') ? t.id : `poster-${t.id}`
+  }));
   const current = getStoredPosters();
   const seen = new Set(current.map((t) => t.id));
   const fresh = withKind.filter((t) => !seen.has(t.id));
   const merged = [...fresh, ...current];
   persistPosterList(merged);
+
+  // Automatically ensure poster images are uploaded to Supabase Storage and records upserted to DB
+  const client = supabase;
+  if (isSupabaseConfigured && client && fresh.length > 0) {
+    fresh.forEach(async (item) => {
+      let finalUrl = item.imageUrl;
+
+      // If poster imageUrl is a base64 dataUrl, immediately upload to Supabase Storage in posters/
+      if (item.imageUrl.startsWith('data:')) {
+        try {
+          const byteString = atob(item.imageUrl.split(',')[1]);
+          const mimeMatch = item.imageUrl.split(',')[0].match(/:(.*?);/);
+          const mimeString = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const blob = new Blob([ab], { type: mimeString });
+          const rand = Math.random().toString(36).slice(2, 7);
+          const clean = (item.title || 'poster').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 30);
+          const storagePath = `posters/poster_${Date.now()}_${clean}_${rand}.jpg`;
+
+          const { error: upErr } = await client.storage
+            .from('Thumbnails')
+            .upload(storagePath, blob, { contentType: 'image/jpeg', upsert: true });
+
+          if (!upErr) {
+            const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(storagePath);
+            if (pubData?.publicUrl) {
+              finalUrl = pubData.publicUrl;
+              item.imageUrl = finalUrl;
+              item.sourceUrl = finalUrl;
+              const currentPosters = getStoredPosters();
+              const updatedList = currentPosters.map(p => p.id === item.id ? { ...p, imageUrl: finalUrl, sourceUrl: finalUrl } : p);
+              persistPosterList(updatedList);
+            }
+          }
+        } catch (e) {
+          console.warn('Background poster storage upload error:', e);
+        }
+      }
+
+      // Upsert into Supabase database table 'thumbnails'
+      try {
+        const assignedId = item.id.startsWith('poster-') ? item.id : `poster-${item.id}`;
+        await client.from('thumbnails').upsert({
+          id: assignedId,
+          title: item.title || 'Movie Poster',
+          creator: item.creator || 'Cinema',
+          image_url: finalUrl,
+          source_url: finalUrl,
+          niche: item.niche || 'Cinema',
+          styles: item.styles || [],
+          tags: item.tags && item.tags.length > 0 ? item.tags : ['Movie Poster', 'Cinema'],
+          colors: item.colors || [],
+          ocr_text: item.ocrText || '',
+          emotion: item.emotion || 'Curious',
+          breakdown_notes: item.breakdownNotes || 'Uploaded movie poster.',
+          source: 'poster',
+          likes_count: item.likesCount || 120,
+          created_at: item.createdAt || new Date().toISOString()
+        });
+      } catch (upsertErr) {
+        console.warn('Supabase DB poster upsert warning:', upsertErr);
+      }
+    });
+  }
+
   return merged;
 }
 

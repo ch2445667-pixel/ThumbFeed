@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { extractColorProfile } from '../../../../lib/colorExtract';
+import { withDimensions } from '../../../../lib/dimensions';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -110,6 +111,21 @@ async function optimizeBuffer(input: Buffer, isPoster: boolean): Promise<Buffer>
   }
 }
 
+/**
+ * Read intrinsic dimensions from the bytes already in hand. Recorded with the
+ * row so the card can reserve the exact box before the image is requested.
+ */
+async function readDimensions(input: Buffer): Promise<{ width: number; height: number } | null> {
+  try {
+    const sharpMod: any = await import('sharp').then((m: any) => m.default || m);
+    const meta = await sharpMod(input).metadata();
+    if (meta && meta.width && meta.height) return { width: meta.width, height: meta.height };
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -145,6 +161,7 @@ export async function POST(req: NextRequest) {
         // empty for them rather than describing artwork we chose not to read.
         let colors: string[] = [];
         let colorFamilies: string[] = [];
+        let dimensions: { width: number; height: number } | null = null;
 
         try {
           const imageResult = await fetchImageBuffer(item.imageUrl, item.videoId);
@@ -157,6 +174,9 @@ export async function POST(req: NextRequest) {
               colors = profile.colors;
               colorFamilies = profile.families;
             }
+
+            // Dimensions come from the original, before the resize above.
+            dimensions = await readDimensions(imageResult.buffer);
 
             // Upload JPEG to Supabase Storage bucket 'Thumbnails' under posters/ or root
             const client = getSupabase();
@@ -190,7 +210,8 @@ export async function POST(req: NextRequest) {
         let dbSaved = false;
         try {
           const viewsValue = item.views || item.viewsEstimate || null;
-          const notes = isPoster ? 'Uploaded movie poster.' : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
+          const baseNote = isPoster ? 'Uploaded movie poster.' : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
+          const notes = withDimensions(baseNote, dimensions?.width, dimensions?.height);
           const record = {
             id: assignedId,
             title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
@@ -233,6 +254,8 @@ export async function POST(req: NextRequest) {
           uploadedToBucket: uploadSuccess,
           colors,
           colorFamilies,
+          width: dimensions?.width,
+          height: dimensions?.height,
           dbSaved
         });
       } catch (itemErr) {

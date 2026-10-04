@@ -529,18 +529,21 @@ export default function HomePage() {
     }
   };
 
-  // Dynamic column masonry for posters so each poster preserves its 100% natural original aspect ratio without locking
+  // Pinterest-style masonry for posters. Safe now that every card reserves its
+  // true height from recorded dimensions: the columns re-balance once at
+  // layout and never again, because no tile changes size once mounted. With
+  // unknown dimensions this was the cause of the flickering, shuffling wall.
   const getPosterColsClass = () => {
     switch (posterColumns) {
       case 3:
-        return 'columns-1 sm:columns-2 lg:columns-3';
+        return 'columns-2 sm:columns-2 lg:columns-3';
       case 4:
-        return 'columns-1 sm:columns-2 md:columns-3 lg:columns-4';
+        return 'columns-2 sm:columns-3 md:columns-3 lg:columns-4';
       case 6:
         return 'columns-2 sm:columns-3 md:columns-4 lg:columns-6';
       case 5:
       default:
-        return 'columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5';
+        return 'columns-2 sm:columns-3 md:columns-4 lg:columns-5';
     }
   };
 
@@ -649,9 +652,9 @@ export default function HomePage() {
         ) : (
           <>
             {section === 'posters' ? (
-              <div className={`${getPosterColsClass()} gap-3 sm:gap-4 space-y-3 sm:space-y-4`}>
+              <div className={`${getPosterColsClass()} gap-3 sm:gap-4`}>
                 {visibleThumbnails.map((item, index) => (
-                  <div key={item.id} className="break-inside-avoid mb-3 sm:mb-4">
+                  <div key={item.id} className="mb-3 break-inside-avoid sm:mb-4">
                     <ThumbnailCard
                       item={item}
                       index={index}

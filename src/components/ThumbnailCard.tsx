@@ -50,7 +50,6 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   // Native lazy loading is cheaper than a per-card observer: the browser
   // batches visibility tracking internally instead of running one
   // IntersectionObserver per tile.
-  const [imgReady, setImgReady] = React.useState(index < 6);
 
   const cachedYT = mounted ? getCachedYouTubeDetail(item) : null;
 
@@ -98,9 +97,17 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
   const shouldRenderFooter = showCardInfo && hasMetadataToShow && !poster;
 
-  // Thumbnails are 16:9; Posters keep their original natural aspect ratio without being locked to fixed ratio
-  const frameAspect = poster ? 'w-full h-auto' : 'aspect-video';
-  const frameRatio = poster ? undefined : { aspectRatio: '16/9' };
+  // Pinterest-style wall: each poster keeps its own aspect ratio, so the tile
+  // reserves its exact box from the dimensions recorded at upload time. The
+  // box never changes when the image arrives, which is what stops the masonry
+  // from re-balancing mid-scroll. Posters without recorded dimensions fall
+  // back to 2:3, which is the standard poster proportion.
+  const knownRatio = poster && item.width && item.height ? item.width / item.height : null;
+  const posterRatio = knownRatio ?? 2 / 3;
+  const frameAspect = poster ? '' : 'aspect-video';
+  const frameRatio = poster
+    ? { aspectRatio: `${posterRatio}` }
+    : { aspectRatio: '16/9' };
 
   return (
     <div
@@ -108,7 +115,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
       suppressHydrationWarning
       className={`group relative w-full cursor-pointer select-none rounded-lg border border-line bg-surface shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.02] hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] ${
         shouldRenderFooter ? 'p-2 flex flex-col' : 'overflow-hidden'
-      } ${poster ? 'h-auto self-start break-inside-avoid' : ''}`}
+      }`}
     >
       {/* Artwork stage. Neutral backdrop preserves true color; posters use natural aspect ratio */}
       <div
@@ -122,18 +129,13 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
           src={item.imageUrl}
           alt={displayTitle || item.title}
           suppressHydrationWarning
-          className={`block w-full transition-opacity duration-300 ease-fluid ${
-            poster ? 'h-auto object-contain w-full' : 'h-full object-cover object-center'
-          } ${imgReady ? 'opacity-100' : 'opacity-0'}`}
-          style={poster ? { width: '100%', height: 'auto', display: 'block', maxHeight: 'none' } : { width: '100%', height: '100%', objectFit: 'cover' }}
-          loading={index < 6 ? 'eager' : 'lazy'}
+          className={`block h-full w-full ${poster ? 'object-contain object-center' : 'object-cover object-center'}`}
+          style={{ width: '100%', height: '100%', objectFit: poster ? 'contain' : 'cover' }}
+          width={item.width ?? (poster ? 1000 : 1280)}
+          height={item.height ?? (poster ? 1500 : 720)}
+          loading={index < 8 ? 'eager' : 'lazy'}
           decoding="async"
-          fetchPriority={index < 6 ? 'high' : 'auto'}
-          onLoad={() => setImgReady(true)}
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            setImgReady(true);
-          }}
+          fetchPriority={index < 4 ? 'high' : 'auto'}
         />
 
         {/* Delete (admin only). No hover scrim and no inspect button: the tile

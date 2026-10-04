@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAnonClient } from '../../../../lib/supabaseServer';
+import { parseDimensions } from '../../../../lib/dimensions';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,6 +49,7 @@ export async function GET() {
     (data || []).forEach((row: any) => {
       if (!row.image_url || seenUrls.has(row.image_url)) return;
       seenUrls.add(row.image_url);
+      const dims = parseDimensions(row.breakdown_notes);
       posters.push({
         id: row.id.startsWith('poster-') ? row.id : `poster-${row.id}`,
         kind: 'poster',
@@ -59,6 +61,8 @@ export async function GET() {
         styles: row.styles || [],
         tags: Array.isArray(row.tags) && row.tags.length > 0 ? row.tags : ['Movie Poster', 'Cinema'],
         colors: Array.isArray(row.colors) ? row.colors : [],
+        width: dims?.width,
+        height: dims?.height,
         ocrText: row.ocr_text || '',
         emotion: row.emotion || 'Curious',
         breakdownNotes: row.breakdown_notes || 'Uploaded movie poster.',

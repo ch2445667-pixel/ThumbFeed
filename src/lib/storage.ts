@@ -2,6 +2,7 @@ import { ThumbnailItem, CollectionBoard } from './types';
 import { INITIAL_THUMBNAILS } from './mockData';
 import { INITIAL_POSTERS } from './posters';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { parseDimensions } from './dimensions';
 
 const USER_IMPORTED_KEY = 'thumbvault_user_imported_v1000_wiped';
 const THUMBNAILS_KEY = 'thumbvault_thumbnails_v1000_wiped';
@@ -750,6 +751,8 @@ export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
           styles: row.styles || [],
           tags: Array.isArray(row.tags) && row.tags.length > 0 ? row.tags : ['Movie Poster', 'Cinema'],
           colors: Array.isArray(row.colors) ? row.colors : [],
+          width: parseDimensions(row.breakdown_notes)?.width,
+          height: parseDimensions(row.breakdown_notes)?.height,
           ocrText: row.ocr_text || '',
           emotion: row.emotion || 'Curious',
           breakdownNotes: row.breakdown_notes || 'Uploaded movie poster.',

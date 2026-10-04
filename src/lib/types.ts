@@ -33,6 +33,13 @@ export interface ThumbnailItem {
   styles: VisualStyle[];
   tags: string[];
   colors?: string[];
+  /**
+   * Intrinsic pixel size, recorded at upload time so a card can reserve its
+   * exact box before the image loads. Without this, masonry re-balances as
+   * images arrive and tiles visibly jump.
+   */
+  width?: number;
+  height?: number;
   ocrText?: string;
   emotion?: 'Shocked' | 'Intense' | 'Curious' | 'Happy' | 'Mysterious' | 'Urgent' | 'Confident';
   breakdownNotes?: string;

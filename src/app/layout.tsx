@@ -27,14 +27,10 @@ const brandFont = localFont({
 export const metadata: Metadata = {
   title: "ThumbFeed",
   description: "High-CTR YouTube and Pinterest thumbnail inspiration gallery with multi-image clipboard paste, bulk extraction, cloud auto-sync, and smart tagging.",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
-  },
+  // Icons are declared by the file convention (src/app/icon.png, icon.svg,
+  // apple-icon.png, favicon.ico). Do not also list them here, and do not keep
+  // copies in public/ -- either one re-introduces the route that collides with
+  // the convention route and every icon request 500s.
   openGraph: {
     title: "ThumbFeed",
     description: "High-CTR YouTube and Pinterest thumbnail inspiration gallery with multi-image clipboard paste, bulk extraction, cloud auto-sync, and smart tagging.",

@@ -694,20 +694,21 @@ export function getStoredPosters(): ThumbnailItem[] {
 /**
  * Fetch posters live from Supabase.
  *
- * The `thumbnails` table is the single source of truth. This no longer scans
- * the storage bucket: the publishable key cannot delete objects, so a deleted
- * poster leaves an orphaned file behind and every folder scan resurrected it.
- * The scan also misfiled ordinary thumbnails such as
- * "1050. YouTube_thumbnail_poster_Design.jpg" as movie posters.
+ * The `thumbnails` table is the single source of truth. Two resurrection
+ * sources were removed:
+ *  - scanning the storage bucket, because the publishable key cannot delete
+ *    objects, so a deleted poster left an orphan file and the scan rebuilt it.
+ *    The scan also misfiled ordinary thumbnails such as
+ *    "1050. YouTube_thumbnail_poster_Design.jpg" as movie posters.
+ *  - merging the local collection back in, which re-added every poster the
+ *    instant its row was deleted.
  *
- * Permanently-deleted keys are filtered here too, so a delete stays honoured
- * even if a stale row lingers.
+ * Permanently-deleted keys are still honoured, so a delete survives a stale
+ * row. On an empty database the seeded posters are shown, which is the only
+ * case where anything is invented.
  */
 export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
-  const fallback = () => {
-    const local = getStoredPosters();
-    return local.length > 0 ? local : INITIAL_POSTERS;
-  };
+  const fallback = () => INITIAL_POSTERS;
 
   const client = supabase;
   if (!isSupabaseConfigured || !client) return fallback();
@@ -762,17 +763,12 @@ export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
       return fallback();
     }
 
-  // Anything the database does not know about still comes from the local
-  // collection, so posters added before the database was reachable survive.
-  const localOnly = getStoredPosters().filter((p) => {
-    if (seenUrls.has(p.imageUrl)) return false;
-    if (deletedKeys.has(p.id) || deletedKeys.has(p.imageUrl)) return false;
-    seenUrls.add(p.imageUrl);
-    return true;
-  });
-
-  const combined = [...dbPosters, ...localOnly];
-  if (combined.length > 0) persistPosterList(combined);
+  // The database is the single source of truth. Local posters are NOT merged
+  // back in: that merge re-added every poster the moment its row was deleted,
+  // which is exactly the resurrection this was meant to prevent. A poster that
+  // is not in the database does not exist.
+  const combined = dbPosters;
+  persistPosterList(combined);
   return combined;
 }
 

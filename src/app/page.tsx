@@ -408,7 +408,17 @@ export default function HomePage() {
     });
     setSelectedItem(prev => (prev && matches(prev) ? null : prev));
     setThumbnailToDelete(null);
-    deleteStoredThumbnailPermanently(item).catch((err) => {
+    deleteStoredThumbnailPermanently(item).then((result) => {
+      // The tile is already gone from the UI. If the server could not also
+      // remove the stored file, say so rather than reporting a clean delete.
+      if (result && result.storageRemovalFailed) {
+        setToastMessage(
+          'Removed from the app, but the file is still in the Supabase bucket. ' +
+            'Add SUPABASE_SERVICE_ROLE_KEY to .env to allow permanent file deletion.'
+        );
+        window.setTimeout(() => setToastMessage(null), 6000);
+      }
+    }).catch((err) => {
       console.error('Permanent delete failed:', err);
       setToastMessage('Delete failed. Check your connection and try again.');
       window.setTimeout(() => setToastMessage(null), 4000);

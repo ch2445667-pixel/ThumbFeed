@@ -468,7 +468,9 @@ export function getStoredThumbnails(): ThumbnailItem[] {
  * 3. Firebase Firestore ('thumbnails' collection)
  * 4. Local persistent storage & caches (and removes from moodboard collections)
  */
-export async function deleteStoredThumbnailPermanently(target: { id: string; imageUrl?: string }): Promise<ThumbnailItem[]> {
+export async function deleteStoredThumbnailPermanently(
+  target: { id: string; imageUrl?: string }
+): Promise<{ items: ThumbnailItem[]; storageRemovalFailed: boolean }> {
   const keysToMark: string[] = [target.id];
   if (target.imageUrl) {
     keysToMark.push(target.imageUrl);
@@ -525,9 +527,13 @@ export async function deleteStoredThumbnailPermanently(target: { id: string; ima
     }
   }
 
-  // 5. Delete from backend database and storage via API route
+  // 5. Delete from the database and storage bucket via the server route.
+  //    The route is the only place that can remove a stored object: the
+  //    publishable key is rejected by Storage with 403. It reports back whether
+  //    the object was really removed so a genuine failure can be surfaced.
+  let storageRemovalFailed = false;
   try {
-    await fetch('/api/thumbnails/delete', {
+    const res = await fetch('/api/thumbnails/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -535,11 +541,24 @@ export async function deleteStoredThumbnailPermanently(target: { id: string; ima
         imageUrl: target.imageUrl
       })
     });
+    const data = await res.json().catch(() => null);
+    if (data?.canDeleteStorageObjects === false) {
+      storageRemovalFailed = true;
+      console.warn(
+        'Row deleted but the stored file remains in the bucket. Add ' +
+          'SUPABASE_SERVICE_ROLE_KEY to .env to allow permanent file deletion.'
+      );
+    } else if (data && data.storageDeleted === false && data.storageSkipped !== true) {
+      storageRemovalFailed = true;
+      console.warn('Row deleted but the stored file could not be removed:', data.storageReason);
+    }
   } catch (apiErr) {
     console.warn('Server delete endpoint note:', apiErr);
   }
 
-  // 6. Direct client-side Supabase delete (for immediate synchronization)
+  // 6. Redundant client-side database delete, kept as a belt-and-braces
+  //    measure. Storage is deliberately NOT touched here: the publishable key
+  //    cannot delete objects, and the attempt failed silently for a long time.
   if (isSupabaseConfigured && supabase) {
     try {
       if (target.id) {
@@ -547,15 +566,6 @@ export async function deleteStoredThumbnailPermanently(target: { id: string; ima
       }
       if (target.imageUrl) {
         await supabase.from('thumbnails').delete().eq('image_url', target.imageUrl);
-        let filename = '';
-        if (target.imageUrl.includes('/Thumbnails/')) {
-          filename = decodeURIComponent(target.imageUrl.split('/Thumbnails/')[1]?.split('?')[0] || '');
-        } else if (target.imageUrl.includes('supabase.co')) {
-          filename = decodeURIComponent(target.imageUrl.split('/').pop()?.split('?')[0] || '');
-        }
-        if (filename) {
-          await supabase.storage.from('Thumbnails').remove([filename]);
-        }
       }
     } catch (sbErr) {
       console.warn('Direct Supabase delete note:', sbErr);
@@ -573,7 +583,7 @@ export async function deleteStoredThumbnailPermanently(target: { id: string; ima
     // Ignore if not present in firestore
   }
 
-  return updatedList;
+  return { items: updatedList, storageRemovalFailed };
 }
 
 export function updateStoredThumbnail(updatedItem: ThumbnailItem): ThumbnailItem[] {
@@ -682,18 +692,34 @@ export function getStoredPosters(): ThumbnailItem[] {
 }
 
 /**
- * Fetch posters live from Supabase (Database table + Storage buckets)
+ * Fetch posters live from Supabase.
+ *
+ * The `thumbnails` table is the single source of truth. This no longer scans
+ * the storage bucket: the publishable key cannot delete objects, so a deleted
+ * poster leaves an orphaned file behind and every folder scan resurrected it.
+ * The scan also misfiled ordinary thumbnails such as
+ * "1050. YouTube_thumbnail_poster_Design.jpg" as movie posters.
+ *
+ * Permanently-deleted keys are filtered here too, so a delete stays honoured
+ * even if a stale row lingers.
  */
 export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
-  const localPosters = getStoredPosters();
-  const dbPosters: ThumbnailItem[] = [];
-  const storagePosters: ThumbnailItem[] = [];
+  const fallback = () => {
+    const local = getStoredPosters();
+    return local.length > 0 ? local : INITIAL_POSTERS;
+  };
 
   const client = supabase;
-  if (isSupabaseConfigured && client) {
-    try {
-      // 1. Fetch posters from Supabase PostgreSQL database table
-      const { data: dbData, error: dbErr } = await client
+  if (!isSupabaseConfigured || !client) return fallback();
+
+  const deletedKeys = getPermanentlyDeletedKeys();
+  const dbPosters: ThumbnailItem[] = [];
+  const seenUrls = new Set<string>();
+
+  try {
+    // Wildcards must be `*`, not `%`: PostgREST 500s on a `%` inside an
+    // ilike pattern, which silently emptied this branch before.
+    const { data: dbData, error: dbErr } = await client
         .from('thumbnails')
         .select('*')
         // Wildcards must be `*`, not `%`: PostgREST 500s on a `%` inside an
@@ -702,126 +728,52 @@ export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
         .order('created_at', { ascending: false })
         .limit(1000);
 
-      if (!dbErr && dbData && dbData.length > 0) {
-        dbData.forEach((row: any) => {
-          dbPosters.push({
-            id: row.id.startsWith('poster-') ? row.id : `poster-${row.id}`,
-            kind: 'poster',
-            title: row.title || 'Movie Poster',
-            creator: row.creator && row.creator !== 'YouTube Creator' ? row.creator : 'Cinema',
-            imageUrl: row.image_url,
-            sourceUrl: row.source_url || row.image_url,
-            niche: row.niche || 'Cinema',
-            styles: row.styles || [],
-            tags: Array.isArray(row.tags) && row.tags.length > 0 ? row.tags : ['Movie Poster', 'Cinema'],
-            colors: row.colors || [],
-            ocrText: row.ocr_text || '',
-            emotion: row.emotion || 'Curious',
-            breakdownNotes: row.breakdown_notes || 'Uploaded movie poster.',
-            source: 'supabase-storage',
-            createdAt: row.created_at || new Date().toISOString(),
-            likesCount: row.likes_count || 120
-          });
+      if (dbErr) {
+        console.warn('Supabase poster fetch error:', dbErr.message);
+        return fallback();
+      }
+
+      (dbData || []).forEach((row: any) => {
+        if (!row.image_url || seenUrls.has(row.image_url)) return;
+        const id = row.id.startsWith('poster-') ? row.id : `poster-${row.id}`;
+        if (deletedKeys.has(row.id) || deletedKeys.has(id) || deletedKeys.has(row.image_url)) return;
+        seenUrls.add(row.image_url);
+        dbPosters.push({
+          id,
+          kind: 'poster',
+          title: row.title || 'Movie Poster',
+          creator: row.creator && row.creator !== 'YouTube Creator' ? row.creator : 'Cinema',
+          imageUrl: row.image_url,
+          sourceUrl: row.source_url || row.image_url,
+          niche: row.niche || 'Cinema',
+          styles: row.styles || [],
+          tags: Array.isArray(row.tags) && row.tags.length > 0 ? row.tags : ['Movie Poster', 'Cinema'],
+          colors: Array.isArray(row.colors) ? row.colors : [],
+          ocrText: row.ocr_text || '',
+          emotion: row.emotion || 'Curious',
+          breakdownNotes: row.breakdown_notes || 'Uploaded movie poster.',
+          source: 'supabase-storage',
+          createdAt: row.created_at || new Date().toISOString(),
+          likesCount: row.likes_count || 120
         });
-      }
-
-      // 2. Fetch posters from Supabase Storage buckets ('posters', 'Posters', 'Thumbnails')
-      const bucketsToCheck = ['posters', 'Posters', 'Thumbnails'];
-      for (const bName of bucketsToCheck) {
-        try {
-          const { data: files } = await client.storage.from(bName).list('', { limit: 200 });
-          if (files && files.length > 0) {
-            files.forEach((file) => {
-              if (file.name && !file.name.startsWith('.')) {
-                const isExplicitPoster = bName.toLowerCase().includes('poster') ||
-                                         file.name.toLowerCase().includes('poster') ||
-                                         file.name.toLowerCase().includes('movie');
-                if (isExplicitPoster) {
-                  const { data: pubData } = client.storage.from(bName).getPublicUrl(file.name);
-                  const url = pubData?.publicUrl || `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co'}/storage/v1/object/public/${bName}/${encodeURIComponent(file.name)}`;
-                  const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/^poster[_-]/i, '').replace(/^[0-9]+[.\s_-]*/, '').replace(/[_-]+/g, ' ').trim();
-                  storagePosters.push({
-                    id: `poster-storage-${bName}-${encodeURIComponent(file.name)}`,
-                    kind: 'poster',
-                    title: cleanTitle || 'Movie Poster',
-                    creator: 'Cinema',
-                    imageUrl: url,
-                    sourceUrl: url,
-                    niche: 'Cinema',
-                    styles: [],
-                    tags: ['Movie Poster', 'Cinema'],
-                    colors: [],
-                    ocrText: '',
-                    source: 'supabase-storage',
-                    createdAt: file.created_at || new Date().toISOString(),
-                    likesCount: 150
-                  });
-                }
-              }
-            });
-          }
-
-          // Check subfolder posters/ inside Thumbnails bucket
-          if (bName === 'Thumbnails') {
-            const { data: subfiles } = await client.storage.from('Thumbnails').list('posters', { limit: 300 });
-            if (subfiles && subfiles.length > 0) {
-              subfiles.forEach((file) => {
-                if (file.name && !file.name.startsWith('.')) {
-                  const filePath = `posters/${file.name}`;
-                  const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(filePath);
-                  const url = pubData?.publicUrl || `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co'}/storage/v1/object/public/Thumbnails/${filePath}`;
-                  const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/^poster[_-]/i, '').replace(/^[0-9]+[.\s_-]*/, '').replace(/[_-]+/g, ' ').trim();
-                  storagePosters.push({
-                    id: `poster-storage-sub-${encodeURIComponent(file.name)}`,
-                    kind: 'poster',
-                    title: cleanTitle || 'Movie Poster',
-                    creator: 'Cinema',
-                    imageUrl: url,
-                    sourceUrl: url,
-                    niche: 'Cinema',
-                    styles: [],
-                    tags: ['Movie Poster', 'Cinema'],
-                    colors: [],
-                    ocrText: '',
-                    source: 'supabase-storage',
-                    createdAt: file.created_at || new Date().toISOString(),
-                    likesCount: 150
-                  });
-                }
-              });
-            }
-          }
-        } catch {}
-      }
-
-      // Merge all Supabase posters with local and initial posters
-      const allSupabase = [...dbPosters, ...storagePosters];
-      const basePool = localPosters.length > 0 ? localPosters : INITIAL_POSTERS;
-      const seenUrls = new Set<string>();
-      const combined: ThumbnailItem[] = [];
-
-      allSupabase.forEach(p => {
-        if (!seenUrls.has(p.imageUrl)) {
-          seenUrls.add(p.imageUrl);
-          combined.push(p);
-        }
       });
-
-      basePool.forEach(p => {
-        if (!seenUrls.has(p.imageUrl)) {
-          seenUrls.add(p.imageUrl);
-          combined.push(p);
-        }
-      });
-
-      persistPosterList(combined);
-      return combined;
     } catch (err) {
       console.warn('Error fetching live Supabase posters:', err);
+      return fallback();
     }
-  }
 
-  return localPosters.length > 0 ? localPosters : INITIAL_POSTERS;
+  // Anything the database does not know about still comes from the local
+  // collection, so posters added before the database was reachable survive.
+  const localOnly = getStoredPosters().filter((p) => {
+    if (seenUrls.has(p.imageUrl)) return false;
+    if (deletedKeys.has(p.id) || deletedKeys.has(p.imageUrl)) return false;
+    seenUrls.add(p.imageUrl);
+    return true;
+  });
+
+  const combined = [...dbPosters, ...localOnly];
+  if (combined.length > 0) persistPosterList(combined);
+  return combined;
 }
 
 export function saveStoredPosters(newItems: ThumbnailItem[]): ThumbnailItem[] {

@@ -368,7 +368,13 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
     try {
       const { data, error } = await supabase
         .from('thumbnails')
-        .select('*')
+        // Explicit column list, not select('*'). This query runs on a timer for
+        // every open visitor, so every unrequested column is multiplied by the
+        // number of polls across every session and shows up directly as egress.
+        .select(
+          'id,title,creator,image_url,source_url,niche,styles,tags,colors,ocr_text,' +
+            'emotion,breakdown_notes,views_estimate,source,created_at,likes_count'
+        )
         .not('breakdown_notes', 'ilike', '%poster%')
         .not('id', 'ilike', 'poster-%')
         .not('niche', 'eq', 'Cinema')
@@ -723,9 +729,13 @@ export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
     // ilike pattern, which silently emptied this branch before.
     const { data: dbData, error: dbErr } = await client
         .from('thumbnails')
-        .select('*')
+        // Explicit columns only: this sync also runs repeatedly per session.
+        .select(
+          'id,title,creator,image_url,source_url,niche,styles,tags,colors,ocr_text,' +
+            'emotion,breakdown_notes,views_estimate,source,created_at,likes_count'
+        )
         // Wildcards must be `*`, not `%`: PostgREST 500s on a `%` inside an
-        // ilike pattern, which silently emptied this branch of the sync.
+        // ilike pattern, which silently emptied this branch before.
         .or('id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*')
         .order('created_at', { ascending: false })
         .limit(1000);

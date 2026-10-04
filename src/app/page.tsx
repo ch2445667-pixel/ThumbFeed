@@ -49,10 +49,14 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 const DEFAULT_SHUFFLE_SEED = 882391;
 const SHUFFLED_INITIAL_THUMBNAILS = seededShuffle(INITIAL_THUMBNAILS, DEFAULT_SHUFFLE_SEED);
 
-// How many tiles mount at once. The library holds 1,400+ items; mounting them
-// all kept thousands of nodes, images and observers alive, which is what made
-// scrolling, filtering and theme switching feel heavy.
-const PAGE_SIZE = 60;
+// How many tiles mount at once. Two constraints:
+//  - mounting everything kept thousands of nodes and images alive, which made
+//    scrolling, filtering and theme switching heavy;
+//  - every mounted tile with a URL in it is a potential egress transfer, so a
+//    smaller first page is also a smaller bill.
+// The sentinel loads the next page well before it is needed, so scrolling
+// still feels continuous.
+const PAGE_SIZE = 24;
 
 export default function HomePage() {
   const { isAdmin } = useAuth();
@@ -233,10 +237,16 @@ export default function HomePage() {
     // Initial sync on mount
     loadData();
 
-    // Auto-sync polling every 5 seconds to catch background extension uploads
+    // Safety-net poll for extension uploads that never fire a realtime event.
+    // This used to run every 5 seconds, which meant every open tab re-downloaded
+    // the entire table ~12 times a minute -- roughly 180 MB per hour per
+    // visitor, and the single largest source of egress. Realtime plus the
+    // focus/visibility handlers below already cover the common cases, so a
+    // slow poll that skips hidden tabs is enough.
     const pollTimer = setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
       loadData();
-    }, 5000);
+    }, 60000);
 
     // Supabase Realtime channel to get notified immediately when Chrome extension saves a record
     let realtimeChannel: any = null;
@@ -467,7 +477,10 @@ export default function HomePage() {
           setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredThumbnails.length));
         }
       },
-      { rootMargin: '900px 0px' }
+      // Prefetch well ahead so scrolling never visibly stalls. Kept under the
+      // browser's own lazy-image threshold so tiles are mounted just before
+      // they are needed rather than a full screen early.
+      { rootMargin: '600px 0px' }
     );
     io.observe(el);
     return () => io.disconnect();

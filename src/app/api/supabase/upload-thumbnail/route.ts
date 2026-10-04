@@ -184,6 +184,11 @@ export async function POST(req: NextRequest) {
               .from('Thumbnails')
               .upload(storagePath, optimizedJpgBuffer, {
                 contentType: 'image/jpeg',
+                // One year. Poster files are immutable once written, so a
+                // returning visitor should never re-download them. Without
+                // this the default is a short max-age and every visit pays
+                // full egress again.
+                cacheControl: '31536000',
                 upsert: true
               });
 

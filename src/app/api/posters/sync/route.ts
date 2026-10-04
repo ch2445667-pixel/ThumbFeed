@@ -15,7 +15,9 @@ export async function GET() {
       const { data: dbData, error: dbErr } = await supabase
         .from('thumbnails')
         .select('*')
-        .or('id.ilike.poster-%,breakdown_notes.ilike.%poster%,niche.eq.Cinema,source.eq.poster')
+        // Wildcards must be `*`, not `%`: PostgREST 500s on a `%` inside an
+        // ilike pattern, which silently emptied this branch of the sync.
+        .or('id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*')
         .order('created_at', { ascending: false })
         .limit(500);
 

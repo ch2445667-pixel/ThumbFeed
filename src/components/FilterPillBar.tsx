@@ -6,7 +6,8 @@ import {
   IconRotateCcw,
   IconPlus
 } from './icons/AppIcons';
-import { NicheCategory, FilterState } from '../lib/types';
+import { NicheCategory, FilterState, ThumbnailItem } from '../lib/types';
+import { COLOR_FAMILY_ORDER, familiesForItem, familyOfHex, type ColorFamily } from '../lib/colorFamilies';
 import {
   getAllCategories,
   getCustomCategories,
@@ -15,16 +16,68 @@ import {
   subscribeCategories
 } from '../lib/categories';
 
+export interface ColorSwatch {
+  hex: string;
+  /** How many thumbnails carry this hex within the family. */
+  count: number;
+}
+
+export interface ColorLibraryEntry {
+  family: ColorFamily;
+  /** Actual hexes found in the library for this family, most common first. */
+  swatches: ColorSwatch[];
+  count: number;
+}
+
 interface FilterPillBarProps {
   isVisible: boolean;
   filters: FilterState;
   onSelectCategory: (category: NicheCategory | 'All') => void;
+  onToggleColor: (family: ColorFamily) => void;
   onResetFilters: () => void;
   onClose: () => void;
   categoryCounts?: Record<string, number>;
+  colorLibrary?: ColorLibraryEntry[];
   resultCount?: number;
   // The posters wall has no niche taxonomy, so its category section hides.
   showCategories?: boolean;
+}
+
+/**
+ * Build one entry per colour family present in the library, each carrying the
+ * real extracted hexes ranked by how many items use them. Rendered as a
+ * proportional strip so the button shows the palette you actually own.
+ */
+export function buildColorLibrary(items: ThumbnailItem[]): ColorLibraryEntry[] {
+  const byFamily = new Map<ColorFamily, Map<string, number>>();
+
+  items.forEach((item) => {
+    const hexes = item.colors || [];
+    if (hexes.length === 0) return;
+    familiesForItem(item).forEach((family) => {
+      // Attribute the swatch that actually reads as this family, not blindly
+      // the leading one — an item tagged [Red, Dark] contributes its brown to
+      // Red and its black to Dark.
+      const hex = hexes.find((h) => familyOfHex(h) === family) ?? hexes[0];
+      if (!byFamily.has(family)) byFamily.set(family, new Map());
+      const hexCounts = byFamily.get(family)!;
+      hexCounts.set(hex, (hexCounts.get(hex) || 0) + 1);
+    });
+  });
+
+  const entries: ColorLibraryEntry[] = [];
+  COLOR_FAMILY_ORDER.forEach((family) => {
+    const hexCounts = byFamily.get(family);
+    if (!hexCounts || hexCounts.size === 0) return;
+    const ranked = Array.from(hexCounts.entries()).sort((a, b) => b[1] - a[1]);
+    entries.push({
+      family,
+      swatches: ranked.slice(0, 4).map(([hex, count]) => ({ hex, count })),
+      count: ranked.reduce((sum, [, n]) => sum + n, 0),
+    });
+  });
+
+  return entries;
 }
 
 function PanelSection({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
@@ -45,9 +98,11 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   isVisible,
   filters,
   onSelectCategory,
+  onToggleColor,
   onResetFilters,
   onClose,
   categoryCounts = {},
+  colorLibrary = [],
   resultCount = 0,
   showCategories = true,
 }) => {
@@ -110,7 +165,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
     (filters.selectedNiche !== 'All' ? 1 : 0) +
     (filters.searchQuery.trim() ? 1 : 0) +
     filters.selectedStyles.length +
-    (filters.selectedColor ? 1 : 0) +
+    filters.selectedColors.length +
     (filters.selectedEmotion ? 1 : 0);
 
   const sortControlClass = (active: boolean) =>
@@ -253,6 +308,44 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                 </button>
               </form>
             )}
+          </div>
+        </PanelSection>
+        )}
+
+        {colorLibrary.length > 0 && (
+        <PanelSection title="Colour">
+          <div className="flex flex-wrap gap-2">
+            {colorLibrary.map((entry) => {
+              const isSelected = filters.selectedColors.includes(entry.family);
+              return (
+                <button
+                  key={entry.family}
+                  type="button"
+                  onClick={() => onToggleColor(entry.family)}
+                  aria-pressed={isSelected}
+                  title={`${entry.family} — ${entry.count} ${entry.count === 1 ? 'thumbnail' : 'thumbnails'}`}
+                  className={`flex cursor-pointer items-center gap-2 overflow-hidden rounded-md border py-1.5 pl-1.5 pr-2.5 text-xs font-medium transition-colors duration-150 active:scale-[0.97] ${
+                    isSelected
+                      ? 'border-transparent bg-accent text-accent-on shadow-card'
+                      : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
+                  }`}
+                >
+                  {/* Real palette from the library. Each slice is flex-grown by
+                      how many thumbnails actually carry that hex. */}
+                  <span className="flex h-4 w-9 shrink-0 overflow-hidden rounded-[3px] ring-1 ring-black/10 dark:ring-white/15">
+                    {entry.swatches.map((swatch) => (
+                      <span
+                        key={swatch.hex}
+                        style={{ backgroundColor: swatch.hex, flexGrow: swatch.count }}
+                        className="h-full min-w-[3px]"
+                      />
+                    ))}
+                  </span>
+                  <span>{entry.family}</span>
+                  <span className="text-[11px] tabular opacity-70">{entry.count}</span>
+                </button>
+              );
+            })}
           </div>
         </PanelSection>
         )}

@@ -78,7 +78,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     filters.searchQuery !== '' ||
     filters.selectedNiche !== 'All' ||
     filters.selectedStyles.length > 0 ||
-    filters.selectedColor !== null ||
+    filters.selectedColors.length > 0 ||
     filters.selectedEmotion !== null;
 
   const clearAllFilters = () => {
@@ -86,7 +86,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       searchQuery: '',
       selectedNiche: 'All',
       selectedStyles: [],
-      selectedColor: null,
+      selectedColors: [],
       selectedEmotion: null,
       sortBy: 'latest'
     });
@@ -203,14 +203,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <div className="flex items-center gap-1.5 ml-auto pl-2 border-l border-[#401D1A]/15 dark:border-[#E4E0D3]/20">
           <span className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 mr-1 hidden sm:inline">Color:</span>
           {COLOR_PALETTES.map((color) => {
-            const isSelected = filters.selectedColor === color.hex;
+            const isSelected = filters.selectedColors.includes(color.hex);
             return (
               <button
                 key={color.hex}
                 title={color.name}
                 onClick={() => onChange({
                   ...filters,
-                  selectedColor: isSelected ? null : color.hex
+                  selectedColors: isSelected
+                    ? filters.selectedColors.filter((c) => c !== color.hex)
+                    : [...filters.selectedColors, color.hex]
                 })}
                 style={{ backgroundColor: color.hex }}
                 className={`w-4 h-4 rounded-full border border-[#401D1A]/20 transition-transform ${
@@ -219,9 +221,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               />
             );
           })}
-          {filters.selectedColor && (
+          {filters.selectedColors.length > 0 && (
             <button
-              onClick={() => onChange({ ...filters, selectedColor: null })}
+              onClick={() => onChange({ ...filters, selectedColors: [] })}
               className="text-[10px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 hover:text-[#401D1A] dark:hover:text-[#FFFFFF] underline ml-1"
             >
               Clear

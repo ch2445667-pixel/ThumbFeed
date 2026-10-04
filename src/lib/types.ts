@@ -57,7 +57,8 @@ export interface FilterState {
   searchQuery: string;
   selectedNiche: NicheCategory | 'All';
   selectedStyles: VisualStyle[];
-  selectedColor?: string | null;
+  /** Colour families, multi-select with OR matching. */
+  selectedColors: string[];
   selectedEmotion?: string | null;
   sortBy: 'latest' | 'popular' | 'random';
 }

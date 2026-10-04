@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import sharp from 'sharp';
+import { extractColorProfile } from '../../../../lib/colorExtract';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 let supabaseClient: any = null;
 
 function getSupabase(): any {
   if (!supabaseClient) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co';
-    const supabaseKey = 
+    const supabaseKey =
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
       'sb_publishable_QprT-ekIg6xv77IwL9p81g_GR5-tdiy';
     supabaseClient = createClient(supabaseUrl, supabaseKey, {
@@ -86,6 +89,27 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
   return null;
 }
 
+/**
+ * Shrink oversized uploads before they reach the bucket. Keeps storage light
+ * and cards fast. Sharp is imported lazily so a missing native binding can
+ * never take down the whole route — the raw buffer is uploaded instead.
+ */
+async function optimizeBuffer(input: Buffer, isPoster: boolean): Promise<Buffer> {
+  try {
+    const mod = await import('sharp').then((m: any) => m.default || m);
+    const matteColor = isPoster ? '#000000' : '#401D1A';
+    const maxSide = isPoster ? 1000 : 1280;
+    return await mod(input)
+      .resize({ width: maxSide, height: maxSide, fit: 'inside', withoutEnlargement: true })
+      .flatten({ background: matteColor })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer();
+  } catch (err) {
+    console.warn('Image optimize note (uploading original):', err instanceof Error ? err.message : err);
+    return input;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -96,118 +120,134 @@ export async function POST(req: NextRequest) {
     }
 
     const uploadedResults: any[] = [];
+    const warnings: string[] = [];
 
+    // Each item is fully isolated: one corrupt payload can never fail the batch.
     for (const item of items) {
-      const isPoster = item.kind === 'poster' || item.id?.startsWith('poster-') || item.niche === 'Cinema';
-      const vId = item.videoId || item.id?.replace(/^.*-/, '') || (isPoster ? 'poster' : 'thumb');
-      const cleanTitle = (item.title || (isPoster ? 'poster' : 'thumb'))
-        .replace(/[^a-zA-Z0-9_\-\s]/g, '')
-        .trim()
-        .replace(/\s+/g, '_')
-        .slice(0, 40) || (isPoster ? 'poster' : 'thumb');
-      const randSuffix = Math.random().toString(36).slice(2, 7);
-
-      // Store posters under the 'posters/' directory inside the Supabase Storage 'Thumbnails' bucket
-      const storagePath = isPoster
-        ? `posters/poster_${Date.now()}_${cleanTitle}_${randSuffix}.jpg`
-        : sanitizeFilename(item.title || 'Thumbnail', vId);
-
-      let finalPublicUrl = item.imageUrl;
-      let uploadSuccess = false;
-
       try {
-        const imageResult = await fetchImageBuffer(item.imageUrl, item.videoId);
+        const isPoster = item.kind === 'poster' || item.id?.startsWith('poster-') || item.niche === 'Cinema';
+        const vId = item.videoId || item.id?.replace(/^.*-/, '') || (isPoster ? 'poster' : 'thumb');
+        const cleanTitle = (item.title || (isPoster ? 'poster' : 'thumb'))
+          .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+          .trim()
+          .replace(/\s+/g, '_')
+          .slice(0, 40) || (isPoster ? 'poster' : 'thumb');
+        const randSuffix = Math.random().toString(36).slice(2, 7);
 
-        if (imageResult) {
-          // Posters use a clean black matte; thumbnails use the brand espresso
-          const matteColor = isPoster ? '#000000' : '#401D1A';
-          let optimizedJpgBuffer: Buffer = imageResult.buffer;
-          try {
-            optimizedJpgBuffer = await sharp(imageResult.buffer)
-              .flatten({ background: matteColor })
-              .jpeg({ quality: 90, mozjpeg: true })
-              .toBuffer();
-          } catch (sharpErr) {
-            console.warn('Sharp JPEG conversion warning:', sharpErr);
-          }
+        // Store posters under the 'posters/' directory inside the Supabase Storage 'Thumbnails' bucket
+        const storagePath = isPoster
+          ? `posters/poster_${Date.now()}_${cleanTitle}_${randSuffix}.jpg`
+          : sanitizeFilename(item.title || 'Thumbnail', vId);
 
-          // Upload JPEG to Supabase Storage bucket 'Thumbnails' under posters/ or root
-          const client = getSupabase();
-          const { error: uploadError } = await client.storage
-            .from('Thumbnails')
-            .upload(storagePath, optimizedJpgBuffer, {
-              contentType: 'image/jpeg',
-              upsert: true
-            });
+        let finalPublicUrl = item.imageUrl;
+        let uploadSuccess = false;
+        // Posters are excluded from colour extraction by design, so this stays
+        // empty for them rather than describing artwork we chose not to read.
+        let colors: string[] = [];
+        let colorFamilies: string[] = [];
 
-          if (!uploadError) {
-            const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(storagePath);
-            const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co';
-            finalPublicUrl = pubData?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${storagePath}`;
-            uploadSuccess = true;
+        try {
+          const imageResult = await fetchImageBuffer(item.imageUrl, item.videoId);
+
+          if (imageResult) {
+            const optimizedJpgBuffer = await optimizeBuffer(imageResult.buffer, isPoster);
+
+            if (!isPoster) {
+              const profile = await extractColorProfile(imageResult.buffer);
+              colors = profile.colors;
+              colorFamilies = profile.families;
+            }
+
+            // Upload JPEG to Supabase Storage bucket 'Thumbnails' under posters/ or root
+            const client = getSupabase();
+            const { error: uploadError } = await client.storage
+              .from('Thumbnails')
+              .upload(storagePath, optimizedJpgBuffer, {
+                contentType: 'image/jpeg',
+                upsert: true
+              });
+
+            if (!uploadError) {
+              const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(storagePath);
+              const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co';
+              finalPublicUrl = pubData?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${storagePath}`;
+              uploadSuccess = true;
+            } else {
+              warnings.push(`Bucket upload for "${item.title || vId}": ${uploadError.message}`);
+            }
           } else {
-            console.warn('Supabase storage upload note:', uploadError.message);
+            warnings.push(`Could not fetch image bytes for "${item.title || vId}" — keeping source URL.`);
           }
+        } catch (err) {
+          warnings.push(`Bucket upload for "${item.title || vId}": ${err instanceof Error ? err.message : String(err)}`);
         }
-      } catch (err) {
-        console.warn('Image fetch or upload note:', err);
-      }
 
-      // Upsert record into Supabase database table 'thumbnails'
-      const assignedId = isPoster
-        ? (item.id && item.id.startsWith('poster-') ? item.id : `poster-${Date.now()}-${randSuffix}`)
-        : (item.id || (item.videoId ? `thumb-yt-${item.videoId}` : `thumb-storage-${vId}`));
+        // Upsert record into Supabase database table 'thumbnails'
+        const assignedId = isPoster
+          ? (item.id && item.id.startsWith('poster-') ? item.id : `poster-${Date.now()}-${randSuffix}`)
+          : (item.id || (item.videoId ? `thumb-yt-${item.videoId}` : `thumb-storage-${vId}`));
 
-      try {
-        const viewsValue = item.views || item.viewsEstimate || null;
-        const notes = isPoster ? 'Uploaded movie poster.' : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
-        const record = {
+        let dbSaved = false;
+        try {
+          const viewsValue = item.views || item.viewsEstimate || null;
+          const notes = isPoster ? 'Uploaded movie poster.' : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
+          const record = {
+            id: assignedId,
+            title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
+            creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
+            image_url: finalPublicUrl,
+            source_url: item.sourceUrl || finalPublicUrl,
+            niche: isPoster ? 'Cinema' : (item.niche || ''),
+            styles: item.styles || [],
+            tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : (item.niche ? [item.niche] : [])),
+            colors,
+            views_estimate: viewsValue,
+            breakdown_notes: notes,
+            source: isPoster ? 'poster' : 'supabase-storage',
+            created_at: new Date().toISOString()
+          };
+
+          const { error: upsertErr } = await getSupabase().from('thumbnails').upsert(record);
+          if (upsertErr) {
+            warnings.push(`Database save for "${record.title}": ${upsertErr.message}`);
+          } else {
+            dbSaved = true;
+          }
+        } catch (dbErr) {
+          warnings.push(`Database save for "${item.title || vId}": ${dbErr instanceof Error ? dbErr.message : String(dbErr)}`);
+        }
+
+        uploadedResults.push({
           id: assignedId,
+          kind: isPoster ? 'poster' : 'thumbnail',
+          videoId: item.videoId,
           title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
           creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
-          image_url: finalPublicUrl,
-          source_url: item.sourceUrl || finalPublicUrl,
+          imageUrl: finalPublicUrl,
+          sourceUrl: item.sourceUrl || finalPublicUrl,
           niche: isPoster ? 'Cinema' : (item.niche || ''),
-          styles: item.styles || [],
-          tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : (item.niche ? [item.niche] : [])),
-          views_estimate: viewsValue,
-          breakdown_notes: notes,
+          tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : []),
+          views: item.views || item.viewsEstimate,
+          publishedTime: item.publishedTime,
           source: isPoster ? 'poster' : 'supabase-storage',
-          created_at: new Date().toISOString()
-        };
-
-        const { error: upsertErr } = await getSupabase().from('thumbnails').upsert(record);
-        if (upsertErr) {
-          console.warn('Supabase DB upsert warning:', upsertErr.message);
-        }
-      } catch (dbErr) {
-        console.warn('Supabase DB upsert note:', dbErr);
+          uploadedToBucket: uploadSuccess,
+          colors,
+          colorFamilies,
+          dbSaved
+        });
+      } catch (itemErr) {
+        warnings.push(`Item failed: ${itemErr instanceof Error ? itemErr.message : String(itemErr)}`);
       }
-
-      uploadedResults.push({
-        id: assignedId,
-        kind: isPoster ? 'poster' : 'thumbnail',
-        videoId: item.videoId,
-        title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
-        creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
-        imageUrl: finalPublicUrl,
-        sourceUrl: item.sourceUrl || finalPublicUrl,
-        niche: isPoster ? 'Cinema' : (item.niche || ''),
-        tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : []),
-        views: item.views || item.viewsEstimate,
-        publishedTime: item.publishedTime,
-        source: isPoster ? 'poster' : 'supabase-storage',
-        uploadedToBucket: uploadSuccess
-      });
     }
 
     return NextResponse.json({
       success: true,
       bucket: 'Thumbnails',
       count: uploadedResults.length,
+      allDbSaved: uploadedResults.length > 0 && uploadedResults.every((r) => r.dbSaved),
+      warnings: warnings.length > 0 ? warnings : undefined,
       items: uploadedResults
     });
-
   } catch (err: any) {
     console.error('Supabase upload handler error:', err);
     return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });

@@ -5,6 +5,34 @@ import { auth, signInWithGoogle, logout, onAuthStateChanged, User } from './fire
 
 export const ADMIN_EMAIL = 'shivashiva66407@gmail.com';
 
+/**
+ * Local development unlock.
+ *
+ * Firebase refuses Google sign-in from origins that are not on the project's
+ * Authorized domains list, and `localhost` is not on it (the project is
+ * AI Studio generated, so the usual localhost entry was never added). That
+ * makes the admin-only surfaces — Add, Delete, Edit — untestable on a
+ * dev machine.
+ *
+ * This grants admin on a local dev server only. Both conditions must hold:
+ *   - NODE_ENV === 'development'  (false in any `next build` output)
+ *   - the browser is on a loopback host
+ * A deployed build served from a real hostname can never satisfy either.
+ */
+function isLocalDevAdmin(): boolean {
+  if (process.env.NODE_ENV !== 'development') return false;
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1';
+}
+
+const LOCAL_DEV_USER = {
+  uid: 'local-dev-admin',
+  email: ADMIN_EMAIL,
+  displayName: 'Local Dev Admin',
+  photoURL: null,
+} as unknown as User;
+
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
@@ -62,6 +90,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (authErr?.code === 'auth/cancelled-popup-request') {
         // Ignored
         return null;
+      } else if (authErr?.code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : 'this origin';
+        setError(
+          `"${host}" is not an approved sign-in origin. Add it in the Firebase console: ` +
+          `Authentication -> Settings -> Authorized domains. The port is ignored, so ` +
+          `"localhost" covers every localhost port.`
+        );
       } else {
         setError(authErr?.message || 'Failed to sign in with Google');
       }
@@ -83,12 +118,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isAdmin = Boolean(
     user?.email && user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
-  );
+  ) || isLocalDevAdmin();
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user ?? (isLocalDevAdmin() ? LOCAL_DEV_USER : null),
         isAdmin,
         loading,
         signingIn,

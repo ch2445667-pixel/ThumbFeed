@@ -9,6 +9,18 @@ const COLLECTIONS_KEY = 'thumbvault_collections_v1000_clean';
 const DELETED_KEYS_KEY = 'thumbvault_permanently_deleted_keys_v2';
 const POSTERS_KEY = 'thumbfeed_posters_v2';
 
+/**
+ * Raw `data:` URLs are megabytes of base64. Writing even a few of them to
+ * localStorage blows the ~5MB quota, the write throws, NOTHING persists,
+ * and the next sync/refresh wipes the items from view. Only cloud-hosted
+ * (http/https) URLs may be persisted — data URLs live in memory only until
+ * the upload route returns a bucket URL for them.
+ */
+function isCloudPersistable(item: ThumbnailItem): boolean {
+  const url = item?.imageUrl || '';
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 // Purge any legacy cached thumbnails from previous sessions immediately
 if (typeof window !== 'undefined') {
   try {
@@ -335,9 +347,11 @@ export function saveUserImportedThumbnails(newItems: ThumbnailItem[]): Thumbnail
       return !keys.some(k => seenKeys.has(k));
     });
 
-    const merged = [...uniqueNew, ...filteredCurrent];
-    localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(merged));
-    return merged;
+    // Never persist raw data URLs: they exhaust the localStorage quota and
+    // the whole write throws, losing every item including the good ones.
+    const persistable = [...uniqueNew, ...filteredCurrent].filter(isCloudPersistable);
+    localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(persistable));
+    return [...uniqueNew, ...filteredCurrent];
   } catch (e) {
     console.warn('Failed to save user imported thumbnails:', e);
     return newItems;
@@ -371,7 +385,9 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
           niche: row.niche || '',
           styles: row.styles && row.styles.length > 0 ? row.styles : ['Face Close-up', 'High-Contrast Glow'],
           tags: Array.isArray(row.tags) ? row.tags : (row.niche ? [row.niche] : []),
-          colors: row.colors && row.colors.length > 0 ? row.colors : ['#401D1A', '#E4E0D3', '#FFFFFF'],
+          // No fabricated fallback: an item without real extracted colours
+          // must report none, otherwise the colour filter lies about it.
+          colors: Array.isArray(row.colors) ? row.colors : [],
           ocrText: row.ocr_text || '',
           emotion: row.emotion || 'Curious',
           breakdownNotes: row.breakdown_notes || '',
@@ -405,7 +421,7 @@ export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
 
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(combined));
+      localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(combined.filter(isCloudPersistable)));
     } catch (e) {
       console.warn('Could not cache merged thumbnails to localStorage:', e);
     }
@@ -609,14 +625,19 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
 
   const list = getStoredThumbnails();
   const updated = blendAndDistributeThumbnails(list, newItems);
-  
+
   try {
-    localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updated));
+    // Cache cloud URLs only — a single data URL can exceed the entire
+    // localStorage quota and void the whole cache write.
+    localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updated.filter(isCloudPersistable)));
   } catch (e) {
     console.warn('LocalStorage save quota warning:', e);
   }
 
-  // Sync to Supabase in batch if available
+  // Sync to Supabase in batch if available.
+  // The server upload route is authoritative for colours — it extracts them
+  // from the image bytes. Re-writing them here would clobber that with the
+  // client's (possibly empty) array, so `colors` is left untouched here.
   if (isSupabaseConfigured && supabase && newItems.length > 0) {
     const records = newItems.map(item => ({
       id: item.id,
@@ -627,7 +648,6 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
       niche: item.niche,
       styles: item.styles,
       tags: item.tags,
-      colors: item.colors,
       ocr_text: item.ocrText,
       emotion: item.emotion,
       breakdown_notes: item.publishedTime ? `Published: ${item.publishedTime}${item.breakdownNotes ? ` | ${item.breakdownNotes}` : ''}` : (item.breakdownNotes || ''),
@@ -676,7 +696,9 @@ export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
       const { data: dbData, error: dbErr } = await client
         .from('thumbnails')
         .select('*')
-        .or('id.ilike.poster-%,breakdown_notes.ilike.%poster%,niche.eq.Cinema,source.eq.poster,image_url.ilike.%/posters/%')
+        // Wildcards must be `*`, not `%`: PostgREST 500s on a `%` inside an
+        // ilike pattern, which silently emptied this branch of the sync.
+        .or('id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*')
         .order('created_at', { ascending: false })
         .limit(1000);
 
@@ -889,7 +911,9 @@ export function saveStoredPosters(newItems: ThumbnailItem[]): ThumbnailItem[] {
 export function persistPosterList(list: ThumbnailItem[]): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(POSTERS_KEY, JSON.stringify(list));
+    // Same quota guard as thumbnails: raw data URLs are memory-only until
+    // the bucket upload returns a public URL.
+    localStorage.setItem(POSTERS_KEY, JSON.stringify(list.filter(isCloudPersistable)));
   } catch (e) {
     console.warn('LocalStorage poster save warning:', e);
   }

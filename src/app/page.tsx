@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { TopBar } from '../components/TopBar';
 import { ThumbnailCard } from '../components/ThumbnailCard';
-import { FilterPillBar } from '../components/FilterPillBar';
+import { FilterPillBar, buildColorLibrary } from '../components/FilterPillBar';
+import { familiesForItem, type ColorFamily } from '../lib/colorFamilies';
 import { AddModal } from '../components/AddModal';
 import { ThumbnailModal } from '../components/ThumbnailModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
@@ -139,7 +140,7 @@ export default function HomePage() {
       ...prev,
       selectedNiche: 'All',
       selectedStyles: [],
-      selectedColor: null,
+      selectedColors: [],
       selectedEmotion: null,
     }));
     if (next === 'posters') {
@@ -193,7 +194,7 @@ export default function HomePage() {
     searchQuery: '',
     selectedNiche: 'All',
     selectedStyles: [],
-    selectedColor: null,
+    selectedColors: [],
     selectedEmotion: null,
     sortBy: 'random'
   });
@@ -336,11 +337,14 @@ export default function HomePage() {
       );
     }
 
-    if (filters.selectedColor) {
-      const targetColor = filters.selectedColor.toLowerCase();
-      result = result.filter(item =>
-        item.colors && item.colors.some(c => c.toLowerCase() === targetColor)
-      );
+    // Colour families, multi-select with OR matching. An item matches when any of
+    // its extracted families is selected.
+    if (filters.selectedColors.length > 0) {
+      const wanted = filters.selectedColors;
+      result = result.filter((item) => {
+        const families = familiesForItem(item);
+        return families.some((family) => wanted.includes(family));
+      });
     }
 
     if (filters.sortBy === 'popular') {
@@ -474,7 +478,7 @@ export default function HomePage() {
     (filters.searchQuery.trim() ? 1 : 0) +
     (filters.selectedNiche !== 'All' ? 1 : 0) +
     filters.selectedStyles.length +
-    (filters.selectedColor ? 1 : 0) +
+    filters.selectedColors.length +
     (filters.selectedEmotion ? 1 : 0);
 
   const resetFilters = useCallback(() => {
@@ -482,11 +486,23 @@ export default function HomePage() {
       searchQuery: '',
       selectedNiche: 'All',
       selectedStyles: [],
-      selectedColor: null,
+      selectedColors: [],
       selectedEmotion: null,
       sortBy: 'random'
     });
   }, []);
+
+  const handleToggleColor = useCallback((family: ColorFamily) => {
+    setFilters((prev) => ({
+      ...prev,
+      selectedColors: prev.selectedColors.includes(family)
+        ? prev.selectedColors.filter((f) => f !== family)
+        : [...prev.selectedColors, family]
+    }));
+  }, []);
+
+  // Colour strip data for the filter panel, rebuilt only when the wall changes.
+  const colorLibrary = useMemo(() => buildColorLibrary(activeItems), [activeItems]);
 
   // Dynamic grid column class based on zoom slider (3 columns = Maximum Zoom with 3 thumbnails per row)
   const getGridColsClass = () => {
@@ -677,9 +693,11 @@ export default function HomePage() {
         isVisible={isFilterBarOpen}
         filters={filters}
         onSelectCategory={(cat) => setFilters(prev => ({ ...prev, selectedNiche: cat }))}
+        onToggleColor={handleToggleColor}
         onResetFilters={resetFilters}
         onClose={() => setIsFilterBarOpen(false)}
         categoryCounts={categoryCounts}
+        colorLibrary={section === 'thumbnails' ? colorLibrary : []}
         resultCount={filteredThumbnails.length}
         showCategories={section === 'thumbnails'}
       />

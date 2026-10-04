@@ -538,6 +538,9 @@ export const AddModal: React.FC<AddModalProps> = ({
   // --- Uploading to Cloud (Supabase) State ---
   const [isUploadingToCloud, setIsUploadingToCloud] = useState(false);
   const [uploadStatusText, setUploadStatusText] = useState('');
+  // Set when the bucket/DB sync failed: items on screen are local-only and
+  // will not survive a refresh. Shown as a banner above the save buttons.
+  const [cloudError, setCloudError] = useState('');
 
   // Subscribe to category updates
   useEffect(() => {
@@ -565,6 +568,7 @@ export const AddModal: React.FC<AddModalProps> = ({
       setActiveTab('upload');
       setIsUploadingToCloud(false);
       setUploadStatusText('');
+      setCloudError('');
     }
   }, [isOpen]);
 
@@ -875,9 +879,11 @@ export const AddModal: React.FC<AddModalProps> = ({
   const handleUploadQueuedImages = async () => {
     if (queuedImages.length === 0) return;
     setIsUploadingToCloud(true);
+    setCloudError('');
     setUploadStatusText(`Uploading ${queuedImages.length} thumbnails to Supabase...`);
 
     let finalItems: ThumbnailItem[] = [];
+    let cloudOk = false;
 
     try {
       const payload = queuedImages.map(item => {
@@ -902,13 +908,21 @@ export const AddModal: React.FC<AddModalProps> = ({
       if (res.ok) {
         const data = await res.json();
         const uploadedMap = new Map<string, string>();
+        const colorMap = new Map<string, string[]>();
+        let allDbSaved = true;
         if (data.items && Array.isArray(data.items)) {
           data.items.forEach((item: any) => {
             if (item.id && item.imageUrl) {
               uploadedMap.set(item.id, item.imageUrl);
             }
+            if (item.id && Array.isArray(item.colors)) {
+              colorMap.set(item.id, item.colors);
+            }
+            if (item.dbSaved === false) allDbSaved = false;
           });
         }
+        if (data.allDbSaved === false) allDbSaved = false;
+        cloudOk = allDbSaved;
 
         finalItems = queuedImages.map(img => {
           const itemCategories = img.tags || [];
@@ -922,7 +936,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             niche: (itemCategories[0] || '') as NicheCategory,
             styles: ['Face Close-up', 'High-Contrast Glow'],
             tags: itemCategories,
-            colors: [],
+            colors: colorMap.get(img.id) ?? [],
             ocrText: '',
             emotion: 'Curious',
             breakdownNotes: mediaKind === 'poster' ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
@@ -962,13 +976,19 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadStatusText('');
     }
 
+    if (!cloudOk) {
+      setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
+    }
+
     if (finalItems.length > 0) {
       if (onAddMultipleThumbnails) {
         onAddMultipleThumbnails(finalItems);
       } else {
         finalItems.forEach(item => onAddThumbnail(item));
       }
-      onClose();
+      // Stay open on sync failure so the warning banner is seen; the user
+      // can retry instead of losing the queue.
+      if (cloudOk) onClose();
     }
   };
 
@@ -1178,6 +1198,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     });
 
     setIsUploadingToCloud(true);
+    setCloudError('');
     setUploadStatusText(`Saving ${uniqueItems.length} thumbnails to cloud...`);
 
     let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
@@ -1204,11 +1225,13 @@ export const AddModal: React.FC<AddModalProps> = ({
       };
     });
 
+    let syncFailed = false;
     try {
       const uploadPayload = uniqueItems.map((item, idx) => {
         const chosenCategories = item.tags || [];
         return {
           id: item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`),
+          kind: mediaKind,
           videoId: item.videoId,
           imageUrl: item.imageUrl,
           sourceUrl: item.url,
@@ -1230,11 +1253,17 @@ export const AddModal: React.FC<AddModalProps> = ({
 
       if (res.ok) {
         const resData = await res.json();
+        let allDbSaved = true;
+        if (resData.allDbSaved === false) allDbSaved = false;
         if (resData.items && Array.isArray(resData.items)) {
           const map = new Map<string, string>();
+          const colorMap = new Map<string, string[]>();
           resData.items.forEach((it: any) => {
             if (it.videoId && it.imageUrl) map.set(it.videoId, it.imageUrl);
             if (it.id && it.imageUrl) map.set(it.id, it.imageUrl);
+            if (it.videoId && Array.isArray(it.colors)) colorMap.set(it.videoId, it.colors);
+            if (it.id && Array.isArray(it.colors)) colorMap.set(it.id, it.colors);
+            if (it.dbSaved === false) allDbSaved = false;
           });
 
           finalThumbnails = finalThumbnails.map((item, idx) => {
@@ -1243,14 +1272,24 @@ export const AddModal: React.FC<AddModalProps> = ({
             return {
               ...item,
               imageUrl: supaUrl || item.imageUrl,
+              colors: (vId ? colorMap.get(vId) : null) ?? colorMap.get(uniqueItems[idx]?.id) ?? [],
               viewsEstimate: uniqueItems[idx]?.views || item.viewsEstimate,
               publishedTime: uniqueItems[idx]?.publishedTime || item.publishedTime
             };
           });
         }
+        if (!allDbSaved) {
+          setCloudError('Cloud database sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
+          syncFailed = true;
+        }
+      } else {
+        setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
+        syncFailed = true;
       }
     } catch (err) {
       console.warn('Supabase batch upload notice:', err);
+      setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
+      syncFailed = true;
     } finally {
       setIsUploadingToCloud(false);
       setUploadStatusText('');
@@ -1261,7 +1300,8 @@ export const AddModal: React.FC<AddModalProps> = ({
     } else {
       finalThumbnails.forEach(t => onAddThumbnail(t));
     }
-    onClose();
+    // Stay open when the sync failed so the warning is seen and retry is possible.
+    if (!syncFailed) onClose();
   };
 
   if (!isOpen) return null;
@@ -1613,6 +1653,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                   </div>
 
                   {/* Bottom Action for Queued Images */}
+                  {cloudError && (
+                    <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
+                      {cloudError}
+                    </div>
+                  )}
                   <div className="pt-3 border-t border-line flex items-center justify-between">
                     <button
                       type="button"
@@ -1844,6 +1889,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     ))}
                   </div>
 
+                  {cloudError && (
+                    <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
+                      {cloudError}
+                    </div>
+                  )}
                   <div className="pt-2 border-t border-line flex items-center justify-between">
                     <button
                       type="button"
@@ -2047,6 +2097,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     ))}
                   </div>
 
+                  {cloudError && (
+                    <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
+                      {cloudError}
+                    </div>
+                  )}
                   <div className="pt-2 border-t border-line flex items-center justify-between">
                     <button
                       type="button"

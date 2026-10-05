@@ -35,3 +35,6 @@ next-env.d.ts
 
 # importer checkpoint: local run state, not source
 scripts/import_progress.json
+
+# scratch files from manual API probing
+v.json

@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { channelUrl, limit = 60 } = body;
 
-    const requestedLimit = Math.min(Math.max(Number(limit) || 60, 10), 100);
+    const requestedLimit = Math.min(Math.max(Number(limit) || 60, 1), 100);
 
     if (!channelUrl || typeof channelUrl !== 'string') {
       return NextResponse.json({ error: 'Channel URL or handle is required' }, { status: 400 });

@@ -40,6 +40,7 @@ interface TopBarProps {
   isFilterOpen?: boolean;
   activeFilterCount?: number;
   onOpenAdd?: () => void;
+  section?: 'thumbnails' | 'posters';
 }
 
 interface SearchFieldProps {
@@ -126,6 +127,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isFilterOpen = false,
   activeFilterCount = 0,
   onOpenAdd,
+  section = 'thumbnails',
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -318,7 +320,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               <button
                 type="button"
                 onClick={onOpenAdd}
-                title="Add thumbnails"
+                title={section === 'posters' ? 'Add posters' : 'Add thumbnails'}
                 className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-on shadow-card transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2} />

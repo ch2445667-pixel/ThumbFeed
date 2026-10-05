@@ -8,7 +8,7 @@ import { type ColorFamily } from '../lib/colorFamilies';
 import { AddModal } from '../components/AddModal';
 import { ThumbnailModal } from '../components/ThumbnailModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
-import { IconTrash, IconFilm, IconImage, IconUploadCloud } from '../components/icons/AppIcons';
+import { IconTrash, IconFilm, IconImage } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
 import { ViewModeToggle } from '../components/ViewModeToggle';
 import { useAuth } from '../lib/authContext';
@@ -94,8 +94,6 @@ export default function HomePage() {
       }
     } catch {}
   }, []);
-
-  const [isSyncingPosters, setIsSyncingPosters] = useState<boolean>(false);
 
   // Switching walls resets the category scope, which belongs to thumbnails.
   // No explicit sync call: the section is part of the gallery query key, so
@@ -199,17 +197,6 @@ export default function HomePage() {
   );
   const galleryTotal = gallery.data?.pages[0]?.total ?? 0;
 
-  // Manual sync button: bust the cache. Active queries refetch by themselves.
-  const handleSyncPosters = useCallback(async () => {
-    setIsSyncingPosters(true);
-    try {
-      await invalidateGallery();
-    } catch (e) {
-      console.warn('Error syncing posters:', e);
-    } finally {
-      setIsSyncingPosters(false);
-    }
-  }, [invalidateGallery]);
 
   // Category counts and the colour library arrive with the facets query,
   // computed server-side over the whole wall. The grid pages below never need
@@ -234,18 +221,26 @@ export default function HomePage() {
     setShuffleSeed(Date.now());
   }, []);
 
-  // Add Thumbnail (Restricted to shivashiva66407@gmail.com)
+  // Add Thumbnail / Poster (Restricted to shivashiva66407@gmail.com)
   const handleAddThumbnail = (item: ThumbnailItem) => {
     if (!isAdmin) return;
-    saveStoredThumbnail(item);
+    const isPoster = item.kind === 'poster' || item.id?.startsWith('poster-') || section === 'posters';
+    if (isPoster) {
+      saveStoredPosters([{ ...item, kind: 'poster' }]);
+    } else {
+      saveStoredThumbnail(item);
+    }
     invalidateGallery();
   };
 
-  // Add Multiple Thumbnails in batch (Restricted to shivashiva66407@gmail.com)
+  // Add Multiple Thumbnails / Posters in batch (Restricted to shivashiva66407@gmail.com)
   const handleAddMultipleThumbnails = (items: ThumbnailItem[]) => {
     if (!isAdmin) return;
-    const posterItems = items.filter(i => i.kind === 'poster');
-    const thumbItems = items.filter(i => i.kind !== 'poster');
+    const isPosterSection = section === 'posters';
+    const posterItems = items
+      .filter(i => i.kind === 'poster' || i.id?.startsWith('poster-') || (isPosterSection && i.kind !== 'thumbnail'))
+      .map(i => ({ ...i, kind: 'poster' as const }));
+    const thumbItems = items.filter(i => !posterItems.some(p => p.id === i.id));
     if (posterItems.length > 0) {
       saveStoredPosters(posterItems);
     }
@@ -253,7 +248,7 @@ export default function HomePage() {
       saveStoredThumbnails(thumbItems);
     }
     // The rows already exist server-side (the upload route wrote them), so a
-    // single invalidation brings them into the feed. No local mirror to update.
+    // single invalidation brings them into the feed.
     invalidateGallery();
   };
 
@@ -401,21 +396,18 @@ export default function HomePage() {
     }
   };
 
-  // Pinterest-style masonry for posters. Safe now that every card reserves its
-  // true height from recorded dimensions: the columns re-balance once at
-  // layout and never again, because no tile changes size once mounted. With
-  // unknown dimensions this was the cause of the flickering, shuffling wall.
+  // Fixed 4:5 grid for posters. Every card has identical 4:5 aspect ratio and clean grid alignment.
   const getPosterColsClass = () => {
     switch (posterColumns) {
       case 3:
-        return 'columns-2 sm:columns-2 lg:columns-3';
+        return 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3';
       case 4:
-        return 'columns-2 sm:columns-3 md:columns-3 lg:columns-4';
+        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4';
       case 6:
-        return 'columns-2 sm:columns-3 md:columns-4 lg:columns-6';
+        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
       case 5:
       default:
-        return 'columns-2 sm:columns-3 md:columns-4 lg:columns-5';
+        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
     }
   };
 
@@ -434,6 +426,7 @@ export default function HomePage() {
         isFilterOpen={isFilterBarOpen}
         activeFilterCount={activeFilterCount}
         onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
+        section={section}
       />
 
       <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-5 sm:px-6 lg:px-8">
@@ -472,18 +465,6 @@ export default function HomePage() {
             {section === 'thumbnails' && (
               <ViewModeToggle isDetail={showCardInfo} onToggle={handleToggleCardInfo} />
             )}
-            {section === 'posters' && (
-              <button
-                type="button"
-                onClick={handleSyncPosters}
-                disabled={isSyncingPosters}
-                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink shadow-card transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised active:scale-[0.98] disabled:opacity-60"
-                title="Import and sync posters from Supabase"
-              >
-                <IconUploadCloud className={`h-3.5 w-3.5 ${isSyncingPosters ? 'animate-spin' : ''}`} />
-                <span>{isSyncingPosters ? 'Syncing...' : 'Sync from Supabase'}</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -502,31 +483,21 @@ export default function HomePage() {
             <p className="mt-1 max-w-[34ch] text-sm text-ink-muted">
               {section === 'thumbnails'
                 ? 'All previous thumbnails have been cleared. Upload or extract YouTube links to add new thumbnails.'
-                : 'No posters match your current search or filters. Sync from Supabase or import new posters.'}
+                : 'No posters match your current search or filters. Upload or import new posters.'}
             </p>
-            {section === 'posters' ? (
-              <button
-                onClick={handleSyncPosters}
-                disabled={isSyncingPosters}
-                className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
-              >
-                {isSyncingPosters ? 'Syncing...' : 'Sync Posters from Supabase'}
-              </button>
-            ) : (
-              <button
-                onClick={resetFilters}
-                className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
-              >
-                Reset filters
-              </button>
-            )}
+            <button
+              onClick={resetFilters}
+              className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
+            >
+              Reset filters
+            </button>
           </div>
         ) : (
           <>
             {section === 'posters' ? (
-              <div className={`${getPosterColsClass()} gap-3 sm:gap-4`}>
+              <div className={`grid ${getPosterColsClass()} gap-3 sm:gap-4`}>
                 {visibleThumbnails.map((item, index) => (
-                  <div key={item.id} className="mb-3 break-inside-avoid sm:mb-4">
+                  <div key={item.id} className="w-full">
                     <ThumbnailCard
                       item={item}
                       index={index}
@@ -596,6 +567,7 @@ export default function HomePage() {
           onClose={() => setIsAddOpen(false)}
           onAddThumbnail={handleAddThumbnail}
           onAddMultipleThumbnails={handleAddMultipleThumbnails}
+          initialMediaKind={section === 'posters' ? 'poster' : 'thumbnail'}
         />
       )}
 

@@ -97,16 +97,10 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
   const shouldRenderFooter = showCardInfo && hasMetadataToShow && !poster;
 
-  // Pinterest-style wall: each poster keeps its own aspect ratio, so the tile
-  // reserves its exact box from the dimensions recorded at upload time. The
-  // box never changes when the image arrives, which is what stops the masonry
-  // from re-balancing mid-scroll. Posters without recorded dimensions fall
-  // back to 2:3, which is the standard poster proportion.
-  const knownRatio = poster && item.width && item.height ? item.width / item.height : null;
-  const posterRatio = knownRatio ?? 2 / 3;
-  const frameAspect = poster ? '' : 'aspect-video';
+  // Fixed standard 4:5 aspect ratio for all posters as requested
+  const frameAspect = poster ? 'aspect-[4/5]' : 'aspect-video';
   const frameRatio = poster
-    ? { aspectRatio: `${posterRatio}` }
+    ? { aspectRatio: '4/5' }
     : { aspectRatio: '16/9' };
 
   // The wall serves the 400px WebP variant when the backfill (or a new
@@ -123,7 +117,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
         shouldRenderFooter ? 'p-2 flex flex-col' : 'overflow-hidden'
       }`}
     >
-      {/* Artwork stage. Neutral backdrop preserves true color; posters use natural aspect ratio */}
+      {/* Artwork stage. Neutral backdrop preserves true color; posters use standard 4:5 ratio */}
       <div
         className={`thumb-stage relative ${frameAspect} w-full overflow-hidden ${
           shouldRenderFooter ? 'rounded-sm' : poster ? 'rounded-lg' : 'rounded-t-[13px]'
@@ -134,11 +128,10 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
         <img
           src={gridSrc}
           alt={displayTitle || item.title}
-          suppressHydrationWarning
-          className={`block h-full w-full ${poster ? 'object-contain object-center' : 'object-cover object-center'}`}
-          style={{ width: '100%', height: '100%', objectFit: poster ? 'contain' : 'cover' }}
-          width={item.width ?? (poster ? 1000 : 1280)}
-          height={item.height ?? (poster ? 1500 : 720)}
+          className="block h-full w-full object-cover object-center"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          width={item.width ?? (poster ? 800 : 1280)}
+          height={item.height ?? (poster ? 1000 : 720)}
           loading={index < 8 ? 'eager' : 'lazy'}
           decoding="async"
           fetchPriority={index < 4 ? 'high' : 'auto'}

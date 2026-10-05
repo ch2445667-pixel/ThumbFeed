@@ -156,9 +156,12 @@ export async function POST(req: NextRequest) {
     const uploadedResults: any[] = [];
     const warnings: string[] = [];
 
-    // Each item is fully isolated: one corrupt payload can never fail the batch.
-    for (const item of items) {
-      try {
+    // Process items with concurrency of 4 for speed
+    const CONCURRENCY = 4;
+    for (let i = 0; i < items.length; i += CONCURRENCY) {
+      const chunk = items.slice(i, i + CONCURRENCY);
+      await Promise.all(chunk.map(async (item) => {
+        try {
         const isPoster = item.kind === 'poster' || item.id?.startsWith('poster-') || item.niche === 'Cinema';
         const vId = item.videoId || item.id?.replace(/^.*-/, '') || (isPoster ? 'poster' : 'thumb');
         const cleanTitle = (item.title || (isPoster ? 'poster' : 'thumb'))
@@ -293,6 +296,7 @@ export async function POST(req: NextRequest) {
 
         uploadedResults.push({
           id: assignedId,
+          originalId: item.id,
           kind: isPoster ? 'poster' : 'thumbnail',
           videoId: item.videoId,
           title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
@@ -312,9 +316,10 @@ export async function POST(req: NextRequest) {
           height: dimensions?.height,
           dbSaved
         });
-      } catch (itemErr) {
-        warnings.push(`Item failed: ${itemErr instanceof Error ? itemErr.message : String(itemErr)}`);
-      }
+        } catch (itemErr) {
+          warnings.push(`Item failed: ${itemErr instanceof Error ? itemErr.message : String(itemErr)}`);
+        }
+      }));
     }
 
     return NextResponse.json({

@@ -30,6 +30,7 @@ interface AddModalProps {
   onClose: () => void;
   onAddThumbnail: (item: ThumbnailItem) => void;
   onAddMultipleThumbnails?: (items: ThumbnailItem[]) => void;
+  initialMediaKind?: 'thumbnail' | 'poster';
 }
 
 type AddTabMode = 'upload' | 'youtube' | 'pinterest';
@@ -501,12 +502,13 @@ export const AddModal: React.FC<AddModalProps> = ({
   isOpen,
   onClose,
   onAddThumbnail,
-  onAddMultipleThumbnails
+  onAddMultipleThumbnails,
+  initialMediaKind = 'thumbnail'
 }) => {
   const [activeTab, setActiveTab] = useState<AddTabMode>('upload');
   // What is being added. Posters skip the YouTube tab and land in the
   // posters wall with kind: 'poster' instead of the thumbnails gallery.
-  const [mediaKind, setMediaKind] = useState<AddMediaKind>('thumbnail');
+  const [mediaKind, setMediaKind] = useState<AddMediaKind>(initialMediaKind);
   // Human word for the media being added, used across button and fallback copy.
   const unitWord = mediaKind === 'poster' ? 'Poster' : 'Thumbnail';
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -553,7 +555,12 @@ export const AddModal: React.FC<AddModalProps> = ({
 
   // Reset modal state on open/close
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setMediaKind(initialMediaKind);
+      if (initialMediaKind === 'poster' && activeTab === 'youtube') {
+        setActiveTab('upload');
+      }
+    } else {
       setQueuedImages([]);
       setYoutubeInput('');
       setYoutubeItems([]);
@@ -564,30 +571,32 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadCategories([]);
       setYoutubeCategories([]);
       setPinterestCategories([]);
-      setMediaKind('thumbnail');
+      setMediaKind(initialMediaKind);
       setActiveTab('upload');
       setIsUploadingToCloud(false);
       setUploadStatusText('');
       setCloudError('');
     }
-  }, [isOpen]);
+  }, [isOpen, initialMediaKind, activeTab]);
 
   // Process a File or Blob into a QueuedImageItem
   const processImageFile = useCallback(async (file: File | Blob, customName?: string): Promise<QueuedImageItem | null> => {
     try {
+      const isPoster = mediaKind === 'poster';
       // Portraits keep a black matte; thumbnails keep the brand matte.
-      const jpgDataUrl = await convertToJpg(file, 0.9, 1920, mediaKind === 'poster' ? '#000000' : '#401D1A');
+      const jpgDataUrl = await convertToJpg(file, 0.9, 1920, isPoster ? '#000000' : '#401D1A');
       const rawName = (file instanceof File && file.name) ? file.name : (customName || `${unitWord} ${Date.now().toString().slice(-4)}`);
       const cleanTitle = rawName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
       const chosenCategories = [...uploadCategories];
 
+      const prefix = isPoster ? 'poster' : 'img';
       return {
-        id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         dataUrl: jpgDataUrl,
         title: cleanTitle || `Curated ${unitWord}`,
-        creator: 'You',
-        niche: (chosenCategories[0] || '') as NicheCategory,
-        tags: [...chosenCategories]
+        creator: isPoster ? 'Cinema' : 'You',
+        niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
+        tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : [])
       };
     } catch (err) {
       console.warn('Error converting image:', err);
@@ -676,15 +685,16 @@ export const AddModal: React.FC<AddModalProps> = ({
         } catch {
           // fallback dataUrl
           const chosenCategories = [...uploadCategories];
+          const isPoster = mediaKind === 'poster';
           setQueuedImages(prev => [
             ...prev,
             {
-              id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              id: `${isPoster ? 'poster' : 'img'}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
               dataUrl: text,
               title: `Pasted ${unitWord} ${prev.length + 1}`,
-              creator: 'You',
-              niche: (chosenCategories[0] || '') as NicheCategory,
-              tags: [...chosenCategories]
+              creator: isPoster ? 'Cinema' : 'You',
+              niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
+              tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : [])
             }
           ]);
         } finally {
@@ -692,7 +702,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         }
       }
     }
-  }, [isOpen, activeTab, processImageFile, queuedImages.length, uploadCategories, unitWord]);
+  }, [isOpen, activeTab, processImageFile, queuedImages.length, uploadCategories, unitWord, mediaKind]);
 
   // Attach global paste listener
   useEffect(() => {
@@ -880,25 +890,26 @@ export const AddModal: React.FC<AddModalProps> = ({
     if (queuedImages.length === 0) return;
     setIsUploadingToCloud(true);
     setCloudError('');
-    setUploadStatusText(`Uploading ${queuedImages.length} thumbnails to Supabase...`);
+    const isPoster = mediaKind === 'poster';
+    setUploadStatusText(`Uploading ${queuedImages.length} ${isPoster ? 'posters' : 'thumbnails'} to Supabase...`);
 
     let finalItems: ThumbnailItem[] = [];
     let cloudOk = false;
+    const payload = queuedImages.map(item => {
+      const itemCategories = item.tags || [];
+      const assignedId = item.id.startsWith('poster-') ? item.id : (isPoster ? `poster-${item.id}` : item.id);
+      return {
+        id: assignedId,
+        kind: mediaKind,
+        imageUrl: item.dataUrl,
+        title: item.title || `Curated ${unitWord}`,
+        creator: item.creator || (isPoster ? 'Cinema' : 'Creator'),
+        niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
+        tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : [])
+      };
+    });
 
     try {
-      const payload = queuedImages.map(item => {
-        const itemCategories = item.tags || [];
-        return {
-          id: item.id,
-          kind: mediaKind,
-          imageUrl: item.dataUrl,
-          title: item.title || `Curated ${unitWord}`,
-          creator: item.creator || (mediaKind === 'poster' ? 'Cinema' : 'Creator'),
-          niche: (itemCategories[0] || (mediaKind === 'poster' ? 'Cinema' : '')) as NicheCategory,
-          tags: itemCategories.length > 0 ? itemCategories : (mediaKind === 'poster' ? ['Movie Poster', 'Cinema'] : [])
-        };
-      });
-
       const res = await fetch('/api/supabase/upload-thumbnail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -908,15 +919,30 @@ export const AddModal: React.FC<AddModalProps> = ({
       if (res.ok) {
         const data = await res.json();
         const uploadedMap = new Map<string, string>();
+        const smallMap = new Map<string, string | undefined>();
+        const dimsMap = new Map<string, { width?: number; height?: number }>();
         const colorMap = new Map<string, string[]>();
         let allDbSaved = true;
         if (data.items && Array.isArray(data.items)) {
           data.items.forEach((item: any) => {
-            if (item.id && item.imageUrl) {
-              uploadedMap.set(item.id, item.imageUrl);
+            const key1 = item.originalId;
+            const key2 = item.id;
+            if (item.imageUrl) {
+              if (key1) uploadedMap.set(key1, item.imageUrl);
+              if (key2) uploadedMap.set(key2, item.imageUrl);
             }
-            if (item.id && Array.isArray(item.colors)) {
-              colorMap.set(item.id, item.colors);
+            if (item.thumbSmallUrl) {
+              if (key1) smallMap.set(key1, item.thumbSmallUrl);
+              if (key2) smallMap.set(key2, item.thumbSmallUrl);
+            }
+            if (item.width || item.height) {
+              const d = { width: item.width, height: item.height };
+              if (key1) dimsMap.set(key1, d);
+              if (key2) dimsMap.set(key2, d);
+            }
+            if (Array.isArray(item.colors)) {
+              if (key1) colorMap.set(key1, item.colors);
+              if (key2) colorMap.set(key2, item.colors);
             }
             if (item.dbSaved === false) allDbSaved = false;
           });
@@ -924,22 +950,31 @@ export const AddModal: React.FC<AddModalProps> = ({
         if (data.allDbSaved === false) allDbSaved = false;
         cloudOk = allDbSaved;
 
-        finalItems = queuedImages.map(img => {
+        finalItems = queuedImages.map((img, idx) => {
           const itemCategories = img.tags || [];
+          const payloadItem = payload[idx];
+          const assignedId = data.items?.[idx]?.id || payloadItem?.id || img.id;
+          const supaUrl = uploadedMap.get(img.id) || uploadedMap.get(payloadItem?.id) || uploadedMap.get(assignedId) || img.dataUrl;
+          const smallUrl = smallMap.get(img.id) || smallMap.get(payloadItem?.id) || smallMap.get(assignedId);
+          const dims = dimsMap.get(img.id) || dimsMap.get(payloadItem?.id) || dimsMap.get(assignedId);
+
           return {
-            id: img.id,
+            id: assignedId,
             kind: mediaKind,
             title: img.title || `Curated ${unitWord}`,
-            creator: img.creator || 'Creator',
-            imageUrl: uploadedMap.get(img.id) || img.dataUrl,
-            sourceUrl: uploadedMap.get(img.id) || img.dataUrl,
-            niche: (itemCategories[0] || '') as NicheCategory,
+            creator: img.creator || (isPoster ? 'Cinema' : 'Creator'),
+            imageUrl: supaUrl,
+            thumbSmallUrl: smallUrl,
+            sourceUrl: supaUrl,
+            niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
             styles: ['Face Close-up', 'High-Contrast Glow'],
-            tags: itemCategories,
-            colors: colorMap.get(img.id) ?? [],
+            tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
+            colors: colorMap.get(img.id) ?? colorMap.get(assignedId) ?? [],
+            width: dims?.width,
+            height: dims?.height,
             ocrText: '',
             emotion: 'Curious',
-            breakdownNotes: mediaKind === 'poster' ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
+            breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
             source: 'supabase-storage',
             createdAt: new Date().toISOString(),
             likesCount: Math.floor(Math.random() * 80) + 40
@@ -950,22 +985,24 @@ export const AddModal: React.FC<AddModalProps> = ({
       }
     } catch (err) {
       console.warn('Fallback to local storage upload:', err);
-      finalItems = queuedImages.map(img => {
+      finalItems = queuedImages.map((img, idx) => {
         const itemCategories = img.tags || [];
+        const payloadItem = payload[idx];
+        const assignedId = payloadItem?.id || img.id;
         return {
-          id: img.id,
+          id: assignedId,
           kind: mediaKind,
           title: img.title || `Curated ${unitWord}`,
-          creator: img.creator || 'Creator',
+          creator: img.creator || (isPoster ? 'Cinema' : 'Creator'),
           imageUrl: img.dataUrl,
           sourceUrl: img.dataUrl,
-          niche: (itemCategories[0] || '') as NicheCategory,
+          niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
           styles: ['Face Close-up', 'High-Contrast Glow'],
-          tags: itemCategories,
+          tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
           colors: [],
           ocrText: '',
           emotion: 'Curious',
-          breakdownNotes: mediaKind === 'poster' ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
+          breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
           source: 'supabase-storage',
           createdAt: new Date().toISOString(),
           likesCount: Math.floor(Math.random() * 80) + 40
@@ -1199,24 +1236,28 @@ export const AddModal: React.FC<AddModalProps> = ({
 
     setIsUploadingToCloud(true);
     setCloudError('');
-    setUploadStatusText(`Saving ${uniqueItems.length} thumbnails to cloud...`);
+    const isPoster = mediaKind === 'poster';
+    setUploadStatusText(`Saving ${uniqueItems.length} ${isPoster ? 'posters' : 'thumbnails'} to cloud...`);
 
     let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
       const chosenCategories = item.tags || [];
+      const assignedId = isPoster
+        ? `poster-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`
+        : (item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`));
       return {
-        id: item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`),
+        id: assignedId,
         kind: mediaKind,
-        title: item.title,
-        creator: item.creator,
+        title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
+        creator: item.creator || (isPoster ? 'Cinema' : 'Creator'),
         imageUrl: item.imageUrl,
         sourceUrl: item.url,
-        niche: (chosenCategories[0] || '') as NicheCategory,
+        niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
         styles: ['Face Close-up', 'High-Contrast Glow'],
-        tags: chosenCategories,
+        tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
         colors: [],
         ocrText: '',
         emotion: 'Curious',
-        breakdownNotes: mediaKind === 'poster' ? 'Imported movie poster.' : 'Auto-extracted inspiration thumbnail.',
+        breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Auto-extracted inspiration thumbnail.',
         viewsEstimate: item.views,
         publishedTime: item.publishedTime,
         source: 'supabase-storage',
@@ -1229,16 +1270,17 @@ export const AddModal: React.FC<AddModalProps> = ({
     try {
       const uploadPayload = uniqueItems.map((item, idx) => {
         const chosenCategories = item.tags || [];
+        const assignedId = finalThumbnails[idx].id;
         return {
-          id: item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`),
+          id: assignedId,
           kind: mediaKind,
           videoId: item.videoId,
           imageUrl: item.imageUrl,
           sourceUrl: item.url,
-          title: item.title,
-          creator: item.creator,
-          niche: (chosenCategories[0] || '') as NicheCategory,
-          tags: chosenCategories,
+          title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
+          creator: item.creator || (isPoster ? 'Cinema' : 'Creator'),
+          niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
+          tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
           views: item.views,
           viewsEstimate: item.views,
           publishedTime: item.publishedTime
@@ -1257,22 +1299,50 @@ export const AddModal: React.FC<AddModalProps> = ({
         if (resData.allDbSaved === false) allDbSaved = false;
         if (resData.items && Array.isArray(resData.items)) {
           const map = new Map<string, string>();
+          const smallMap = new Map<string, string | undefined>();
+          const dimsMap = new Map<string, { width?: number; height?: number }>();
           const colorMap = new Map<string, string[]>();
           resData.items.forEach((it: any) => {
-            if (it.videoId && it.imageUrl) map.set(it.videoId, it.imageUrl);
-            if (it.id && it.imageUrl) map.set(it.id, it.imageUrl);
-            if (it.videoId && Array.isArray(it.colors)) colorMap.set(it.videoId, it.colors);
-            if (it.id && Array.isArray(it.colors)) colorMap.set(it.id, it.colors);
+            const key1 = it.originalId;
+            const key2 = it.id;
+            const key3 = it.videoId;
+            if (it.imageUrl) {
+              if (key1) map.set(key1, it.imageUrl);
+              if (key2) map.set(key2, it.imageUrl);
+              if (key3) map.set(key3, it.imageUrl);
+            }
+            if (it.thumbSmallUrl) {
+              if (key1) smallMap.set(key1, it.thumbSmallUrl);
+              if (key2) smallMap.set(key2, it.thumbSmallUrl);
+              if (key3) smallMap.set(key3, it.thumbSmallUrl);
+            }
+            if (it.width || it.height) {
+              const d = { width: it.width, height: it.height };
+              if (key1) dimsMap.set(key1, d);
+              if (key2) dimsMap.set(key2, d);
+              if (key3) dimsMap.set(key3, d);
+            }
+            if (Array.isArray(it.colors)) {
+              if (key1) colorMap.set(key1, it.colors);
+              if (key2) colorMap.set(key2, it.colors);
+              if (key3) colorMap.set(key3, it.colors);
+            }
             if (it.dbSaved === false) allDbSaved = false;
           });
 
           finalThumbnails = finalThumbnails.map((item, idx) => {
             const vId = uniqueItems[idx]?.videoId;
-            const supaUrl = (vId ? map.get(vId) : null) || map.get(uniqueItems[idx]?.id);
+            const origId = uploadPayload[idx]?.id;
+            const supaUrl = (vId ? map.get(vId) : null) || map.get(origId) || map.get(item.id) || item.imageUrl;
+            const smallUrl = (vId ? smallMap.get(vId) : null) || smallMap.get(origId) || smallMap.get(item.id);
+            const dims = (vId ? dimsMap.get(vId) : null) || dimsMap.get(origId) || dimsMap.get(item.id);
             return {
               ...item,
-              imageUrl: supaUrl || item.imageUrl,
-              colors: (vId ? colorMap.get(vId) : null) ?? colorMap.get(uniqueItems[idx]?.id) ?? [],
+              imageUrl: supaUrl,
+              thumbSmallUrl: smallUrl,
+              width: dims?.width ?? item.width,
+              height: dims?.height ?? item.height,
+              colors: (vId ? colorMap.get(vId) : null) ?? colorMap.get(origId) ?? colorMap.get(item.id) ?? [],
               viewsEstimate: uniqueItems[idx]?.views || item.viewsEstimate,
               publishedTime: uniqueItems[idx]?.publishedTime || item.publishedTime
             };

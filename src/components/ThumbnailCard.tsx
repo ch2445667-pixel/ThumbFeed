@@ -74,7 +74,8 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
         ? `${displayCreator} Thumbnail`
         : '';
 
-  // Views information
+  // Views. Already formatted by the backfill ("423K views", "1.2M views"),
+  // so only the plain-number case needs a suffix added.
   let displayViews = cachedYT?.views || item.viewsEstimate || '';
   if (displayViews && !displayViews.toLowerCase().includes('view')) {
     displayViews = `${displayViews} views`;

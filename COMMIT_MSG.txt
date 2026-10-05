@@ -1,33 +1,28 @@
-Rewrite the auto-tagger and fix the facet counts it fed
+Replace scraped view text with real view counts and publish dates
 
-The importer's tagger matched keywords with String.includes, so "ai" fired
-inside "said", "mac" inside "machine" and "war" inside "warm". It also wrote
-style names that do not exist in the app's VisualStyle union -- "Bold
-Typography", "Product Focus", "Split Screen" -- so selecting any style in the
-filter bar matched nothing at all. Its tags were just the longest words in the
-title: "Gen", "Gave", "Having".
+The importer stored whatever text it could scrape off the channel grid:
+"423K views views", "2 million views", "2.2 thousand views". The duplicated
+suffix and the spelled-out numbers came from the extractor concatenating an
+accessibility label with a fallback. Upload dates were worse -- created_at was
+the row's insert timestamp, so every tile claimed to be uploaded on the day the
+import ran, and 27 rows carried a relative note like "Published: 6mo ago".
 
-scripts/tagger.js replaces it. Matching is on word boundaries; every emitted
-niche, style and emotion is validated against the app's controlled
-vocabularies; tags come from a curated topic lexicon so a tag means the same
-thing everywhere, with proper nouns and an ALL-CAPS hook word as fallback.
-scripts/test-tagger.js covers the substring failures and asserts no value
-outside the vocabularies ever gets emitted.
+scripts/fetch-stats.mjs walks every thumb-yt-* row and asks InnerTube for the
+exact viewCount and ISO publishDate. Views are stored as K below a million and
+M above ("423K views", "1.2M views", "18M views"); counts under a thousand
+stay exact rather than rounding a real number to "1K". created_at becomes the
+video's real publish date, so formatTimeAgo renders a true age, and
+breakdown_notes gains a "Published: YYYY-MM-DD" marker.
 
-Two counting bugs in the facets route:
+YouTube answers LOGIN_REQUIRED once a burst of player calls goes through, which
+cost 353 rows on the first pass. The script now falls back to the public watch
+page for a single rejected call, drops concurrency to 2, and pauses as failures
+accumulate. Re-running it resumes: only rows without an exact-looking value are
+fetched. 2149 of 2150 rows now carry real figures.
 
-PostgREST caps responses at 1000 rows, so limit(5000) returned the first
-thousand rows and every count was computed over half the data. It now pages
-with range() until exhausted: "All" reads 2140, not 1000.
+The one holdout, thumb-yt-v7O8ZUgGRCI, is UNPLAYABLE on every client including
+the watch page. Its publish date was recoverable from the page and is recorded;
+the view count is left null rather than guessed.
 
-Counts also folded every tag into the niche counts, which is what produced
-~700 phantom categories in the filter bar. Only real niche names are folded
-in now, mirroring the niche-or-tag match in the gallery route.
-
-Also completed the import to 2141/2141 across all 51 channels (Johnny Harris
-and HimanshuG were the gaps) and re-tagged all rows with the new tagger.
-import_progress.json is now gitignored -- it is local run state.
-
-Verified: tsc clean, the text-heavy style filter returns 1547 rows where it
-returned 0 before, niche=Tech returns 297, no broken images, grid still
-serving small WebP variants.
+Verified in the browser: 14K / 401K / 761K / 3.1M / 5.4M views with 10mo, 2mo,
+5y, 1y, 1mo ages, no broken images, grid still on small WebP variants.

@@ -34,6 +34,12 @@ export interface ThumbnailItem {
   tags: string[];
   colors?: string[];
   /**
+   * Grid-sized variant (400px WebP) served in the wall. The full original in
+   * imageUrl loads only when a tile is opened. Absent until the backfill and
+   * for rows uploaded before it -- the card falls back to imageUrl.
+   */
+  thumbSmallUrl?: string;
+  /**
    * Intrinsic pixel size, recorded at upload time so a card can reserve its
    * exact box before the image loads. Without this, masonry re-balances as
    * images arrive and tiles visibly jump.

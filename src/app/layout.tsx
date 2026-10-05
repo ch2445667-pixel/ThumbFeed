@@ -3,6 +3,7 @@ import { Outfit, JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/lib/authContext";
+import { QueryProvider } from "@/lib/QueryProvider";
 
 const geistSans = Outfit({
   subsets: ["latin"],
@@ -86,7 +87,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-canvas text-ink antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider><QueryProvider>{children}</QueryProvider></AuthProvider>
       </body>
     </html>
   );

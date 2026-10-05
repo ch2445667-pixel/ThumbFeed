@@ -109,6 +109,12 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
     ? { aspectRatio: `${posterRatio}` }
     : { aspectRatio: '16/9' };
 
+  // The wall serves the 400px WebP variant when the backfill (or a new
+  // upload) has produced one. The full original is only requested by the
+  // inspect modal, so browsing never transfers full-size files. Rows without
+  // a small variant still work, just at full size.
+  const gridSrc = item.thumbSmallUrl || item.imageUrl;
+
   return (
     <div
       onClick={() => onInspect(item)}
@@ -126,7 +132,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={item.imageUrl}
+          src={gridSrc}
           alt={displayTitle || item.title}
           suppressHydrationWarning
           className={`block h-full w-full ${poster ? 'object-contain object-center' : 'object-cover object-center'}`}

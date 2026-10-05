@@ -112,6 +112,24 @@ async function optimizeBuffer(input: Buffer, isPoster: boolean): Promise<Buffer>
 }
 
 /**
+ * Grid-sized WebP (400px wide). The wall renders this instead of the
+ * original; the full image is only fetched when a tile is opened. Roughly
+ * 15-25 KB against 80 KB+ for a stored original.
+ */
+async function makeSmallWebp(input: Buffer): Promise<Buffer | null> {
+  try {
+    const mod = await import('sharp').then((m: any) => m.default || m);
+    return await mod(input)
+      .resize({ width: 400, withoutEnlargement: true })
+      .webp({ quality: 75 })
+      .toBuffer();
+  } catch (err) {
+    console.warn('Small variant note:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/**
  * Read intrinsic dimensions from the bytes already in hand. Recorded with the
  * row so the card can reserve the exact box before the image is requested.
  */
@@ -156,6 +174,7 @@ export async function POST(req: NextRequest) {
           : sanitizeFilename(item.title || 'Thumbnail', vId);
 
         let finalPublicUrl = item.imageUrl;
+        let thumbSmallUrl: string | null = null;
         let uploadSuccess = false;
         // Posters are excluded from colour extraction by design, so this stays
         // empty for them rather than describing artwork we chose not to read.
@@ -197,6 +216,32 @@ export async function POST(req: NextRequest) {
               const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co';
               finalPublicUrl = pubData?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${storagePath}`;
               uploadSuccess = true;
+
+              // Second object: the 400px WebP the wall actually renders.
+              // Derived from the same bytes we already hold, so this costs no
+              // extra fetch. A failure here is not fatal -- the row simply has
+              // no small variant and the card falls back to the full image.
+              try {
+                const small = await makeSmallWebp(imageResult.buffer);
+                if (small) {
+                  const smallPath = `small/${storagePath.replace(/\.[^/.]+$/, '')}.webp`;
+                  const { error: smallErr } = await client.storage
+                    .from('Thumbnails')
+                    .upload(smallPath, small, {
+                      contentType: 'image/webp',
+                      cacheControl: '31536000',
+                      upsert: true,
+                    });
+                  if (smallErr) {
+                    warnings.push(`Small variant for "${item.title || vId}": ${smallErr.message}`);
+                  } else {
+                    const { data: smallPub } = client.storage.from('Thumbnails').getPublicUrl(smallPath);
+                    thumbSmallUrl = smallPub?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${smallPath}`;
+                  }
+                }
+              } catch (smallErr) {
+                warnings.push(`Small variant for "${item.title || vId}": ${smallErr instanceof Error ? smallErr.message : String(smallErr)}`);
+              }
             } else {
               warnings.push(`Bucket upload for "${item.title || vId}": ${uploadError.message}`);
             }
@@ -227,6 +272,9 @@ export async function POST(req: NextRequest) {
             styles: item.styles || [],
             tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : (item.niche ? [item.niche] : [])),
             colors,
+            // Null when the small variant failed, so an older row's stale
+            // value is cleared rather than left pointing at a deleted object.
+            thumb_small_url: thumbSmallUrl,
             views_estimate: viewsValue,
             breakdown_notes: notes,
             source: isPoster ? 'poster' : 'supabase-storage',
@@ -249,7 +297,6 @@ export async function POST(req: NextRequest) {
           videoId: item.videoId,
           title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
           creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
-          imageUrl: finalPublicUrl,
           sourceUrl: item.sourceUrl || finalPublicUrl,
           niche: isPoster ? 'Cinema' : (item.niche || ''),
           tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : []),
@@ -257,6 +304,8 @@ export async function POST(req: NextRequest) {
           publishedTime: item.publishedTime,
           source: isPoster ? 'poster' : 'supabase-storage',
           uploadedToBucket: uploadSuccess,
+          imageUrl: finalPublicUrl,
+          thumbSmallUrl,
           colors,
           colorFamilies,
           width: dimensions?.width,

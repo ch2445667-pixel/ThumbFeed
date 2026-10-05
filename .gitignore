@@ -32,3 +32,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# importer checkpoint: local run state, not source
+scripts/import_progress.json

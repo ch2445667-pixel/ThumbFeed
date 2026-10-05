@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAnonClient } from '../../../../lib/supabaseServer';
 import { COLOR_FAMILY_ORDER, familyOfHex, familiesForItem, type ColorFamily } from '../../../../lib/colorFamilies';
 
+/**
+ * Niche names the filter bar offers. A row whose niche column is empty but
+ * which carries one of these as a tag still counts toward it, mirroring the
+ * `niche.eq.X,tags.cs.{"X"}` match in the gallery route.
+ */
+const NICHE_NAMES = new Set([
+  'irl', 'business', 'tech', 'entertainment', 'gaming', 'sports',
+  'documentary', 'educational', 'podcast', 'interviews', 'football',
+  'mindset', 'self-improvement', 'lifestyle', 'entrepreneurship',
+  'geopolitics', 'military', 'nfl', 'psychology', 'soccer',
+  'video games', 'vlog', 'war',
+]);
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -20,25 +33,35 @@ export async function GET(req: NextRequest) {
     const section = url.searchParams.get('section') === 'posters' ? 'posters' : 'thumbnails';
     const supabase = getAnonClient();
 
-    let query = supabase.from('thumbnails').select('id,niche,tags,colors');
-    if (section === 'posters') {
-      query = query.or(
-        'id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*'
-      );
-    } else {
-      query = query
-        .not('breakdown_notes', 'ilike', '%poster%')
-        .not('id', 'ilike', 'poster-%')
-        .not('niche', 'eq', 'Cinema')
-        .not('source', 'eq', 'poster');
-    }
+    // PostgREST caps a single response at max-rows (1000 on this project), so
+    // a plain .limit(5000) silently returns only the first thousand rows and
+    // every count below is wrong. Page through with offset instead.
+    const PAGE = 1000;
+    const rows: any[] = [];
+    for (let offset = 0; ; offset += PAGE) {
+      let query = supabase.from('thumbnails').select('id,niche,tags,colors');
+      if (section === 'posters') {
+        query = query.or(
+          'id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*'
+        );
+      } else {
+        query = query
+          .not('breakdown_notes', 'ilike', '%poster%')
+          .not('id', 'ilike', 'poster-%')
+          .not('niche', 'eq', 'Cinema')
+          .not('source', 'eq', 'poster');
+      }
 
-    const { data, error } = await query.limit(5000);
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      const { data, error } = await query
+        .order('id', { ascending: true })
+        .range(offset, offset + PAGE - 1);
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      const batch = data || [];
+      rows.push(...batch);
+      if (batch.length < PAGE) break;
     }
-
-    const rows = data || [];
     const nicheCounts: Record<string, number> = { All: rows.length };
     for (const row of rows) {
       const seen = new Set<string>();
@@ -46,14 +69,16 @@ export async function GET(req: NextRequest) {
         nicheCounts[row.niche] = (nicheCounts[row.niche] || 0) + 1;
         seen.add((row.niche as string).toLowerCase());
       }
+      // The filter matches on niche OR tag, so a row tagged "Football" still
+      // belongs to the Football count. Only real niche names are folded in --
+      // counting every tag produced ~700 phantom categories in the filter bar.
       if (Array.isArray(row.tags)) {
         for (const tag of row.tags) {
-          const lower = (tag || '').trim().toLowerCase();
-          if (lower && !seen.has(lower)) {
-            const key = (tag as string).trim();
-            nicheCounts[key] = (nicheCounts[key] || 0) + 1;
-            seen.add(lower);
-          }
+          const key = (tag || '').trim();
+          const lower = key.toLowerCase();
+          if (!lower || seen.has(lower) || !NICHE_NAMES.has(lower)) continue;
+          nicheCounts[key] = (nicheCounts[key] || 0) + 1;
+          seen.add(lower);
         }
       }
     }

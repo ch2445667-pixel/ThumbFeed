@@ -1,0 +1,33 @@
+Rewrite the auto-tagger and fix the facet counts it fed
+
+The importer's tagger matched keywords with String.includes, so "ai" fired
+inside "said", "mac" inside "machine" and "war" inside "warm". It also wrote
+style names that do not exist in the app's VisualStyle union -- "Bold
+Typography", "Product Focus", "Split Screen" -- so selecting any style in the
+filter bar matched nothing at all. Its tags were just the longest words in the
+title: "Gen", "Gave", "Having".
+
+scripts/tagger.js replaces it. Matching is on word boundaries; every emitted
+niche, style and emotion is validated against the app's controlled
+vocabularies; tags come from a curated topic lexicon so a tag means the same
+thing everywhere, with proper nouns and an ALL-CAPS hook word as fallback.
+scripts/test-tagger.js covers the substring failures and asserts no value
+outside the vocabularies ever gets emitted.
+
+Two counting bugs in the facets route:
+
+PostgREST caps responses at 1000 rows, so limit(5000) returned the first
+thousand rows and every count was computed over half the data. It now pages
+with range() until exhausted: "All" reads 2140, not 1000.
+
+Counts also folded every tag into the niche counts, which is what produced
+~700 phantom categories in the filter bar. Only real niche names are folded
+in now, mirroring the niche-or-tag match in the gallery route.
+
+Also completed the import to 2141/2141 across all 51 channels (Johnny Harris
+and HimanshuG were the gaps) and re-tagged all rows with the new tagger.
+import_progress.json is now gitignored -- it is local run state.
+
+Verified: tsc clean, the text-heavy style filter returns 1547 rows where it
+returned 0 before, niche=Tech returns 297, no broken images, grid still
+serving small WebP variants.

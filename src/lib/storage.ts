@@ -69,7 +69,7 @@ export const DEFAULT_COLLECTIONS: CollectionBoard[] = [
     description: 'Thumbnails with bold expressions, curiosity gaps and high engagement',
     thumbnailIds: [],
     createdAt: '2026-08-20',
-    colorTheme: '#401D1A'
+    colorTheme: '#411C1A'
   },
   {
     id: 'col-2',
@@ -77,7 +77,7 @@ export const DEFAULT_COLLECTIONS: CollectionBoard[] = [
     description: 'Clean Apple-style and sleek documentary lighting references',
     thumbnailIds: [],
     createdAt: '2026-08-20',
-    colorTheme: '#E4E0D3'
+    colorTheme: '#D6D1BC'
   }
 ];
 

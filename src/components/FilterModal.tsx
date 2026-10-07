@@ -68,24 +68,24 @@ export const FilterModal: React.FC<FilterModalProps> = ({
       {/* Compact Popover Card (Not Full Screen) */}
       <div
         id="compact-niche-filter-card"
-        className="relative w-full max-w-sm sm:max-w-md bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-10 p-5 space-y-4 animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-sm sm:max-w-md bg-surface border border-line rounded-2xl shadow-2xl overflow-hidden z-10 p-5 space-y-4 animate-in zoom-in-95 duration-150"
       >
         {/* Compact Header */}
-        <div className="flex items-center justify-between border-b border-border/80 pb-3">
+        <div className="flex items-center justify-between border-b border-line pb-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <div className="p-1.5 rounded-lg bg-accent-veil text-accent border border-accent">
               <Filter className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-white">Filter by Niche</h3>
-              <p className="text-[11px] text-gray-400">{filteredCount} thumbnails</p>
+              <h3 className="font-bold text-sm text-ink">Filter by Niche</h3>
+              <p className="text-[11px] text-ink-muted">{filteredCount} thumbnails</p>
             </div>
           </div>
 
           <button
             id="filter-close-btn"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-surfaceHover transition-colors"
+            className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface-raised transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -102,8 +102,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 onClick={() => handleSelectNiche(niche)}
                 className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left ${
                   isSelected
-                    ? 'bg-indigo-600 text-white shadow-md font-semibold'
-                    : 'bg-background border border-border/70 text-gray-300 hover:text-white hover:bg-surfaceHover hover:border-border'
+                    ? 'bg-accent text-accent-on shadow-md font-semibold'
+                    : 'bg-background border border-line text-ink-muted hover:text-ink hover:bg-surface-raised'
                 }`}
               >
                 <span className="truncate">{niche}</span>
@@ -113,11 +113,11 @@ export const FilterModal: React.FC<FilterModalProps> = ({
         </div>
 
         {/* Compact Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/80">
+        <div className="flex items-center justify-between pt-3 border-t border-line">
           <button
             id="filter-reset-btn"
             onClick={onReset}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink transition-colors"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Reset</span>
@@ -126,7 +126,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           <button
             id="filter-apply-btn"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-all shadow-sm"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-accent-on bg-accent hover:bg-accent-hover transition-all shadow-sm"
           >
             Apply ({filteredCount})
           </button>

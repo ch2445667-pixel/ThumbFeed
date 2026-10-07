@@ -268,7 +268,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                         }
                       }}
                       title="Remove category"
-                      className="grid h-4 w-4 cursor-pointer place-items-center rounded-full text-xs leading-none opacity-60 hover:bg-black/15 hover:opacity-100 dark:hover:bg-white/20"
+                      className="grid h-4 w-4 cursor-pointer place-items-center rounded-full text-xs leading-none opacity-60 hover:bg-black/15 hover:opacity-100 dark:hover:bg-[#E4E1D2]/20"
                     >
                       &times;
                     </span>
@@ -332,7 +332,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                 >
                   {/* Real palette from the library. Each slice is flex-grown by
                       how many thumbnails actually carry that hex. */}
-                  <span className="flex h-4 w-9 shrink-0 overflow-hidden rounded-[3px] ring-1 ring-black/10 dark:ring-white/15">
+                  <span className="flex h-4 w-9 shrink-0 overflow-hidden rounded-[3px] ring-1 ring-black/10 dark:ring-[#E4E1D2]/15">
                     {entry.swatches.map((swatch) => (
                       <span
                         key={swatch.hex}

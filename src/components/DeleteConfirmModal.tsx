@@ -47,19 +47,19 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           id="delete-confirm-dialog"
-          className="relative w-full max-w-md bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-[20px] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 z-10"
+          className="relative w-full max-w-md bg-[#D6D1BC] dark:bg-[#1E1B1A] border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 rounded-[20px] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 z-10"
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-full bg-[#401D1A]/10 dark:bg-[#E4E0D3]/20 text-[#401D1A] dark:text-[#E4E0D3] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 shrink-0">
+              <div className="p-2.5 rounded-full bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 shrink-0">
                 <IconTrash className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#401D1A] dark:text-[#FFFFFF]">
+                <h3 className="text-base font-bold text-[#0d0e10] dark:text-[#D6D1BC]">
                   Delete Permanently?
                 </h3>
-                <p className="text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
+                <p className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70">
                   This action cannot be undone
                 </p>
               </div>
@@ -69,15 +69,15 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Cancel delete"
-              className="p-1 rounded-lg text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/70 dark:hover:text-[#FFFFFF] hover:bg-[#E4E0D3]/30 dark:hover:bg-[#FFFFFF]/10 transition-colors"
+              className="p-1 rounded-lg text-[#0d0e10]/60 hover:text-[#0d0e10] dark:text-[#D6D1BC]/70 dark:hover:text-[#D6D1BC] hover:bg-[#E4E1D2]/30 dark:hover:bg-[#411C1A]/10 transition-colors"
             >
               <IconClose className="w-4 h-4" />
             </button>
           </div>
 
           {/* Thumbnail preview snippet */}
-          <div className="flex items-center gap-3 p-2.5 rounded-[12px] bg-[#E4E0D3]/40 dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25">
-            <div className="w-20 aspect-video rounded-[8px] overflow-hidden bg-[#401D1A] shrink-0">
+          <div className="flex items-center gap-3 p-2.5 rounded-[12px] bg-[#E4E1D2]/40 dark:bg-[#1E1B1A] border border-[#0d0e10]/15 dark:border-[#D6D1BC]/25">
+            <div className="w-20 aspect-video rounded-[8px] overflow-hidden bg-[#411C1A] shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.imageUrl}
@@ -89,26 +89,26 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-[#401D1A] dark:text-[#FFFFFF] truncate">
+              <p className="text-xs font-semibold text-[#0d0e10] dark:text-[#D6D1BC] truncate">
                 {item.title}
               </p>
-              <p className="text-[11px] text-[#401D1A]/70 dark:text-[#E4E0D3]/70 truncate">
+              <p className="text-[11px] text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 truncate">
                 {item.creator || 'Creator'} • {item.niche}
               </p>
             </div>
           </div>
 
           {/* Warning text */}
-          <p className="text-xs text-[#401D1A]/80 dark:text-[#E4E0D3]/80 leading-relaxed">
+          <p className="text-xs text-[#0d0e10]/80 dark:text-[#D6D1BC]/80 leading-relaxed">
             Are you sure you want to permanently delete this thumbnail? It will be removed immediately from your database, storage bucket, and feed.
           </p>
 
           {/* Action buttons */}
-          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
+          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#0d0e10]/10 dark:border-[#D6D1BC]/15">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 rounded-[10px] transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-[#0d0e10] dark:text-[#D6D1BC] hover:bg-[#E4E1D2]/40 dark:hover:bg-[#411C1A]/10 rounded-[10px] transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -116,7 +116,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               id="confirm-delete-action-btn"
               type="button"
               onClick={handleConfirm}
-              className="px-4 py-2 text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-[0.97] rounded-[10px] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-[#0d0e10] bg-[#411C1A] dark:bg-[#411C1A] dark:text-[#0d0e10] hover:opacity-90 active:scale-[0.97] rounded-[10px] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <IconTrash className="w-3.5 h-3.5" />
               <span>Delete Permanently</span>

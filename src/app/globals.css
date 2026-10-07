@@ -5,9 +5,14 @@
 /* ==========================================================================
    ThumbFeed design tokens
    --------------------------------------------------------------------------
-   Single source of truth. Brand values (#401D1A espresso / #E4E0D3 cream) are
-   fixed and must not drift. Everything else is derived from them so surfaces
-   can be re-tinted without touching a component.
+   Single source of truth. Brand values (#411C1A maroon / #E4E1D2 beige /
+   #0d0e10 near-black) are fixed and must not drift. Everything else is
+   derived from them so surfaces can be re-tinted without touching a
+   component.
+
+   Light mode pairs a beige canvas with deeper-beige surfaces, near-black ink
+   and a maroon accent; dark mode inverts to a near-black canvas with beige
+   ink and the same maroon accent. On-accent content is always beige.
 
    Radius rule (Shape Consistency Lock): 6px chips / 10px controls /
    14px cards+panels / 18px sheets / full for pills.
@@ -16,47 +21,49 @@
 :root {
   color-scheme: light;
 
-  /* Brand (locked) */
-  --espresso: #401D1A;
-  --cream: #E4E0D3;
+  /* Brand (locked): maroon / beige / near-black */
+  --espresso: #0d0e10;
+  --cream: #E4E1D2;
 
-  /* Surfaces: light is a cream tonal ladder, not flat cream + white */
-  --canvas: #E4E0D3;
-  --surface: #EDEADE;
-  --surface-raised: #F6F4EC;
-  --surface-sunken: #DCD8C9;
+  /* Surfaces: beige canvas, deeper-beige cards and controls */
+  --canvas: #E4E1D2;
+  --surface: #D6D1BC;
+  --surface-raised: #EDEAD9;
+  --surface-sunken: #CFCAB4;
 
   /* Ink. Alphas are floored so the faintest step still clears WCAG AA (4.5:1)
      against its own surface. Hierarchy comes from size and weight too. */
-  --ink: #401D1A;
-  --ink-2: rgba(64, 29, 26, 0.78);
-  --ink-3: rgba(64, 29, 26, 0.68);
+  --ink: #0d0e10;
+  --ink-2: rgba(13, 14, 16, 0.78);
+  --ink-3: rgba(13, 14, 16, 0.66);
 
-  /* Accent is the brand ink. One accent, used everywhere. */
-  --accent: #401D1A;
-  --accent-hover: #4E2723;
-  --on-accent: #F6F4EC;
+  /* Accent is maroon, distinct from the ink: buttons/active states read as
+     brand fills rather than as text. On-accent content is always beige. */
+  --accent: #411C1A;
+  --accent-hover: #5E2422;
+  --on-accent: #E4E1D2;
   /* Alpha variants declared as tokens. Tailwind cannot apply an /opacity
      modifier to a var() color, so these are pre-resolved. */
-  --on-accent-dim: rgba(246, 244, 236, 0.78);
-  --on-accent-line: rgba(246, 244, 236, 0.24);
-  --accent-veil: rgba(246, 244, 236, 0.14);
+  --on-accent-dim: rgba(228, 225, 210, 0.82);
+  --on-accent-line: rgba(228, 225, 210, 0.30);
+  --accent-veil: rgba(65, 28, 26, 0.12);
 
   /* Hairlines */
-  --line: rgba(64, 29, 26, 0.14);
-  --line-2: rgba(64, 29, 26, 0.26);
+  --line: rgba(13, 14, 16, 0.14);
+  --line-2: rgba(13, 14, 16, 0.26);
 
   /* Focus ring, used by every interactive element */
-  --focus: #401D1A;
+  --focus: #411C1A;
 
-  /* Semantic (destructive actions only, never decoration) */
-  --danger: #9A2B25;
-  --danger-soft: rgba(154, 43, 37, 0.10);
-  --danger-line: rgba(154, 43, 37, 0.28);
-  --on-danger: #FDF7F5;
+  /* Semantic (destructive actions only, never decoration). Maroon doubles as
+     the danger hue so the palette stays at three colors. */
+  --danger: #411C1A;
+  --danger-soft: rgba(65, 28, 26, 0.10);
+  --danger-line: rgba(65, 28, 26, 0.32);
+  --on-danger: #E4E1D2;
 
-  /* Image stage behind every thumbnail, both modes */
-  --stage: #14110F;
+  /* Image stage behind every thumbnail, light mode */
+  --stage: #0d0e10;
 
   /* Legacy aliases kept so existing utility classes resolve identically */
   --background: var(--canvas);
@@ -81,49 +88,52 @@
   --r-lg: 14px;
   --r-xl: 18px;
 
-  /* Elevation, tinted to the espresso hue. Never pure black on cream. */
-  --shadow-card: 0 1px 2px rgba(64, 29, 26, 0.05), 0 0 0 0.5px rgba(64, 29, 26, 0.10);
-  --shadow-card-hover: 0 6px 18px -6px rgba(64, 29, 26, 0.22), 0 0 0 0.5px rgba(64, 29, 26, 0.24);
-  --shadow-elevated: 0 2px 6px rgba(64, 29, 26, 0.06), 0 12px 32px -10px rgba(64, 29, 26, 0.24);
-  --shadow-dock: 0 2px 8px rgba(64, 29, 26, 0.10), 0 18px 40px -12px rgba(64, 29, 26, 0.38);
+  /* Elevation, tinted to the ink hue. Never pure black on beige. */
+  --shadow-card: 0 1px 2px rgba(13, 14, 16, 0.05), 0 0 0 0.5px rgba(13, 14, 16, 0.10);
+  --shadow-card-hover: 0 6px 18px -6px rgba(13, 14, 16, 0.22), 0 0 0 0.5px rgba(13, 14, 16, 0.24);
+  --shadow-elevated: 0 2px 6px rgba(13, 14, 16, 0.06), 0 12px 32px -10px rgba(13, 14, 16, 0.24);
+  --shadow-dock: 0 2px 8px rgba(13, 14, 16, 0.10), 0 18px 40px -12px rgba(13, 14, 16, 0.38);
 }
 
 .dark {
   color-scheme: dark;
 
-  /* Warm-tinted darks so the espresso accent reads as intentional,
-     not as a brown smear on cold zinc. */
-  --canvas: #161110;
-  --surface: #1E1815;
-  --surface-raised: #2A221E;
-  --surface-sunken: #120D0C;
+  /* Near-black canvas with beige ink and a maroon accent. */
+  --canvas: #0d0e10;
+  --surface: #1E1B1A;
+  --surface-raised: #2A2423;
+  --surface-sunken: #060607;
 
-  --ink: #F1ECE1;
-  --ink-2: rgba(241, 236, 225, 0.70);
-  --ink-3: rgba(241, 236, 225, 0.52);
+  --ink: #E4E1D2;
+  --ink-2: rgba(228, 225, 210, 0.78);
+  --ink-3: rgba(228, 225, 210, 0.56);
 
-  /* Lifted clay. Lightened to clear 3:1 against the canvas, which WCAG 1.4.11
-     requires for a non-text UI boundary such as the dock. */
-  --accent: #9A5646;
-  --accent-hover: #A8614E;
-  --on-accent: #F8F3EA;
-  --on-accent-dim: rgba(248, 243, 234, 0.92);
-  --on-accent-line: rgba(248, 243, 234, 0.24);
-  --accent-veil: rgba(248, 243, 234, 0.14);
+  /* Maroon accent, shared with light mode. On-accent content stays beige in
+     both themes; the dock is delineated from the canvas by a beige hairline
+     (see --on-accent-line), which WCAG 1.4.11 requires for a non-text UI
+     boundary. */
+  --accent: #411C1A;
+  --accent-hover: #5E2422;
+  --on-accent: #E4E1D2;
+  --on-accent-dim: rgba(228, 225, 210, 0.82);
+  --on-accent-line: rgba(228, 225, 210, 0.28);
+  --accent-veil: rgba(228, 225, 210, 0.14);
 
-  --line: rgba(241, 236, 225, 0.12);
-  --line-2: rgba(241, 236, 225, 0.22);
-  --focus: #F1ECE1;
+  --line: rgba(228, 225, 210, 0.14);
+  --line-2: rgba(228, 225, 210, 0.26);
+  --focus: #E4E1D2;
 
-  --danger: #E0776E;
-  --danger-soft: rgba(224, 119, 110, 0.14);
-  --danger-line: rgba(224, 119, 110, 0.32);
-  --on-danger: #1A1210;
+  /* Destructive surfaces stay maroon; text on them stays beige so the palette
+     never leaves the three brand colors. */
+  --danger: #411C1A;
+  --danger-soft: rgba(65, 28, 26, 0.55);
+  --danger-line: rgba(228, 225, 210, 0.30);
+  --on-danger: #E4E1D2;
 
-  --stage: #0D0A09;
+  --stage: #060607;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(241, 236, 225, 0.10);
-  --shadow-card-hover: 0 8px 22px -8px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(241, 236, 225, 0.24);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(228, 225, 210, 0.10);
+  --shadow-card-hover: 0 8px 22px -8px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(228, 225, 210, 0.24);
   --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.55), 0 18px 44px -12px rgba(0, 0, 0, 0.7);
   --shadow-dock: 0 2px 10px rgba(0, 0, 0, 0.5), 0 20px 44px -12px rgba(0, 0, 0, 0.75);
 }

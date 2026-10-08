@@ -114,7 +114,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
     <div
       onClick={() => onInspect(item)}
       suppressHydrationWarning
-      className={`group relative w-full cursor-pointer select-none rounded-lg border border-line bg-surface shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.02] hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] ${
+      className={`group relative w-full cursor-pointer select-none rounded-lg border border-[#1e2024] bg-[#0d0e10] shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.02] hover:border-[#3a3c42] hover:shadow-card-hover active:scale-[0.99] dark:border-[#1e2024] dark:bg-[#0d0e10] dark:hover:border-[#3a3c42] ${
         shouldRenderFooter ? 'p-2 flex flex-col' : 'overflow-hidden'
       }`}
     >
@@ -162,7 +162,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
             <h4
               title={displayTitle}
               suppressHydrationWarning
-              className="line-clamp-2 text-sm font-semibold leading-snug text-ink"
+              className="line-clamp-2 text-sm font-semibold leading-snug text-[#E6E8EC] dark:text-[#E6E8EC]"
             >
               {displayTitle}
             </h4>
@@ -170,7 +170,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
           {showCreator && (
             <p
-              className="mt-1.5 truncate text-[13px] text-ink-muted"
+              className="mt-1.5 truncate text-[13px] text-[#E6E8EC]/80 dark:text-[#E6E8EC]/80"
               title={displayCreator}
             >
               {displayCreator}
@@ -180,7 +180,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
           {/* One separator maximum, tabular figures for the numbers to line up
               down the grid. */}
           {(displayViews || displaySubs || displayTime) && (
-            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-ink-faint tabular">
+            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-[#E6E8EC]/60 dark:text-[#E6E8EC]/60 tabular">
               {displaySubs && <span className="truncate">{displaySubs}</span>}
               {displaySubs && (displayViews || displayTime) && (
                 <span aria-hidden="true">·</span>

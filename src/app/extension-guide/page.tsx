@@ -16,33 +16,33 @@ export default function ExtensionGuidePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E4E1D2] dark:bg-[#0d0e10] text-[#0d0e10] dark:text-[#D6D1BC] p-4 sm:p-8">
+    <div className="min-h-screen bg-[#A6A39C] dark:bg-[#0d0e10] text-[#0d0e10] dark:text-[#A6A39C] p-4 sm:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Navigation */}
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-medium text-[#0d0e10]/70 hover:text-[#0d0e10] dark:text-[#D6D1BC]/70 dark:hover:text-[#D6D1BC] transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-[#0d0e10]/70 hover:text-[#0d0e10] dark:text-[#A6A39C]/70 dark:hover:text-[#A6A39C] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Inspiration Gallery</span>
           </Link>
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 flex items-center gap-1.5">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 flex items-center gap-1.5">
             <Youtube className="w-3.5 h-3.5" /> 1-Click YouTube Grabber
           </span>
         </div>
 
         {/* Hero Header */}
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] text-xs font-semibold border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] text-xs font-semibold border border-[#0d0e10]/20 dark:border-[#A6A39C]/30">
             <Chrome className="w-3.5 h-3.5" />
             <span>ThumbVault Chrome Extension (Manifest V3)</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d0e10] dark:text-[#D6D1BC]">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d0e10] dark:text-[#A6A39C]">
             1-Click YouTube Thumbnail Grabber
           </h1>
-          <p className="text-sm text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 max-w-2xl leading-relaxed">
+          <p className="text-sm text-[#0d0e10]/70 dark:text-[#A6A39C]/70 max-w-2xl leading-relaxed">
             Browse YouTube as normal. Whenever you spot a thumbnail that converts or inspires you, click the ThumbVault extension button to extract its maximum resolution (HD) asset and send it straight into your inspiration gallery with auto-tags.
           </p>
         </div>
@@ -50,55 +50,55 @@ export default function ExtensionGuidePage() {
         {/* Installation Steps Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           
-          <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-3">
-            <div className="w-8 h-8 rounded-xl bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] font-bold text-sm flex items-center justify-center border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30">
+          <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-3">
+            <div className="w-8 h-8 rounded-xl bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] font-bold text-sm flex items-center justify-center border border-[#0d0e10]/20 dark:border-[#A6A39C]/30">
               1
             </div>
-            <h3 className="font-bold text-sm text-[#0d0e10] dark:text-[#D6D1BC]">Open Chrome Extensions</h3>
-            <p className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 leading-relaxed">
-              Open Google Chrome (or Brave / Edge) and navigate to <code className="text-[#0d0e10] dark:text-[#D6D1BC] bg-[#E4E1D2]/50 dark:bg-[#411C1A]/10 px-1 py-0.5 rounded font-mono">chrome://extensions</code> in your address bar.
+            <h3 className="font-bold text-sm text-[#0d0e10] dark:text-[#A6A39C]">Open Chrome Extensions</h3>
+            <p className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 leading-relaxed">
+              Open Google Chrome (or Brave / Edge) and navigate to <code className="text-[#0d0e10] dark:text-[#A6A39C] bg-[#A6A39C]/50 dark:bg-[#A6A39C]/10 px-1 py-0.5 rounded font-mono">chrome://extensions</code> in your address bar.
             </p>
           </div>
 
-          <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-3">
-            <div className="w-8 h-8 rounded-xl bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] font-bold text-sm flex items-center justify-center border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30">
+          <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-3">
+            <div className="w-8 h-8 rounded-xl bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] font-bold text-sm flex items-center justify-center border border-[#0d0e10]/20 dark:border-[#A6A39C]/30">
               2
             </div>
-            <h3 className="font-bold text-sm text-[#0d0e10] dark:text-[#D6D1BC]">Enable Developer Mode</h3>
-            <p className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 leading-relaxed">
+            <h3 className="font-bold text-sm text-[#0d0e10] dark:text-[#A6A39C]">Enable Developer Mode</h3>
+            <p className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 leading-relaxed">
               Toggle the <strong>&quot;Developer mode&quot;</strong> switch located in the top-right corner of the Extensions page.
             </p>
           </div>
 
-          <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-3">
-            <div className="w-8 h-8 rounded-xl bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] font-bold text-sm flex items-center justify-center border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30">
+          <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-3">
+            <div className="w-8 h-8 rounded-xl bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] font-bold text-sm flex items-center justify-center border border-[#0d0e10]/20 dark:border-[#A6A39C]/30">
               3
             </div>
-            <h3 className="font-bold text-sm text-[#0d0e10] dark:text-[#D6D1BC]">Load Unpacked</h3>
-            <p className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 leading-relaxed">
-              Click the <strong>&quot;Load unpacked&quot;</strong> button and select the <code className="text-[#0d0e10] dark:text-[#D6D1BC] bg-[#E4E1D2]/50 dark:bg-[#411C1A]/10 px-1 py-0.5 rounded font-mono">extension</code> folder from this project.
+            <h3 className="font-bold text-sm text-[#0d0e10] dark:text-[#A6A39C]">Load Unpacked</h3>
+            <p className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 leading-relaxed">
+              Click the <strong>&quot;Load unpacked&quot;</strong> button and select the <code className="text-[#0d0e10] dark:text-[#A6A39C] bg-[#A6A39C]/50 dark:bg-[#A6A39C]/10 px-1 py-0.5 rounded font-mono">extension</code> folder from this project.
             </p>
           </div>
 
         </div>
 
         {/* Extension Directory Path Box */}
-        <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-3">
-          <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#D6D1BC] flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#0d0e10] dark:text-[#D6D1BC]" />
+        <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-3">
+          <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#A6A39C] flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#0d0e10] dark:text-[#A6A39C]" />
             Your Local Extension Folder Path
           </h3>
-          <p className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70">
+          <p className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70">
             Copy this folder path and paste it into the folder picker when clicking &quot;Load unpacked&quot; in Chrome:
           </p>
 
-          <div className="flex items-center gap-2 p-3 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 rounded-xl">
-            <code className="text-xs text-[#0d0e10] dark:text-[#D6D1BC] font-mono flex-1 truncate">
+          <div className="flex items-center gap-2 p-3 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 rounded-xl">
+            <code className="text-xs text-[#0d0e10] dark:text-[#A6A39C] font-mono flex-1 truncate">
               {extensionFolderPath}
             </code>
             <button
               onClick={copyPath}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#411C1A] dark:bg-[#411C1A] dark:text-[#0d0e10] hover:opacity-90 text-[#0d0e10] flex items-center gap-1 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0d0e10] dark:bg-[#A6A39C] dark:text-[#0d0e10] hover:opacity-90 text-[#A6A39C] flex items-center gap-1 transition-colors"
             >
               {copiedPath ? (
                 <>
@@ -113,33 +113,33 @@ export default function ExtensionGuidePage() {
         </div>
 
         {/* How It Works Visual Flow */}
-        <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-4">
-          <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#D6D1BC] flex items-center gap-2">
-            <Zap className="w-4 h-4 text-[#0d0e10] dark:text-[#D6D1BC]" />
+        <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-4">
+          <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#A6A39C] flex items-center gap-2">
+            <Zap className="w-4 h-4 text-[#0d0e10] dark:text-[#A6A39C]" />
             How to Grab Thumbnails in 1-Click
           </h3>
 
-          <div className="space-y-3 text-xs text-[#0d0e10]/80 dark:text-[#D6D1BC]/80">
-            <div className="flex items-start gap-3 p-3 bg-[#E4E1D2]/20 dark:bg-[#1E1B1A] rounded-xl border border-[#0d0e10]/10 dark:border-[#D6D1BC]/15">
-              <span className="w-5 h-5 rounded-full bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">A</span>
+          <div className="space-y-3 text-xs text-[#0d0e10]/80 dark:text-[#A6A39C]/80">
+            <div className="flex items-start gap-3 p-3 bg-[#A6A39C]/20 dark:bg-[#0d0e10] rounded-xl border border-[#0d0e10]/10 dark:border-[#A6A39C]/15">
+              <span className="w-5 h-5 rounded-full bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">A</span>
               <div>
-                <strong className="text-[#0d0e10] dark:text-[#D6D1BC] block">Visit any YouTube video:</strong>
-                Navigate to any YouTube video watch page (e.g., <code className="text-[#0d0e10] dark:text-[#D6D1BC]">youtube.com/watch?v=...</code>).
+                <strong className="text-[#0d0e10] dark:text-[#A6A39C] block">Visit any YouTube video:</strong>
+                Navigate to any YouTube video watch page (e.g., <code className="text-[#0d0e10] dark:text-[#A6A39C]">youtube.com/watch?v=...</code>).
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-[#E4E1D2]/20 dark:bg-[#1E1B1A] rounded-xl border border-[#0d0e10]/10 dark:border-[#D6D1BC]/15">
-              <span className="w-5 h-5 rounded-full bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">B</span>
+            <div className="flex items-start gap-3 p-3 bg-[#A6A39C]/20 dark:bg-[#0d0e10] rounded-xl border border-[#0d0e10]/10 dark:border-[#A6A39C]/15">
+              <span className="w-5 h-5 rounded-full bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">B</span>
               <div>
-                <strong className="text-[#0d0e10] dark:text-[#D6D1BC] block">Click the ThumbVault icon in your browser toolbar:</strong>
+                <strong className="text-[#0d0e10] dark:text-[#A6A39C] block">Click the ThumbVault icon in your browser toolbar:</strong>
                 The popup will instantly extract the HD thumbnail, YouTube channel name, and video title.
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-[#E4E1D2]/20 dark:bg-[#1E1B1A] rounded-xl border border-[#0d0e10]/10 dark:border-[#D6D1BC]/15">
-              <span className="w-5 h-5 rounded-full bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">C</span>
+            <div className="flex items-start gap-3 p-3 bg-[#A6A39C]/20 dark:bg-[#0d0e10] rounded-xl border border-[#0d0e10]/10 dark:border-[#A6A39C]/15">
+              <span className="w-5 h-5 rounded-full bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">C</span>
               <div>
-                <strong className="text-[#0d0e10] dark:text-[#D6D1BC] block">Click &quot;Send to ThumbVault&quot;:</strong>
+                <strong className="text-[#0d0e10] dark:text-[#A6A39C] block">Click &quot;Send to ThumbVault&quot;:</strong>
                 It immediately sends the thumbnail to your local/cloud inspiration vault and auto-tags it with AI!
               </div>
             </div>

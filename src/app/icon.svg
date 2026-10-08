@@ -4,12 +4,12 @@
       <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000000" flood-opacity="0.45" />
     </filter>
   </defs>
-  <!-- Maroon Base Canvas -->
-  <rect width="800" height="800" rx="96" fill="#411C1A" />
+  <!-- Dark Black Base Canvas -->
+  <rect width="800" height="800" rx="96" fill="#0d0e10" />
   
   <g filter="url(#shadow)">
-    <!-- Stylized Monogram / Logo Mark in #E4E1D2 -->
-    <path fill="#E4E1D2" fill-rule="evenodd" d="
+    <!-- Stylized Monogram / Logo Mark in #E6E8EC -->
+    <path fill="#E6E8EC" fill-rule="evenodd" d="
       M 238 250
       L 476 250
       L 483 222

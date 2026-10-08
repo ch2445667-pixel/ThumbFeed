@@ -151,7 +151,7 @@ export default function AdminPage() {
       niche,
       styles: selectedStyles,
       tags: parsedTags.length > 0 ? parsedTags : ['YouTube', 'CTR'],
-      colors: parsedColors.length > 0 ? parsedColors : ['#411C1A', '#E4E1D2', '#0d0e10'],
+      colors: parsedColors.length > 0 ? parsedColors : ['#0d0e10', '#A6A39C', '#FFFFFF'],
       ocrText,
       emotion,
       breakdownNotes,
@@ -185,34 +185,34 @@ export default function AdminPage() {
 
   if (!loading && !isAdmin) {
     return (
-      <div className="min-h-screen bg-[#E4E1D2] dark:bg-[#0d0e10] text-[#0d0e10] dark:text-[#D6D1BC] flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-6 sm:p-8 rounded-2xl bg-[#E4E1D2] dark:bg-[#1E1B1A] border border-[#0d0e10]/10 dark:border-[#E4E1D2]/10 shadow-lg text-center space-y-4">
+      <div className="min-h-screen bg-[#A6A39C] dark:bg-[#0d0e10] text-[#0d0e10] dark:text-[#A6A39C] flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-6 sm:p-8 rounded-2xl bg-[#A6A39C] dark:bg-[#0d0e10] border border-[#0d0e10]/10 dark:border-[#A6A39C]/10 shadow-lg text-center space-y-4">
           <div className="w-12 h-12 mx-auto rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-lg">
             !
           </div>
-          <h2 className="text-xl font-bold text-[#0d0e10] dark:text-[#E4E1D2]">
+          <h2 className="text-xl font-bold text-[#0d0e10] dark:text-[#A6A39C]">
             Access Restricted
           </h2>
-          <p className="text-sm text-[#0d0e10]/70 dark:text-[#E4E1D2]/70">
+          <p className="text-sm text-[#0d0e10]/70 dark:text-[#A6A39C]/70">
             Adding and deleting thumbnails is restricted exclusively to the owner account ({ADMIN_EMAIL}).
           </p>
           {user ? (
-            <p className="text-xs text-[#0d0e10]/60 dark:text-[#E4E1D2]/60">
+            <p className="text-xs text-[#0d0e10]/60 dark:text-[#A6A39C]/60">
               Currently signed in as: <span className="font-semibold">{user.email}</span>
             </p>
           ) : (
             <button
               onClick={() => signIn()}
               disabled={signingIn}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-[#E4E1D2] bg-[#411C1A] dark:bg-[#E4E1D2] dark:text-[#0d0e10] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-[#A6A39C] bg-[#0d0e10] dark:bg-[#A6A39C] dark:text-[#0d0e10] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2"
             >
               Sign In with Google
             </button>
           )}
-          <div className="pt-2 border-t border-[#0d0e10]/10 dark:border-[#E4E1D2]/10">
+          <div className="pt-2 border-t border-[#0d0e10]/10 dark:border-[#A6A39C]/10">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0d0e10]/70 hover:text-[#0d0e10] dark:text-[#E4E1D2]/70 dark:hover:text-[#E4E1D2] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0d0e10]/70 hover:text-[#0d0e10] dark:text-[#A6A39C]/70 dark:hover:text-[#A6A39C] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return to Inspiration Gallery</span>
@@ -224,21 +224,21 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#E4E1D2] dark:bg-[#0d0e10] text-[#0d0e10] dark:text-[#D6D1BC] p-4 sm:p-8">
+    <div className="min-h-screen bg-[#A6A39C] dark:bg-[#0d0e10] text-[#0d0e10] dark:text-[#A6A39C] p-4 sm:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header Navigation */}
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-medium text-[#0d0e10]/70 hover:text-[#0d0e10] dark:text-[#D6D1BC]/70 dark:hover:text-[#D6D1BC] transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-[#0d0e10]/70 hover:text-[#0d0e10] dark:text-[#A6A39C]/70 dark:hover:text-[#A6A39C] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Inspiration Gallery</span>
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#411C1A]/10 dark:bg-[#411C1A]/20 text-[#0d0e10] dark:text-[#D6D1BC] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d0e10]/10 dark:bg-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30">
               Admin & AI Curation Hub
             </span>
           </div>
@@ -246,10 +246,10 @@ export default function AdminPage() {
 
         {/* Title */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d0e10] dark:text-[#D6D1BC]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d0e10] dark:text-[#A6A39C]">
             Add Thumbnail & AI Auto-Tagging Engine
           </h1>
-          <p className="text-sm text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 mt-1">
+          <p className="text-sm text-[#0d0e10]/70 dark:text-[#A6A39C]/70 mt-1">
             Input a YouTube video URL, image link, or upload an image file. The AI analyzes visual hooks, colors, styles, and text automatically.
           </p>
         </div>
@@ -261,32 +261,32 @@ export default function AdminPage() {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Input Box */}
-            <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-4">
-              <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#D6D1BC] flex items-center gap-2">
-                <Youtube className="w-4 h-4 text-[#0d0e10] dark:text-[#D6D1BC]" />
+            <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-5 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-4">
+              <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#A6A39C] flex items-center gap-2">
+                <Youtube className="w-4 h-4 text-[#0d0e10] dark:text-[#A6A39C]" />
                 1. Provide Thumbnail Source
               </h3>
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1">YouTube Video Link or Image URL</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1">YouTube Video Link or Image URL</label>
                   <input
                     type="text"
                     placeholder="https://www.youtube.com/watch?v=... or image URL"
                     value={inputUrl}
                     onChange={(e) => setInputUrl(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] placeholder-[#0d0e10]/50 dark:placeholder-[#D6D1BC]/50 focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2.5 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] placeholder-[#0d0e10]/50 dark:placeholder-[#A6A39C]/50 focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1">Video Title / Topic (Optional - helps AI precision)</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1">Video Title / Topic (Optional - helps AI precision)</label>
                   <input
                     type="text"
                     placeholder="e.g. $1 vs $1,000,000 Luxury Island!"
                     value={videoTitleInput}
                     onChange={(e) => setVideoTitleInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] placeholder-[#0d0e10]/50 dark:placeholder-[#D6D1BC]/50 focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2.5 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] placeholder-[#0d0e10]/50 dark:placeholder-[#A6A39C]/50 focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   />
                 </div>
 
@@ -295,7 +295,7 @@ export default function AdminPage() {
                     type="button"
                     onClick={handleFetchAndAnalyze}
                     disabled={!inputUrl.trim() || isAnalyzing}
-                    className="flex-1 py-2.5 px-4 bg-[#411C1A] dark:bg-[#411C1A] dark:text-[#0d0e10] hover:opacity-90 disabled:opacity-50 text-[#0d0e10] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md"
+                    className="flex-1 py-2.5 px-4 bg-[#0d0e10] dark:bg-[#A6A39C] dark:text-[#0d0e10] hover:opacity-90 disabled:opacity-50 text-[#A6A39C] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md"
                   >
                     <Sparkles className="w-4 h-4" />
                     <span>{isAnalyzing ? 'AI Analyzing Thumbnail...' : 'Analyze & Auto-Tag with AI'}</span>
@@ -305,16 +305,16 @@ export default function AdminPage() {
 
               {/* Or Drag & Drop Local Image File */}
               <div className="relative pt-2">
-                <div className="border-t border-[#0d0e10]/10 dark:border-[#D6D1BC]/15 my-3 text-center">
-                  <span className="bg-[#D6D1BC] dark:bg-[#1E1B1A] px-2 text-[10px] text-[#0d0e10]/60 dark:text-[#D6D1BC]/60 uppercase tracking-wider relative -top-2">
+                <div className="border-t border-[#0d0e10]/10 dark:border-[#A6A39C]/15 my-3 text-center">
+                  <span className="bg-[#A6A39C] dark:bg-[#0d0e10] px-2 text-[10px] text-[#0d0e10]/60 dark:text-[#A6A39C]/60 uppercase tracking-wider relative -top-2">
                     OR UPLOAD DIRECT FILE
                   </span>
                 </div>
 
-                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl cursor-pointer hover:border-[#0d0e10] dark:hover:border-[#D6D1BC] hover:bg-[#E4E1D2]/30 dark:hover:bg-[#411C1A]/5 transition-all">
-                  <UploadCloud className="w-6 h-6 text-[#0d0e10]/60 dark:text-[#D6D1BC]/60 mb-1" />
-                  <span className="text-xs font-medium text-[#0d0e10] dark:text-[#D6D1BC]">Choose thumbnail image (PNG/JPG)</span>
-                  <span className="text-[10px] text-[#0d0e10]/50 dark:text-[#D6D1BC]/50 mt-0.5">Max 10MB</span>
+                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl cursor-pointer hover:border-[#0d0e10] dark:hover:border-[#A6A39C] hover:bg-[#A6A39C]/30 dark:hover:bg-[#A6A39C]/5 transition-all">
+                  <UploadCloud className="w-6 h-6 text-[#0d0e10]/60 dark:text-[#A6A39C]/60 mb-1" />
+                  <span className="text-xs font-medium text-[#0d0e10] dark:text-[#A6A39C]">Choose thumbnail image (PNG/JPG)</span>
+                  <span className="text-[10px] text-[#0d0e10]/50 dark:text-[#A6A39C]/50 mt-0.5">Max 10MB</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -327,9 +327,9 @@ export default function AdminPage() {
 
             {/* Preview Box */}
             {previewImage && (
-              <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-4 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-2">
-                <span className="text-xs font-semibold text-[#0d0e10]/70 dark:text-[#D6D1BC]/70">Thumbnail Preview:</span>
-                <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-[#411C1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/20">
+              <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-4 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-2">
+                <span className="text-xs font-semibold text-[#0d0e10]/70 dark:text-[#A6A39C]/70">Thumbnail Preview:</span>
+                <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
                 </div>
@@ -340,15 +340,15 @@ export default function AdminPage() {
 
           {/* Right Column: Editable Metadata Form */}
           <div className="lg:col-span-7">
-            <form onSubmit={handleSaveThumbnail} className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-5">
+            <form onSubmit={handleSaveThumbnail} className="bg-[#A6A39C] dark:bg-[#0d0e10] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-5">
               
-              <div className="flex items-center justify-between border-b border-[#0d0e10]/10 dark:border-[#D6D1BC]/15 pb-3">
-                <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#D6D1BC] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#0d0e10] dark:text-[#D6D1BC]" />
+              <div className="flex items-center justify-between border-b border-[#0d0e10]/10 dark:border-[#A6A39C]/15 pb-3">
+                <h3 className="text-sm font-bold text-[#0d0e10] dark:text-[#A6A39C] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#0d0e10] dark:text-[#A6A39C]" />
                   2. Review & Refine AI Tags
                 </h3>
                 {savedSuccess && (
-                  <span className="flex items-center gap-1 text-xs font-semibold text-[#0d0e10] dark:text-[#D6D1BC] bg-[#E4E1D2]/60 dark:bg-[#411C1A]/10 px-2.5 py-1 rounded-lg border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 animate-in fade-in">
+                  <span className="flex items-center gap-1 text-xs font-semibold text-[#0d0e10] dark:text-[#A6A39C] bg-[#A6A39C]/60 dark:bg-[#A6A39C]/10 px-2.5 py-1 rounded-lg border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 animate-in fade-in">
                     <Check className="w-3.5 h-3.5" /> Published to Gallery!
                   </span>
                 )}
@@ -356,41 +356,41 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">Title / Concept</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">Title / Concept</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. $1 vs $1,000,000 Luxury Island!"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">Creator / Channel Style</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">Creator / Channel Style</label>
                   <input
                     type="text"
                     placeholder="e.g. MrBeast, Ali Abdaal, Vox"
                     value={creator}
                     onChange={(e) => setCreator(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">Niche / Category</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">Niche / Category</label>
                   <select
                     value={niche}
                     onChange={(e) => setNiche(e.target.value as any)}
-                    className="w-full px-3.5 py-2 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   >
                     {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">Visual Styles (Select multiple)</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">Visual Styles (Select multiple)</label>
                   <div className="flex flex-wrap gap-1.5">
                     {VISUAL_STYLES.map(style => {
                       const isSel = selectedStyles.includes(style);
@@ -407,8 +407,8 @@ export default function AdminPage() {
                           }}
                           className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                             isSel
-                              ? 'bg-[#411C1A] text-[#0d0e10] dark:bg-[#411C1A] dark:text-[#0d0e10]'
-                              : 'bg-[#E4E1D2]/40 dark:bg-[#411C1A]/10 border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 text-[#0d0e10] dark:text-[#D6D1BC] hover:bg-[#E4E1D2]'
+                              ? 'bg-[#0d0e10] text-[#A6A39C] dark:bg-[#A6A39C] dark:text-[#0d0e10]'
+                              : 'bg-[#A6A39C]/40 dark:bg-[#A6A39C]/10 border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 text-[#0d0e10] dark:text-[#A6A39C] hover:bg-[#A6A39C]'
                           }`}
                         >
                           {style}
@@ -419,55 +419,55 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">OCR Text on Thumbnail</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">OCR Text on Thumbnail</label>
                   <input
                     type="text"
                     placeholder="e.g. $1 VS $1,000,000"
                     value={ocrText}
                     onChange={(e) => setOcrText(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">Dominant Color Hexes (Comma-separated)</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">Dominant Color Hexes (Comma-separated)</label>
                   <input
                     type="text"
-                    placeholder="#411C1A, #E4E1D2, #0d0e10"
+                    placeholder="#0d0e10, #A6A39C, #FFFFFF"
                     value={colorsInput}
                     onChange={(e) => setColorsInput(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC] font-mono"
+                    className="w-full px-3.5 py-2 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C] font-mono"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">Search Tags (Comma-separated)</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">Search Tags (Comma-separated)</label>
                   <input
                     type="text"
                     placeholder="Gaming, Lava, Day 100, Extreme Contrast"
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 block mb-1 font-medium">Why This Thumbnail Works (Breakdown Notes)</label>
+                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70 block mb-1 font-medium">Why This Thumbnail Works (Breakdown Notes)</label>
                   <textarea
                     rows={2}
                     placeholder="e.g. Clear split-screen dichotomy creates immediate curiosity. Exaggerated facial expression anchors eye gaze."
                     value={breakdownNotes}
                     onChange={(e) => setBreakdownNotes(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-[#E4E1D2]/30 dark:bg-[#1E1B1A] border border-[#0d0e10]/20 dark:border-[#D6D1BC]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#D6D1BC] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#D6D1BC]"
+                    className="w-full px-3.5 py-2 bg-[#A6A39C]/30 dark:bg-[#0d0e10] border border-[#0d0e10]/20 dark:border-[#A6A39C]/30 rounded-xl text-xs text-[#0d0e10] dark:text-[#A6A39C] focus:outline-none focus:border-[#0d0e10] dark:focus:border-[#A6A39C]"
                   />
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#0d0e10]/10 dark:border-[#D6D1BC]/15 flex justify-end">
+              <div className="pt-3 border-t border-[#0d0e10]/10 dark:border-[#A6A39C]/15 flex justify-end">
                 <button
                   type="submit"
                   disabled={!previewImage}
-                  className="px-6 py-2.5 rounded-xl text-xs font-semibold text-[#0d0e10] bg-[#411C1A] dark:bg-[#411C1A] dark:text-[#0d0e10] hover:opacity-90 disabled:opacity-40 transition-all shadow-md flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl text-xs font-semibold text-[#A6A39C] bg-[#0d0e10] dark:bg-[#A6A39C] dark:text-[#0d0e10] hover:opacity-90 disabled:opacity-40 transition-all shadow-md flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Publish to Inspiration Vault</span>
@@ -480,28 +480,28 @@ export default function AdminPage() {
         </div>
 
         {/* Existing Thumbnails Inventory */}
-        <div className="bg-[#D6D1BC] dark:bg-[#1E1B1A] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 shadow-md space-y-4 mt-8">
+        <div className="bg-[#A6A39C] dark:bg-[#0d0e10] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#A6A39C]/20 shadow-md space-y-4 mt-8">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-[#0d0e10] dark:text-[#D6D1BC]">Current Vault Inventory ({thumbnails.length} Thumbnails)</h3>
-            <span className="text-xs text-[#0d0e10]/70 dark:text-[#D6D1BC]/70">Stored in Local Database</span>
+            <h3 className="text-base font-bold text-[#0d0e10] dark:text-[#A6A39C]">Current Vault Inventory ({thumbnails.length} Thumbnails)</h3>
+            <span className="text-xs text-[#0d0e10]/70 dark:text-[#A6A39C]/70">Stored in Local Database</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {thumbnails.map(item => (
-              <div key={item.id} className="p-3 rounded-xl bg-[#E4E1D2]/20 dark:bg-[#1E1B1A] border border-[#0d0e10]/15 dark:border-[#D6D1BC]/20 flex flex-col justify-between gap-2">
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-[#411C1A]">
+              <div key={item.id} className="p-3 rounded-xl bg-[#0d0e10] dark:bg-[#0d0e10] border border-[#1e2024] dark:border-[#A6A39C]/20 flex flex-col justify-between gap-2 shadow-sm">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-[#0d0e10]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-[#0d0e10] dark:text-[#D6D1BC] truncate">{item.title}</h4>
-                  <p className="text-[11px] text-[#0d0e10]/70 dark:text-[#D6D1BC]/70 mt-0.5">{item.niche}</p>
+                  <h4 className="text-xs font-semibold text-[#A6A39C] dark:text-[#A6A39C] truncate">{item.title}</h4>
+                  <p className="text-[11px] text-[#A6A39C]/70 dark:text-[#A6A39C]/70 mt-0.5">{item.niche}</p>
                 </div>
-                <div className="flex items-center justify-between pt-1 border-t border-[#0d0e10]/10 dark:border-[#D6D1BC]/15">
-                  <span className="text-[10px] text-[#0d0e10]/60 dark:text-[#D6D1BC]/60">{item.creator || 'Creator'}</span>
+                <div className="flex items-center justify-between pt-1 border-t border-[#2F333B] dark:border-[#A6A39C]/15">
+                  <span className="text-[10px] text-[#A6A39C]/60 dark:text-[#A6A39C]/60">{item.creator || 'Creator'}</span>
                   <button
                     onClick={() => handleDeleteThumbnail(item.id)}
-                    className="text-[#0d0e10]/60 hover:text-[#0d0e10] dark:text-[#D6D1BC]/60 dark:hover:text-[#D6D1BC] p-1 transition-colors"
+                    className="text-[#A6A39C]/60 hover:text-[#A6A39C] dark:text-[#A6A39C]/60 dark:hover:text-[#A6A39C] p-1 transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

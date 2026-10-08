@@ -26,8 +26,8 @@ export async function convertToJpg(
   quality: number = 0.88,
   maxDimension: number = 1920,
   // Matte fill behind transparent pixels. Posters pass black so portrait
-  // artwork never inherits the espresso thumbnail matte.
-  fill: string = '#411C1A'
+  // artwork never inherits the thumbnail matte.
+  fill: string = '#0d0e10'
 ): Promise<string> {
   if (typeof window === 'undefined') {
     return typeof source === 'string' ? source : '';

@@ -54,7 +54,7 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
   }, []);
 
   return (
-    <div className="w-full bg-[#E4E1D2]/90 dark:bg-[#411C1A]/90 backdrop-blur-md border-b border-[#411C1A]/10 dark:border-[#E4E1D2]/15 sticky top-16 z-20 px-6 sm:px-10 py-3">
+    <div className="w-full bg-[#E6E8EC]/90 dark:bg-[#0d0e10]/90 backdrop-blur-md border-b border-[#0d0e10]/10 dark:border-[#E6E8EC]/15 sticky top-16 z-20 px-6 sm:px-10 py-3">
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
         {categories.map((cat) => {
           const isSelected = selectedCategory === cat;
@@ -67,15 +67,15 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
               onClick={() => onSelectCategory(cat as NicheCategory | 'All')}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-150 shrink-0 select-none cursor-pointer ${
                 isSelected
-                  ? 'bg-[#411C1A] text-[#E4E1D2] dark:bg-[#E4E1D2] dark:text-[#411C1A] shadow-xs scale-[1.02]'
-                  : 'bg-[#E4E1D2] text-[#411C1A]/80 hover:text-[#411C1A] dark:bg-[#411C1A] dark:text-[#E4E1D2]/80 dark:hover:text-[#E4E1D2] border border-[#411C1A]/15 dark:border-[#E4E1D2]/20 hover:border-[#411C1A]/30 shadow-2xs'
+                  ? 'bg-[#0d0e10] text-[#E6E8EC] dark:bg-[#E6E8EC] dark:text-[#0d0e10] shadow-xs scale-[1.02]'
+                  : 'bg-[#E6E8EC] text-[#0d0e10]/80 hover:text-[#0d0e10] dark:bg-[#0d0e10] dark:text-[#E6E8EC]/80 dark:hover:text-[#E6E8EC] border border-[#0d0e10]/15 dark:border-[#E6E8EC]/20 hover:border-[#0d0e10]/30 shadow-2xs'
               }`}
             >
               <span>{cat}</span>
               {count !== undefined && count > 0 && (
                 <span
                   className={`text-[10px] px-1.5 py-0.2 rounded-full font-medium ${
-                    isSelected ? 'bg-[#E4E1D2]/20 text-[#E4E1D2] dark:bg-black/20 dark:text-[#411C1A]' : 'bg-[#E4E1D2]/60 dark:bg-[#E4E1D2]/10 text-[#411C1A]/70 dark:text-[#E4E1D2]/70'
+                    isSelected ? 'bg-[#E6E8EC]/20 text-[#E6E8EC] dark:bg-black/20 dark:text-[#0d0e10]' : 'bg-[#E6E8EC]/60 dark:bg-[#E6E8EC]/10 text-[#0d0e10]/70 dark:text-[#E6E8EC]/70'
                   }`}
                 >
                   {count}

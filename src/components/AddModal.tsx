@@ -584,7 +584,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     try {
       const isPoster = mediaKind === 'poster';
       // Portraits keep a black matte; thumbnails keep the brand matte.
-      const jpgDataUrl = await convertToJpg(file, 0.9, 1920, isPoster ? '#000000' : '#411C1A');
+      const jpgDataUrl = await convertToJpg(file, 0.9, 1920, isPoster ? '#000000' : '#0d0e10');
       const rawName = (file instanceof File && file.name) ? file.name : (customName || `${unitWord} ${Date.now().toString().slice(-4)}`);
       const cleanTitle = rawName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
       const chosenCategories = [...uploadCategories];

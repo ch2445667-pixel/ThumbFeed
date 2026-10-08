@@ -98,7 +98,7 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
 async function optimizeBuffer(input: Buffer, isPoster: boolean): Promise<Buffer> {
   try {
     const mod = await import('sharp').then((m: any) => m.default || m);
-    const matteColor = isPoster ? '#000000' : '#411C1A';
+    const matteColor = isPoster ? '#000000' : '#0d0e10';
     const maxSide = isPoster ? 1000 : 1280;
     return await mod(input)
       .resize({ width: maxSide, height: maxSide, fit: 'inside', withoutEnlargement: true })

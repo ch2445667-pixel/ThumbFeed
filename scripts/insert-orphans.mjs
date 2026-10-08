@@ -50,7 +50,7 @@ async function run() {
       niche: '',
       styles: ['Face Close-up', 'High-Contrast Glow'],
       tags: [],
-      colors: ['#401D1A', '#E4E0D3', '#FFFFFF'],
+      colors: ['#0d0e10', '#E6E8EC', '#FFFFFF'],
       ocr_text: '',
       emotion: 'Curious',
       breakdown_notes: 'Auto-created for storage file with no DB row; pending vision tagging.',

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Pencil, Check, X as XIcon, Eye, Calendar, ExternalLink, User } from 'lucide-react';
 import { IconClose, IconDownload, IconTrash } from './icons/AppIcons';
 import { ThumbnailItem } from '../lib/types';
+import { getCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
 
 interface ThumbnailModalProps {
   item: ThumbnailItem | null;
@@ -242,20 +243,24 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
 
             {/* Metadata Footer: Channel name with link, Views count, Upload date */}
             {(() => {
+              const cachedYT = getCachedYouTubeDetail(item);
+              const rawCreator = cachedYT?.creator || item.creator || '';
               const isTanzeeOrUnknown =
-                !item.creator ||
-                item.creator.trim() === '' ||
-                item.creator.toLowerCase().includes('tanzee') ||
-                item.creator.trim() === 'YouTube Creator' ||
-                item.creator.trim() === 'Unknown';
+                !rawCreator ||
+                rawCreator.trim() === '' ||
+                rawCreator.toLowerCase().includes('tanzee') ||
+                rawCreator.trim() === 'YouTube Creator' ||
+                rawCreator.trim() === 'Unknown';
 
-              const creatorName = isTanzeeOrUnknown ? null : item.creator;
-              const viewsText = item.viewsEstimate
-                ? item.viewsEstimate.toLowerCase().includes('view')
-                  ? item.viewsEstimate
-                  : `${item.viewsEstimate} views`
+              const creatorName = isTanzeeOrUnknown ? null : rawCreator;
+              const rawViews = cachedYT?.views || item.viewsEstimate || '';
+              const viewsText = rawViews
+                ? rawViews.toLowerCase().includes('view')
+                  ? rawViews
+                  : `${rawViews} views`
                 : null;
-              const publishedDate = item.publishedTime || null;
+              const publishedDate = cachedYT?.publishedTime || item.publishedTime || null;
+              const subsText = cachedYT?.subscribers || item.subscribersCount || null;
               const isYouTube =
                 item.sourceUrl &&
                 (item.sourceUrl.includes('youtube.com') || item.sourceUrl.includes('youtu.be'));
@@ -271,6 +276,11 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                       <div className="flex items-center gap-1.5 font-semibold text-[#0d0e10] dark:text-[#D8DBE0]">
                         <User className="w-3.5 h-3.5 opacity-70" />
                         <span>{creatorName}</span>
+                      </div>
+                    )}
+                    {subsText && (
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#0d0e10]/5 dark:bg-[#E6E8EC]/10 text-[11px] text-[#0d0e10]/70 dark:text-[#D8DBE0]/70">
+                        <span>{subsText}</span>
                       </div>
                     )}
                     {viewsText && (

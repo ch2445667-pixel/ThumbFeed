@@ -60,6 +60,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Local-dev admin is resolved after mount, never during render. Reading it
+  // synchronously diverges between server (no window -> false) and client
+  // hydration (loopback host -> true), which hydrates a profile button the
+  // server HTML never contained.
+  const [localDevUser, setLocalDevUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (isLocalDevAdmin()) {
+      setLocalDevUser(LOCAL_DEV_USER);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -116,14 +127,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const isAdmin = Boolean(
-    user?.email && user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
-  ) || isLocalDevAdmin();
+  const effectiveUser = user ?? localDevUser;
+
+  const isAdmin =
+    Boolean(
+      user?.email && user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
+    ) || localDevUser !== null;
 
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? (isLocalDevAdmin() ? LOCAL_DEV_USER : null),
+        user: effectiveUser,
         isAdmin,
         loading,
         signingIn,

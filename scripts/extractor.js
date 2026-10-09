@@ -85,7 +85,11 @@ function extractAllVideos(obj, channelFallbackName, seenIds, list = []) {
                 const txt = (part.text?.content || '').trim();
                 const a11y = (part.accessibilityLabel || '').trim();
                 if (a11y.toLowerCase().includes('view') || txt.toLowerCase().includes('view')) {
-                  viewsText = a11y || (txt ? `${txt} views` : '');
+                  // Continuation responses carry "19M views" as plain text while
+                  // the first page carries it as an accessibility label. Appending
+                  // unconditionally produced "19M views views".
+                  const label = (a11y || txt).trim();
+                  viewsText = /views?\b/i.test(label) ? label : (label ? `${label} views` : '');
                 } else if (a11y.toLowerCase().includes('ago') || txt.toLowerCase().includes('ago')) {
                   publishedText = txt || a11y;
                 }

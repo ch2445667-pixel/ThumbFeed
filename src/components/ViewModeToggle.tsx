@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { LayoutGrid, Images } from 'lucide-react';
+import { SlidingTabs } from './SlidingTabs';
 
 interface ViewModeToggleProps {
   isDetail: boolean;
@@ -15,43 +16,19 @@ export const ViewModeToggle: React.FC<ViewModeToggleProps> = ({
   className = '',
 }) => {
   return (
-    <div
-      role="group"
-      aria-label="Thumbnail display mode"
-      className={`inline-flex items-center gap-0.5 rounded-lg border border-line bg-surface p-1 shadow-card ${className}`}
-    >
-      <button
-        type="button"
-        onClick={() => {
-          if (!isDetail) onToggle();
-        }}
-        aria-pressed={isDetail}
-        className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
-          isDetail
-            ? 'bg-accent text-accent-on'
-            : 'text-ink-muted hover:bg-surface-raised hover:text-ink'
-        }`}
-      >
-        <LayoutGrid className="h-3.5 w-3.5" strokeWidth={1.75} />
-        <span>Details</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => {
-          if (isDetail) onToggle();
-        }}
-        aria-pressed={!isDetail}
-        className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
-          !isDetail
-            ? 'bg-accent text-accent-on'
-            : 'text-ink-muted hover:bg-surface-raised hover:text-ink'
-        }`}
-      >
-        <Images className="h-3.5 w-3.5" strokeWidth={1.75} />
-        <span>Compact</span>
-      </button>
-    </div>
+    <SlidingTabs
+      items={[
+        { key: 'details', label: 'Details', icon: LayoutGrid },
+        { key: 'compact', label: 'Compact', icon: Images },
+      ]}
+      value={isDetail ? 'details' : 'compact'}
+      onChange={(key) => {
+        const nextDetail = key === 'details';
+        if (nextDetail !== isDetail) onToggle();
+      }}
+      ariaLabel="Thumbnail display mode"
+      className={className}
+    />
   );
 };
 

@@ -75,6 +75,43 @@ export default function RootLayout({
                   document.documentElement.classList.add('dark');
                 }
 
+                // Inject saved colour overrides before first paint so a custom
+                // palette does not flash the default token colours. Must run
+                // AFTER the dark class is set, since the overrides are scoped
+                // to :root and .dark.
+                (function() {
+                  try {
+                    var raw = localStorage.getItem('thumbfeed_theme_overrides');
+                    if (!raw) return;
+                    var parsed = JSON.parse(raw);
+                    if (!parsed || typeof parsed !== 'object') return;
+                    var KEYS = ['canvas','surface','surface-raised','surface-sunken','ink','ink-2','ink-3','accent','accent-hover','on-accent','line','line-2','focus','danger','danger-soft','danger-line','on-danger','stage'];
+                    var HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+                    function clean(mode) {
+                      var out = '';
+                      var m = parsed[mode];
+                      if (!m || typeof m !== 'object') return out;
+                      for (var i = 0; i < KEYS.length; i++) {
+                        var v = m[KEYS[i]];
+                        if (typeof v === 'string' && HEX.test(v.trim())) {
+                          out += '--' + KEYS[i] + ':' + v.trim() + ';';
+                        }
+                      }
+                      return out;
+                    }
+                    var light = clean('light');
+                    var dark = clean('dark');
+                    if (!light && !dark) return;
+                    var css = '';
+                    if (light) css += ':root{' + light + '}';
+                    if (dark) css += '.dark{' + dark + '}';
+                    var el = document.createElement('style');
+                    el.id = 'theme-overrides';
+                    el.textContent = css;
+                    document.head.appendChild(el);
+                  } catch (e) {}
+                })();
+
                 // Prevent benign 404/network image load events from bubbling to global window error listeners
                 window.addEventListener('error', function(e) {
                   if (e && e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'LINK' || e.target.tagName === 'VIDEO')) {

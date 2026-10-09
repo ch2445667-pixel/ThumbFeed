@@ -33,8 +33,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# importer checkpoint: local run state, not source
+# importer checkpoints: local run state, not source
 scripts/import_progress.json
+scripts/channel_import_progress.json
+scripts/channel_import_report.json
+scripts/batch_progress_shard*.json
+scripts/batch_report_shard*.json
 
 # scratch files from manual API probing
 v.json

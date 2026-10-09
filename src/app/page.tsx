@@ -11,6 +11,7 @@ import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 import { IconTrash, IconFilm, IconImage } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
 import { ViewModeToggle } from '../components/ViewModeToggle';
+import { SlidingTabs } from '../components/SlidingTabs';
 import { useAuth } from '../lib/authContext';
 import {
   saveStoredThumbnail,
@@ -429,39 +430,21 @@ export default function HomePage() {
         section={section}
       />
 
-      <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-5 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-3 sm:px-6 lg:px-8">
         {/* Library section switcher, sort and view controls */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div
-            className="flex items-center gap-1 rounded-lg border border-line bg-surface p-1 shadow-card"
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <SlidingTabs
+            items={[
+              { key: 'thumbnails', label: 'Thumbnails', icon: IconImage },
+              { key: 'posters', label: 'Posters', icon: IconFilm },
+            ]}
+            value={section}
+            onChange={handleSectionChange}
             role="tablist"
-            aria-label="Library section"
-          >
-            {(
-              [
-                { key: 'thumbnails', label: 'Thumbnails', Icon: IconImage },
-                { key: 'posters', label: 'Posters', Icon: IconFilm },
-              ] as const
-            ).map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={section === key}
-                onClick={() => handleSectionChange(key)}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-200 active:scale-[0.98] ${
-                  section === key
-                    ? 'bg-accent text-accent-on shadow-card'
-                    : 'text-ink-muted hover:bg-surface-raised hover:text-ink'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
+            ariaLabel="Library section"
+          />
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {section === 'thumbnails' && (
               <ViewModeToggle isDetail={showCardInfo} onToggle={handleToggleCardInfo} />
             )}

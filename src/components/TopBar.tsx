@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, X, AlertCircle, Search, Info, ShieldCheck, FileText, Minus, Plus, Shuffle, SlidersHorizontal } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { ThemeColorEditor } from './ThemeColorEditor';
 import { useAuth } from '../lib/authContext';
 
 // Google brand mark. Kept as literal brand geometry, not a hand-drawn icon.
@@ -220,9 +221,9 @@ export const TopBar: React.FC<TopBarProps> = ({
         />
 
         <div className="relative flex h-16 items-center justify-between gap-2 px-4 sm:px-6 lg:px-10">
-          <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
-            <span className="font-brand select-none text-[22px] leading-none tracking-tight text-ink">
-              Thumb<span className="text-ink-muted">Feed</span>
+          <div className="pointer-events-auto flex min-w-0 shrink-0 items-center">
+            <span className="font-brand select-none text-[19px] leading-none tracking-tight text-ink">
+              Thumb<span className="text-ink-faint">Feed</span>
             </span>
           </div>
 
@@ -240,7 +241,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           )}
 
-          <div ref={menuRef} className="pointer-events-auto flex shrink-0 items-center gap-2">
+          <div ref={menuRef} className="pointer-events-auto flex shrink-0 items-center gap-1.5">
             {/* Mobile search trigger */}
             {searchEnabled && (
               <button
@@ -257,7 +258,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             {/* Grid density stepper. Compact enough to live in the bar. */}
             {onColumnsChange && (
               <div
-                className="hidden h-9 items-center gap-0.5 rounded-md border border-line bg-surface px-1 shadow-card sm:flex"
+                className="hidden h-9 items-center gap-0 rounded-md border border-line bg-surface px-1 shadow-card sm:flex"
                 role="group"
                 aria-label="Grid density"
               >
@@ -291,7 +292,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 onClick={onShuffle}
                 title="Shuffle gallery"
                 aria-label="Shuffle gallery"
-                className="hidden h-9 w-9 cursor-pointer place-items-center rounded-md border border-line bg-surface text-ink-muted shadow-card transition-colors duration-200 hover:border-line-strong hover:text-ink active:scale-95 sm:grid"
+                className="hidden h-9 w-9 cursor-pointer place-items-center rounded-md border border-line bg-surface text-ink-muted shadow-card ease-spring transition-all duration-200 hover:border-line-strong hover:text-ink active:scale-[0.9] sm:grid"
               >
                 <Shuffle className="h-4 w-4" strokeWidth={1.75} />
               </button>
@@ -304,7 +305,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 title="Filters"
                 aria-label="Open filters"
                 aria-expanded={isFilterOpen}
-                className="flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium text-ink-muted shadow-card transition-colors duration-200 hover:border-line-strong hover:text-ink active:scale-[0.98]"
+                className="flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium text-ink-muted shadow-card ease-spring transition-all duration-200 hover:border-line-strong hover:bg-surface-raised hover:text-ink active:scale-[0.94] active:shadow-none"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={1.75} />
                 <span className="hidden sm:inline">Filter</span>
@@ -321,7 +322,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 type="button"
                 onClick={onOpenAdd}
                 title={section === 'posters' ? 'Add posters' : 'Add thumbnails'}
-                className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-on shadow-card transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
+                className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-on shadow-card ease-spring transition-all duration-200 hover:opacity-90 active:scale-[0.94] active:opacity-100"
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2} />
                 <span className="hidden sm:inline">Add</span>
@@ -329,6 +330,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
 
             <ThemeToggle />
+            <ThemeColorEditor />
 
             {!loading && !user && (
               <button

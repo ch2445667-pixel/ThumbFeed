@@ -46,6 +46,12 @@ scripts/batch_report_shard*.json
 scripts/tagging/batch_*.json
 scripts/tagging/tags_*.json
 scripts/tagging/uncovered.json
+scripts/tagging_growth/batch_*.json
+scripts/tagging_growth/tags_*.json
+
+# growth-channel importer checkpoints
+scripts/growth_progress_shard*.json
+scripts/growth_report_shard*.json
 
 # scratch files from manual API probing
 v.json

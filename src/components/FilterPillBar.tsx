@@ -9,7 +9,6 @@ import {
 import { NicheCategory, FilterState, ThumbnailItem } from '../lib/types';
 import { COLOR_FAMILY_ORDER, familiesForItem, familyOfHex, type ColorFamily } from '../lib/colorFamilies';
 import {
-  getAllCategories,
   getCustomCategories,
   addCustomCategory,
   removeCustomCategory,
@@ -112,15 +111,24 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   const [newCatInput, setNewCatInput] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Categories come from the facets counts, which are derived from the tags
+  // actually in the data. The hardcoded list would hide every category that
+  // was not already in it and show ones no thumbnail carries. Locally added
+  // categories are merged on top, since nothing assigns those yet.
   useEffect(() => {
     const update = () => {
-      const all = getAllCategories();
-      setCategories(['All', ...all]);
-      setCustomCategories(getCustomCategories());
+      const fromData = Object.keys(categoryCounts).filter((c) => c !== 'All');
+      const custom = getCustomCategories();
+      const merged = [...fromData];
+      for (const c of custom) {
+        if (!merged.some((m) => m.toLowerCase() === c.toLowerCase())) merged.push(c);
+      }
+      setCategories(['All', ...merged]);
+      setCustomCategories(custom);
     };
     update();
     return subscribeCategories(update);
-  }, []);
+  }, [categoryCounts]);
 
   // Dismiss on Escape or outside click while open.
   useEffect(() => {
@@ -164,7 +172,6 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   const activeCount =
     (filters.selectedNiche !== 'All' ? 1 : 0) +
     (filters.searchQuery.trim() ? 1 : 0) +
-    filters.selectedStyles.length +
     filters.selectedColors.length +
     (filters.selectedEmotion ? 1 : 0);
 

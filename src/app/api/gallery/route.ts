@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAnonClient } from '../../../lib/supabaseServer';
 import { parseDimensions } from '../../../lib/dimensions';
 import { familiesFromHexes, type ColorFamily } from '../../../lib/colorFamilies';
+import {
+  CUSTOM_ID_PREFIX,
+  CUSTOM_SOURCE,
+  customUploadPredicate,
+  excludeOtherWalls,
+  isCustomUploadRow,
+} from '../../../lib/customUploads';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,7 +36,7 @@ const PAGE_SIZE = 36;
 
 // Columns the grid actually needs. No select('*') anywhere on this path.
 const GRID_COLUMNS =
-  'id,title,creator,image_url,thumb_small_url,source_url,niche,styles,tags,colors,' +
+  'id,title,creator,image_url,thumb_small_url,source_url,niche,tags,colors,' +
   'ocr_text,emotion,breakdown_notes,views_estimate,source,created_at,likes_count';
 
 // Minimal columns for the Path B pre-pass.
@@ -40,25 +47,28 @@ function posterPredicate() {
   return 'id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*';
 }
 
+/**
+ * Three disjoint walls. Posters and custom uploads are selected by their own
+ * predicates, and the thumbnails wall additionally excludes both -- their ids
+ * and sources do not collide with imported rows, so without the exclusion they
+ * would leak into the main feed.
+ */
 function applySection(query: any, section: string) {
   if (section === 'posters') {
     return query.or(posterPredicate());
   }
-  return query
-    .not('breakdown_notes', 'ilike', '%poster%')
-    .not('id', 'ilike', 'poster-%')
-    .not('niche', 'eq', 'Cinema')
-    .not('source', 'eq', 'poster');
+  if (section === 'uploads') {
+    return query.or(customUploadPredicate());
+  }
+  return excludeOtherWalls(query);
 }
 
-function applySharedFilters(query: any, params: { niche: string; styles: string[]; search: string }) {
+function applySharedFilters(query: any, params: { niche: string; search: string }) {
   let q = query;
   if (params.niche && params.niche !== 'All') {
-    // Matches the old client behaviour: niche column or any tag, exact match.
+    // Category match: the niche column OR any tag, so a thumbnail tagged
+    // directly is found whether the category landed in either place.
     q = q.or(`niche.eq.${params.niche},tags.cs.{"${params.niche}"}`);
-  }
-  if (params.styles.length > 0) {
-    q = q.overlaps('styles', params.styles);
   }
   return q;
 }
@@ -76,21 +86,22 @@ function applySearch(query: any, search: string) {
 
 function rowToItem(row: any, section: string): any {
   const dims = parseDimensions(row.breakdown_notes);
+  const isCustom = section === 'uploads' || isCustomUploadRow(row);
   const isPoster =
-    section === 'posters' ||
-    row.id?.startsWith('poster-') ||
-    row.niche === 'Cinema' ||
-    row.source === 'poster';
+    !isCustom &&
+    (section === 'posters' ||
+      row.id?.startsWith('poster-') ||
+      row.niche === 'Cinema' ||
+      row.source === 'poster');
   return {
     id: row.id,
-    kind: isPoster ? 'poster' : undefined,
-    title: row.title || (isPoster ? 'Movie Poster' : 'YouTube Thumbnail'),
-    creator: row.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
+    kind: isPoster ? 'poster' : isCustom ? 'custom' : undefined,
+    title: row.title || (isPoster ? 'Movie Poster' : isCustom ? 'Upload' : 'YouTube Thumbnail'),
+    creator: row.creator || (isPoster ? 'Cinema' : isCustom ? 'My Uploads' : 'YouTube Creator'),
     imageUrl: row.image_url,
     thumbSmallUrl: row.thumb_small_url || undefined,
     sourceUrl: row.source_url || row.image_url,
     niche: row.niche || (isPoster ? 'Cinema' : ''),
-    styles: row.styles || [],
     tags: Array.isArray(row.tags) ? row.tags : [],
     colors: Array.isArray(row.colors) ? row.colors : [],
     width: dims?.width,
@@ -137,10 +148,11 @@ function matchesSearch(row: any, q: string): boolean {
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const section = url.searchParams.get('section') === 'posters' ? 'posters' : 'thumbnails';
+    const sectionParam = url.searchParams.get('section');
+    const section =
+      sectionParam === 'posters' ? 'posters' : sectionParam === 'uploads' ? 'uploads' : 'thumbnails';
     const search = (url.searchParams.get('search') || '').trim();
     const niche = url.searchParams.get('niche') || 'All';
-    const styles = (url.searchParams.get('styles') || '').split(',').map((s) => s.trim()).filter(Boolean);
     const colors = (url.searchParams.get('colors') || '').split(',').map((s) => s.trim()).filter(Boolean) as ColorFamily[];
     const sort = url.searchParams.get('sort') || 'random';
     const seed = Number(url.searchParams.get('seed') || 882391) || 882391;
@@ -155,7 +167,7 @@ export async function GET(req: NextRequest) {
       // Path A: pure SQL pagination.
       let query = supabase.from('thumbnails').select(GRID_COLUMNS, { count: 'exact' });
       query = applySection(query, section);
-      query = applySharedFilters(query, { niche, styles, search: '' });
+      query = applySharedFilters(query, { niche, search: '' });
       query = sort === 'popular'
         ? query.order('likes_count', { ascending: false })
         : query.order('created_at', { ascending: false });
@@ -174,7 +186,7 @@ export async function GET(req: NextRequest) {
     // Path B: light pre-pass, then Node filtering/shuffle, then one page fetch.
     let light = supabase.from('thumbnails').select(LIGHT_COLUMNS);
     light = applySection(light, section);
-    light = applySharedFilters(light, { niche, styles, search: '' });
+    light = applySharedFilters(light, { niche, search: '' });
     const { data: lightRows, error: lightError } = await light.limit(5000);
     if (lightError) {
       return NextResponse.json({ error: lightError.message }, { status: 500 });

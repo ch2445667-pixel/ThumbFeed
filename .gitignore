@@ -40,5 +40,12 @@ scripts/channel_import_report.json
 scripts/batch_progress_shard*.json
 scripts/batch_report_shard*.json
 
+# Generated title/tag batches from the LLM tagging pass (~1.5MB of JSON).
+# SPEC.md stays: it documents how the categories were assigned and lets the
+# pass be reproduced.
+scripts/tagging/batch_*.json
+scripts/tagging/tags_*.json
+scripts/tagging/uncovered.json
+
 # scratch files from manual API probing
 v.json

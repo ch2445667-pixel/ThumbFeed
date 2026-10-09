@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NicheCategory } from '@/lib/types';
-import { GoogleGenAI } from '@google/genai';
 
 interface ExtractedChannelVideo {
   id: string;
@@ -684,54 +683,6 @@ export async function POST(req: NextRequest) {
         }
       } catch (rssErr) {
         console.warn('RSS fallback error:', rssErr);
-      }
-    }
-
-    // Tertiary AI Grounding Fallback if needed
-    if (extractedVideos.length === 0 && process.env.GEMINI_API_KEY) {
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const prompt = `Find 30 to ${requestedLimit} recent regular long-form YouTube video uploads (NOT shorts, NOT reels) for the channel: "${input}".
-Return a strict JSON array of objects with keys: "videoId" (exact 11-char YouTube ID), "title", "creator", "niche".`;
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-          }
-        });
-
-        if (response && response.text) {
-          const parsed = JSON.parse(response.text);
-          if (Array.isArray(parsed)) {
-            for (const item of parsed) {
-              let vId = item.videoId || '';
-              if (vId.includes('v=')) {
-                vId = vId.split('v=')[1].slice(0, 11);
-              } else if (vId.includes('youtu.be/')) {
-                vId = vId.split('youtu.be/')[1].slice(0, 11);
-              }
-              if (vId && vId.length === 11 && !seenVideoIds.has(vId)) {
-                seenVideoIds.add(vId);
-                const { niche, tags } = classifyNicheFromTitle(item.title || '', item.creator || channelTitle);
-                extractedVideos.push({
-                  id: `ch-yt-${vId}`,
-                  videoId: vId,
-                  title: item.title || 'YouTube Video',
-                  creator: item.creator || channelTitle || input,
-                  imageUrl: `https://i.ytimg.com/vi/${vId}/maxresdefault.jpg`,
-                  sourceUrl: `https://www.youtube.com/watch?v=${vId}`,
-                  niche: (item.niche as NicheCategory) || niche,
-                  tags: tags
-                });
-                if (extractedVideos.length >= requestedLimit) break;
-              }
-            }
-          }
-        }
-      } catch (geminiErr) {
-        console.warn('Gemini channel extract fallback error:', geminiErr);
       }
     }
 

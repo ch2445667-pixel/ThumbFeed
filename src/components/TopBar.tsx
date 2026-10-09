@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { LogOut, X, AlertCircle, Search, Info, ShieldCheck, FileText, Minus, Plus, Shuffle, SlidersHorizontal } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { ThemeColorEditor } from './ThemeColorEditor';
+import { ViewModeToggle } from './ViewModeToggle';
 import { useAuth } from '../lib/authContext';
 
 // Google brand mark. Kept as literal brand geometry, not a hand-drawn icon.
@@ -41,7 +42,10 @@ interface TopBarProps {
   isFilterOpen?: boolean;
   activeFilterCount?: number;
   onOpenAdd?: () => void;
-  section?: 'thumbnails' | 'posters';
+  section?: 'thumbnails' | 'posters' | 'uploads';
+  /** Details/Compact lives in the bar; the bottom pill owns the section switch. */
+  isDetailView?: boolean;
+  onToggleDetailView?: () => void;
 }
 
 interface SearchFieldProps {
@@ -129,6 +133,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   activeFilterCount = 0,
   onOpenAdd,
   section = 'thumbnails',
+  isDetailView,
+  onToggleDetailView,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -317,11 +323,25 @@ export const TopBar: React.FC<TopBarProps> = ({
               </button>
             )}
 
+            {typeof onToggleDetailView === 'function' && (
+              <ViewModeToggle
+                isDetail={Boolean(isDetailView)}
+                onToggle={onToggleDetailView}
+                className="hidden sm:inline-flex"
+              />
+            )}
+
             {onOpenAdd && (
               <button
                 type="button"
                 onClick={onOpenAdd}
-                title={section === 'posters' ? 'Add posters' : 'Add thumbnails'}
+                title={
+                  section === 'posters'
+                    ? 'Add posters'
+                    : section === 'uploads'
+                      ? 'Add to My Uploads'
+                      : 'Add thumbnails'
+                }
                 className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-on shadow-card ease-spring transition-all duration-200 hover:opacity-90 active:scale-[0.94] active:opacity-100"
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2} />

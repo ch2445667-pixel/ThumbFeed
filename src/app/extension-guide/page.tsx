@@ -7,7 +7,7 @@ import { ArrowLeft, Chrome, Download, Check, Sparkles, Youtube, ExternalLink, Sh
 export default function ExtensionGuidePage() {
   const [copiedPath, setCopiedPath] = useState(false);
 
-  const extensionFolderPath = `C:\\Users\\ch244\\.gemini\\antigravity\\scratch\\thumbvault\\extension`;
+  const extensionFolderPath = 'your-project-folder\\extension';
 
   const copyPath = () => {
     navigator.clipboard.writeText(extensionFolderPath);

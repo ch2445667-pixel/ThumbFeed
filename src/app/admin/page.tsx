@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, UploadCloud, Youtube, Link as LinkIcon, Check, Plus, Trash2, Eye, Palette, Tag } from 'lucide-react';
-import { ThumbnailItem, NicheCategory, VisualStyle } from '../../lib/types';
+import { ThumbnailItem, NicheCategory } from '../../lib/types';
 import { getStoredThumbnails, saveStoredThumbnail } from '../../lib/storage';
 import { useAuth, ADMIN_EMAIL } from '../../lib/authContext';
 
@@ -33,17 +33,6 @@ const NICHES: NicheCategory[] = [
   'War'
 ];
 
-const VISUAL_STYLES: VisualStyle[] = [
-  'Face Close-up',
-  '3D Render / CGI',
-  'Illustrated / Anime',
-  'Minimalist & Clean',
-  'Split Screen / Before-After',
-  'Text-Heavy / Typography',
-  'No-Text / Visual Hook',
-  'High-Contrast Glow'
-];
-
 export default function AdminPage() {
   const { user, isAdmin, loading, signingIn, signIn } = useAuth();
   const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>([]);
@@ -57,7 +46,6 @@ export default function AdminPage() {
   const [title, setTitle] = useState('');
   const [creator, setCreator] = useState('');
   const [niche, setNiche] = useState<NicheCategory>('Tech');
-  const [selectedStyles, setSelectedStyles] = useState<VisualStyle[]>(['Face Close-up', 'High-Contrast Glow']);
   const [tagsInput, setTagsInput] = useState('High CTR, YouTube Hook, Contrast');
   const [colorsInput, setColorsInput] = useState('#EF4444, #0F172A, #FBBF24, #FFFFFF');
   const [ocrText, setOcrText] = useState('');
@@ -87,33 +75,9 @@ export default function AdminPage() {
     const resolvedImageUrl = extractYoutubeThumbnail(inputUrl.trim());
     setPreviewImage(resolvedImageUrl);
 
-    try {
-      const res = await fetch('/api/ai-tagger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageUrl: resolvedImageUrl,
-          videoTitle: videoTitleInput.trim()
-        })
-      });
-
-      const json = await res.json();
-      if (json.success && json.data) {
-        const d = json.data;
-        if (d.title) setTitle(d.title);
-        if (d.niche) setNiche(d.niche);
-        if (d.styles) setSelectedStyles(d.styles);
-        if (d.tags) setTagsInput(d.tags.join(', '));
-        if (d.colors) setColorsInput(d.colors.join(', '));
-        if (d.ocrText !== undefined) setOcrText(d.ocrText);
-        if (d.emotion) setEmotion(d.emotion);
-        if (d.breakdownNotes) setBreakdownNotes(d.breakdownNotes);
-      }
-    } catch (err) {
-      console.error('AI Tagger failed:', err);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    // Categories come from a human reading the title. There is no automatic
+    // analyser: any value left blank here is filled in deliberately.
+    setIsAnalyzing(false);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,7 +113,6 @@ export default function AdminPage() {
       creator: creator || 'YouTube Creator',
       imageUrl: previewImage,
       niche,
-      styles: selectedStyles,
       tags: parsedTags.length > 0 ? parsedTags : ['YouTube', 'CTR'],
       colors: parsedColors.length > 0 ? parsedColors : ['#0d0e10', '#E6E8EC', '#FFFFFF'],
       ocrText,
@@ -387,35 +350,6 @@ export default function AdminPage() {
                   >
                     {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="text-xs text-[#0d0e10]/70 dark:text-[#D8DBE0]/70 block mb-1 font-medium">Visual Styles (Select multiple)</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {VISUAL_STYLES.map(style => {
-                      const isSel = selectedStyles.includes(style);
-                      return (
-                        <button
-                          type="button"
-                          key={style}
-                          onClick={() => {
-                            if (isSel) {
-                              setSelectedStyles(selectedStyles.filter(s => s !== style));
-                            } else {
-                              setSelectedStyles([...selectedStyles, style]);
-                            }
-                          }}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                            isSel
-                              ? 'bg-[#0d0e10] text-[#E6E8EC] dark:bg-[#E6E8EC] dark:text-[#0d0e10]'
-                              : 'bg-[#E6E8EC]/40 dark:bg-[#E6E8EC]/10 border border-[#0d0e10]/15 dark:border-[#D8DBE0]/20 text-[#0d0e10] dark:text-[#D8DBE0] hover:bg-[#E6E8EC]'
-                          }`}
-                        >
-                          {style}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
 
                 <div>

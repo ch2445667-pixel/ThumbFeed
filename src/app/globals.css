@@ -306,6 +306,25 @@ html {
   background: var(--ink-2);
 }
 
+/**
+ * Hides the scrollbar on an element that scrolls. Two names existed in the
+ * markup (`scrollbar-none` and `no-scrollbar`) with no rule behind either, so
+ * both were silently no-ops; this defines both so a horizontal scroller can opt
+ * out visually and still scroll.
+ */
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 .thumbnail-card-container {
   content-visibility: auto;
   contain-intrinsic-size: auto 200px;

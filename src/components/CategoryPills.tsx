@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { NicheCategory } from '../lib/types';
-import { getAllCategories, subscribeCategories } from '../lib/categories';
+import { getCustomCategories, subscribeCategories } from '../lib/categories';
 
 export const DEFAULT_CATEGORIES: (NicheCategory | 'All')[] = [
   'All',
@@ -42,16 +42,22 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
   onSelectCategory,
   categoryCounts = {}
 }) => {
-  const [categories, setCategories] = useState<string[]>(['All', ...getAllCategories()]);
+  // Built from the facet counts so every category actually in use is offered.
+  // Locally added categories are merged in, since nothing assigns those.
+  const [categories, setCategories] = useState<string[]>(['All']);
 
   useEffect(() => {
-    const update = (cats: string[]) => {
-      const set = new Set<string>(['All', ...cats]);
-      setCategories(Array.from(set));
+    const update = () => {
+      const fromData = Object.keys(categoryCounts).filter((c) => c !== 'All');
+      const merged = [...fromData];
+      for (const c of getCustomCategories()) {
+        if (!merged.some((m) => m.toLowerCase() === c.toLowerCase())) merged.push(c);
+      }
+      setCategories(['All', ...merged]);
     };
-    update(getAllCategories());
+    update();
     return subscribeCategories(update);
-  }, []);
+  }, [categoryCounts]);
 
   return (
     <div className="w-full bg-[#E6E8EC]/90 dark:bg-[#0d0e10]/90 backdrop-blur-md border-b border-[#0d0e10]/10 dark:border-[#E6E8EC]/15 sticky top-16 z-20 px-6 sm:px-10 py-3">

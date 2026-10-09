@@ -9,17 +9,12 @@ export type NicheCategory =
   | 'Educational'
   | (string & {});
 
-export type VisualStyle = 
-  | 'Face Close-up'
-  | '3D Render / CGI'
-  | 'Illustrated / Anime'
-  | 'Minimalist & Clean'
-  | 'Split Screen / Before-After'
-  | 'Text-Heavy / Typography'
-  | 'No-Text / Visual Hook'
-  | 'High-Contrast Glow';
-
-export type MediaKind = 'thumbnail' | 'poster';
+/**
+ * 'custom' is the user's own uploads, kept as a separate wall. It has to be
+ * distinguishable in the database, not just in the UI, or a custom upload would
+ * land in the thumbnails section.
+ */
+export type MediaKind = 'thumbnail' | 'poster' | 'custom';
 
 export interface ThumbnailItem {
   id: string;
@@ -30,7 +25,6 @@ export interface ThumbnailItem {
   imageUrl: string;
   sourceUrl?: string;
   niche: NicheCategory;
-  styles: VisualStyle[];
   tags: string[];
   colors?: string[];
   /**
@@ -69,7 +63,6 @@ export interface CollectionBoard {
 export interface FilterState {
   searchQuery: string;
   selectedNiche: NicheCategory | 'All';
-  selectedStyles: VisualStyle[];
   /** Colour families, multi-select with OR matching. */
   selectedColors: string[];
   selectedEmotion?: string | null;

@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAnonClient } from '../../../../lib/supabaseServer';
 import { COLOR_FAMILY_ORDER, familyOfHex, familiesForItem, type ColorFamily } from '../../../../lib/colorFamilies';
+import { customUploadPredicate, excludeOtherWalls } from '../../../../lib/customUploads';
 
 /**
- * Niche names the filter bar offers. A row whose niche column is empty but
- * which carries one of these as a tag still counts toward it, mirroring the
- * `niche.eq.X,tags.cs.{"X"}` match in the gallery route.
+ * Categories are no longer a fixed list. They are assigned per thumbnail from
+ * the video title, so the filter has to offer whatever is actually in use --
+ * anything hardcoded here would hide real categories and invent empty ones.
+ *
+ * A minimum count keeps the bar readable: a category carried by one thumbnail
+ * out of ~8k is noise, not a browse axis. The gallery route matches on
+ * `niche.eq.X,tags.cs.{"X"}`, so both the column and the tags are folded in,
+ * de-duplicated per row so one thumbnail counts once per category.
  */
-const NICHE_NAMES = new Set([
-  'irl', 'business', 'tech', 'entertainment', 'gaming', 'sports',
-  'documentary', 'educational', 'podcast', 'interviews', 'football',
-  'mindset', 'self-improvement', 'lifestyle', 'entrepreneurship',
-  'geopolitics', 'military', 'nfl', 'psychology', 'soccer',
-  'video games', 'vlog', 'war',
-]);
+const MIN_CATEGORY_ROWS = 8;
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +30,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const section = url.searchParams.get('section') === 'posters' ? 'posters' : 'thumbnails';
+    const sectionParam = url.searchParams.get('section');
+    const section =
+      sectionParam === 'posters' ? 'posters' : sectionParam === 'uploads' ? 'uploads' : 'thumbnails';
     const supabase = getAnonClient();
 
     // PostgREST caps a single response at max-rows (1000 on this project), so
@@ -44,12 +46,10 @@ export async function GET(req: NextRequest) {
         query = query.or(
           'id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*'
         );
+      } else if (section === 'uploads') {
+        query = query.or(customUploadPredicate());
       } else {
-        query = query
-          .not('breakdown_notes', 'ilike', '%poster%')
-          .not('id', 'ilike', 'poster-%')
-          .not('niche', 'eq', 'Cinema')
-          .not('source', 'eq', 'poster');
+        query = excludeOtherWalls(query);
       }
 
       const { data, error } = await query
@@ -62,25 +62,37 @@ export async function GET(req: NextRequest) {
       rows.push(...batch);
       if (batch.length < PAGE) break;
     }
-    const nicheCounts: Record<string, number> = { All: rows.length };
+    // Count every category that appears in niche or in tags. The set is
+    // normalised by lowercase so "Football" and "football" are one category,
+    // but the first spelling seen is the one shown.
+    const rawCounts = new Map<string, { label: string; n: number }>();
+    const bump = (label: unknown) => {
+      const key = String(label || '').trim();
+      if (!key) return;
+      const lower = key.toLowerCase();
+      const hit = rawCounts.get(lower);
+      if (hit) hit.n += 1;
+      else rawCounts.set(lower, { label: key, n: 1 });
+    };
+
     for (const row of rows) {
       const seen = new Set<string>();
-      if (row.niche) {
-        nicheCounts[row.niche] = (nicheCounts[row.niche] || 0) + 1;
-        seen.add((row.niche as string).toLowerCase());
-      }
-      // The filter matches on niche OR tag, so a row tagged "Football" still
-      // belongs to the Football count. Only real niche names are folded in --
-      // counting every tag produced ~700 phantom categories in the filter bar.
-      if (Array.isArray(row.tags)) {
-        for (const tag of row.tags) {
-          const key = (tag || '').trim();
-          const lower = key.toLowerCase();
-          if (!lower || seen.has(lower) || !NICHE_NAMES.has(lower)) continue;
-          nicheCounts[key] = (nicheCounts[key] || 0) + 1;
-          seen.add(lower);
-        }
-      }
+      const add = (label: unknown) => {
+        const key = String(label || '').trim();
+        if (!key) return;
+        const lower = key.toLowerCase();
+        if (seen.has(lower)) return;
+        seen.add(lower);
+        bump(key);
+      };
+      add(row.niche);
+      if (Array.isArray(row.tags)) for (const tag of row.tags) add(tag);
+    }
+
+    const nicheCounts: Record<string, number> = { All: rows.length };
+    for (const { label, n } of [...rawCounts.values()].sort((a, b) => b.n - a.n)) {
+      if (n < MIN_CATEGORY_ROWS) continue;
+      nicheCounts[label] = n;
     }
 
     const byFamily = new Map<ColorFamily, Map<string, number>>();

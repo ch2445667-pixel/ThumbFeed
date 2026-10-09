@@ -21,11 +21,12 @@ export interface GalleryFacets {
   total: number;
 }
 
+export type GallerySection = 'thumbnails' | 'posters' | 'uploads';
+
 interface GalleryKey {
-  section: 'thumbnails' | 'posters';
+  section: GallerySection;
   search: string;
   niche: string;
-  styles: string[];
   colors: string[];
   sort: string;
   seed: number;
@@ -36,7 +37,6 @@ function buildParams(key: GalleryKey, page: number): string {
     section: key.section,
     search: key.search,
     niche: key.niche,
-    styles: key.styles.join(','),
     colors: key.colors.join(','),
     sort: key.sort,
     seed: String(key.seed),
@@ -51,7 +51,7 @@ async function fetchGalleryPage(key: GalleryKey, page: number): Promise<GalleryP
   return res.json();
 }
 
-async function fetchFacets(section: 'thumbnails' | 'posters'): Promise<GalleryFacets> {
+async function fetchFacets(section: GallerySection): Promise<GalleryFacets> {
   const res = await fetch(`/api/gallery/facets?section=${section}`);
   if (!res.ok) throw new Error(`Facets request failed: ${res.status}`);
   return res.json();
@@ -104,7 +104,7 @@ export function useGallery(key: GalleryKey) {
   return query;
 }
 
-export function useGalleryFacets(section: 'thumbnails' | 'posters') {
+export function useGalleryFacets(section: GallerySection) {
   return useQuery({
     queryKey: ['gallery-facets', section],
     queryFn: () => fetchFacets(section),

@@ -30,12 +30,12 @@ interface AddModalProps {
   onClose: () => void;
   onAddThumbnail: (item: ThumbnailItem) => void;
   onAddMultipleThumbnails?: (items: ThumbnailItem[]) => void;
-  initialMediaKind?: 'thumbnail' | 'poster';
+  initialMediaKind?: 'thumbnail' | 'poster' | 'custom';
 }
 
 type AddTabMode = 'upload' | 'youtube' | 'pinterest';
 
-type AddMediaKind = 'thumbnail' | 'poster';
+type AddMediaKind = 'thumbnail' | 'poster' | 'custom';
 
 interface QueuedImageItem {
   id: string;
@@ -510,7 +510,8 @@ export const AddModal: React.FC<AddModalProps> = ({
   // posters wall with kind: 'poster' instead of the thumbnails gallery.
   const [mediaKind, setMediaKind] = useState<AddMediaKind>(initialMediaKind);
   // Human word for the media being added, used across button and fallback copy.
-  const unitWord = mediaKind === 'poster' ? 'Poster' : 'Thumbnail';
+  const unitWord = mediaKind === 'poster' ? 'Poster' : mediaKind === 'custom' ? 'Upload' : 'Thumbnail';
+  const isCustomKind = mediaKind === 'custom';
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // Selected Categories per section (supports multiple categories, defaults to none)
@@ -891,21 +892,34 @@ export const AddModal: React.FC<AddModalProps> = ({
     setIsUploadingToCloud(true);
     setCloudError('');
     const isPoster = mediaKind === 'poster';
-    setUploadStatusText(`Uploading ${queuedImages.length} ${isPoster ? 'posters' : 'thumbnails'} to Supabase...`);
+    const isCustomKind = mediaKind === 'custom';
+    const unitLabel = isPoster ? 'posters' : isCustomKind ? 'uploads' : 'thumbnails';
+    setUploadStatusText(`Uploading ${queuedImages.length} ${unitLabel} to Supabase...`);
 
     let finalItems: ThumbnailItem[] = [];
     let cloudOk = false;
     const payload = queuedImages.map(item => {
       const itemCategories = item.tags || [];
-      const assignedId = item.id.startsWith('poster-') ? item.id : (isPoster ? `poster-${item.id}` : item.id);
+      const assignedId = item.id.startsWith('poster-')
+          ? item.id
+          : isCustomKind
+            ? `upload-${item.id}`
+            : isPoster
+              ? `poster-${item.id}`
+              : item.id;
       return {
         id: assignedId,
         kind: mediaKind,
         imageUrl: item.dataUrl,
         title: item.title || `Curated ${unitWord}`,
-        creator: item.creator || (isPoster ? 'Cinema' : 'Creator'),
+        creator: item.creator || (isPoster ? 'Cinema' : isCustomKind ? 'My Uploads' : 'Creator'),
         niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-        tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : [])
+        tags:
+          itemCategories.length > 0
+            ? itemCategories
+            : isPoster
+              ? ['Movie Poster', 'Cinema']
+              : []
       };
     });
 
@@ -967,8 +981,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             thumbSmallUrl: smallUrl,
             sourceUrl: supaUrl,
             niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-            styles: ['Face Close-up', 'High-Contrast Glow'],
-            tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
+                tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
             colors: colorMap.get(img.id) ?? colorMap.get(assignedId) ?? [],
             width: dims?.width,
             height: dims?.height,
@@ -997,8 +1010,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           imageUrl: img.dataUrl,
           sourceUrl: img.dataUrl,
           niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-          styles: ['Face Close-up', 'High-Contrast Glow'],
-          tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
+            tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
           colors: [],
           ocrText: '',
           emotion: 'Curious',
@@ -1252,7 +1264,6 @@ export const AddModal: React.FC<AddModalProps> = ({
         imageUrl: item.imageUrl,
         sourceUrl: item.url,
         niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-        styles: ['Face Close-up', 'High-Contrast Glow'],
         tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
         colors: [],
         ocrText: '',
@@ -1419,7 +1430,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         {/* What is being added */}
         <div className="px-5 pt-3">
           <div
-            className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface p-1"
+            className="grid grid-cols-3 gap-1 rounded-xl border border-line bg-surface p-1"
             role="tablist"
             aria-label="What are you adding?"
           >
@@ -1427,6 +1438,7 @@ export const AddModal: React.FC<AddModalProps> = ({
               [
                 { key: 'thumbnail', label: 'Thumbnails', Icon: IconImage },
                 { key: 'poster', label: 'Posters', Icon: IconFilm },
+                { key: 'custom', label: 'My Uploads', Icon: IconUploadCloud },
               ] as const
             ).map(({ key, label, Icon }) => (
               <button
@@ -1436,7 +1448,10 @@ export const AddModal: React.FC<AddModalProps> = ({
                 aria-selected={mediaKind === key}
                 onClick={() => {
                   setMediaKind(key);
-                  if (key === 'poster' && activeTab === 'youtube') setActiveTab('upload');
+                  // YouTube and Pinterest both resolve to a public thumbnail
+                  // URL for an existing video, which is not the user's own
+                  // image, so neither applies to the uploads wall.
+                  if (key !== 'thumbnail' && activeTab !== 'upload') setActiveTab('upload');
                 }}
                 className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
                   mediaKind === key
@@ -1449,6 +1464,12 @@ export const AddModal: React.FC<AddModalProps> = ({
               </button>
             ))}
           </div>
+          {mediaKind === 'custom' && (
+            <p className="mt-2 px-1 text-[11px] leading-relaxed text-ink-faint">
+              Saves to your own <strong className="text-ink-muted">My Uploads</strong> wall.
+              Kept separate from the imported feed and from posters.
+            </p>
+          )}
         </div>
 
         {/* Minimalist Tab Switcher */}

@@ -8,9 +8,8 @@ import { type ColorFamily } from '../lib/colorFamilies';
 import { AddModal } from '../components/AddModal';
 import { ThumbnailModal } from '../components/ThumbnailModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
-import { IconTrash, IconFilm, IconImage } from '../components/icons/AppIcons';
+import { IconTrash, IconFilm, IconImage, IconUploadCloud as IconUpload } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
-import { ViewModeToggle } from '../components/ViewModeToggle';
 import { SlidingTabs } from '../components/SlidingTabs';
 import { useAuth } from '../lib/authContext';
 import {
@@ -22,7 +21,8 @@ import {
   deleteStoredThumbnailPermanently,
   updateStoredThumbnail
 } from '../lib/storage';
-import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE, type GalleryPage } from '../lib/useGallery';
+import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE, type GalleryPage, type GallerySection } from '../lib/useGallery';
+import { BottomSectionPill } from '../components/BottomSectionPill';
 import { useQueryClient } from '@tanstack/react-query';
 
 /** Shuffle seed, also sent to the gallery API so server-side random order matches. */
@@ -52,9 +52,9 @@ export default function HomePage() {
   // pages accumulate in the query cache, mutations invalidate it, and the
   // realtime channel invalidates on any database change.
 
-  // Library section. Posters are a separate wall: portrait artwork, no
-  // metadata footers, local-only persistence.
-  const [section, setSection] = useState<'thumbnails' | 'posters'>('thumbnails');
+  // Library section. Three disjoint walls: the imported feed, portrait posters,
+  // and the user's own uploads. Switched from the bottom pill.
+  const [section, setSection] = useState<GallerySection>('thumbnails');
 
   // Grid density is remembered per section. Portraits read better denser.
   const [posterColumns, setPosterColumns] = useState<number>(5);
@@ -90,8 +90,8 @@ export default function HomePage() {
         if (val >= 3 && val <= 6) setPosterColumns(val);
       }
       const storedSection = localStorage.getItem('thumbfeed_section');
-      if (storedSection === 'posters' || storedSection === 'thumbnails') {
-        setSection(storedSection);
+      if (storedSection === 'posters' || storedSection === 'thumbnails' || storedSection === 'uploads') {
+        setSection(storedSection as GallerySection);
       }
     } catch {}
   }, []);
@@ -99,7 +99,7 @@ export default function HomePage() {
   // Switching walls resets the category scope, which belongs to thumbnails.
   // No explicit sync call: the section is part of the gallery query key, so
   // switching mounts the other wall's cached pages (or fetches page 0 once).
-  const handleSectionChange = useCallback((next: 'thumbnails' | 'posters') => {
+  const handleSectionChange = useCallback((next: GallerySection) => {
     setSection(next);
     try {
       localStorage.setItem('thumbfeed_section', next);
@@ -107,8 +107,7 @@ export default function HomePage() {
     setFilters(prev => ({
       ...prev,
       selectedNiche: 'All',
-      selectedStyles: [],
-      selectedColors: [],
+          selectedColors: [],
       selectedEmotion: null,
     }));
   }, []);
@@ -158,7 +157,6 @@ export default function HomePage() {
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     selectedNiche: 'All',
-    selectedStyles: [],
     selectedColors: [],
     selectedEmotion: null,
     sortBy: 'random'
@@ -181,11 +179,10 @@ export default function HomePage() {
     section,
     search: debouncedSearch,
     niche: filters.selectedNiche,
-    styles: filters.selectedStyles,
-    colors: filters.selectedColors,
+      colors: filters.selectedColors,
     sort: filters.sortBy,
     seed: shuffleSeed,
-  }), [section, debouncedSearch, filters.selectedNiche, filters.selectedStyles, filters.selectedColors, filters.sortBy, shuffleSeed]);
+  }), [section, debouncedSearch, filters.selectedNiche, filters.selectedColors, filters.sortBy, shuffleSeed]);
 
   const gallery = useGallery(galleryKey);
   const facetsQuery = useGalleryFacets(section);
@@ -356,16 +353,14 @@ export default function HomePage() {
   const activeFilterCount =
     (filters.searchQuery.trim() ? 1 : 0) +
     (filters.selectedNiche !== 'All' ? 1 : 0) +
-    filters.selectedStyles.length +
-    filters.selectedColors.length +
+        filters.selectedColors.length +
     (filters.selectedEmotion ? 1 : 0);
 
   const resetFilters = useCallback(() => {
     setFilters({
       searchQuery: '',
       selectedNiche: 'All',
-      selectedStyles: [],
-      selectedColors: [],
+          selectedColors: [],
       selectedEmotion: null,
       sortBy: 'random'
     });
@@ -428,45 +423,38 @@ export default function HomePage() {
         activeFilterCount={activeFilterCount}
         onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
         section={section}
+        isDetailView={showCardInfo}
+        onToggleDetailView={handleToggleCardInfo}
       />
 
-      <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-3 sm:px-6 lg:px-8">
-        {/* Library section switcher, sort and view controls */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <SlidingTabs
-            items={[
-              { key: 'thumbnails', label: 'Thumbnails', icon: IconImage },
-              { key: 'posters', label: 'Posters', icon: IconFilm },
-            ]}
-            value={section}
-            onChange={handleSectionChange}
-            role="tablist"
-            ariaLabel="Library section"
-          />
+      {/* Library switcher: docked at the bottom, out of the reading column. */}
+      <BottomSectionPill section={section} onChange={handleSectionChange} />
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {section === 'thumbnails' && (
-              <ViewModeToggle isDetail={showCardInfo} onToggle={handleToggleCardInfo} />
-            )}
-          </div>
-        </div>
-
+      <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 pb-28 pt-3 sm:px-6 lg:px-8">
         {galleryTotal === 0 && !gallery.isLoading ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface">
               {section === 'posters' ? (
                 <IconFilm className="h-4 w-4 text-ink-faint" />
+              ) : section === 'uploads' ? (
+                <IconUpload className="h-4 w-4 text-ink-faint" />
               ) : (
                 <IconImage className="h-4 w-4 text-ink-faint" />
               )}
             </div>
             <p className="mt-4 text-sm font-medium text-ink">
-              {section === 'thumbnails' ? 'No thumbnails in vault' : 'No posters found'}
+              {section === 'thumbnails'
+                ? 'No thumbnails in vault'
+                : section === 'uploads'
+                  ? 'No uploads yet'
+                  : 'No posters found'}
             </p>
             <p className="mt-1 max-w-[34ch] text-sm text-ink-muted">
               {section === 'thumbnails'
                 ? 'All previous thumbnails have been cleared. Upload or extract YouTube links to add new thumbnails.'
-                : 'No posters match your current search or filters. Upload or import new posters.'}
+                : section === 'uploads'
+                  ? 'Images you add from the Add button land here, kept apart from the imported feed.'
+                  : 'No posters match your current search or filters. Upload or import new posters.'}
             </p>
             <button
               onClick={resetFilters}
@@ -550,7 +538,9 @@ export default function HomePage() {
           onClose={() => setIsAddOpen(false)}
           onAddThumbnail={handleAddThumbnail}
           onAddMultipleThumbnails={handleAddMultipleThumbnails}
-          initialMediaKind={section === 'posters' ? 'poster' : 'thumbnail'}
+          initialMediaKind={
+            section === 'posters' ? 'poster' : section === 'uploads' ? 'custom' : 'thumbnail'
+          }
         />
       )}
 

@@ -23,7 +23,7 @@ function getSupabase(): any {
 
 interface UploadItemPayload {
   id?: string;
-  kind?: 'thumbnail' | 'poster';
+  kind?: 'thumbnail' | 'poster' | 'custom';
   videoId?: string;
   imageUrl: string;
   sourceUrl?: string;
@@ -31,10 +31,16 @@ interface UploadItemPayload {
   creator?: string;
   niche?: string;
   tags?: string[];
-  styles?: string[];
   views?: string;
   viewsEstimate?: string;
   publishedTime?: string;
+}
+
+/** Custom uploads live under their own storage prefix and source value. */
+import { CUSTOM_ID_PREFIX, CUSTOM_SOURCE } from '@/lib/customUploads';
+
+function isCustomItem(item: UploadItemPayload): boolean {
+  return item.kind === 'custom' || String(item.id || '').startsWith(CUSTOM_ID_PREFIX);
 }
 
 function sanitizeFilename(title: string, videoId: string): string {
@@ -162,7 +168,10 @@ export async function POST(req: NextRequest) {
       const chunk = items.slice(i, i + CONCURRENCY);
       await Promise.all(chunk.map(async (item) => {
         try {
-        const isPoster = item.kind === 'poster' || item.id?.startsWith('poster-') || item.niche === 'Cinema';
+        const isCustom = isCustomItem(item);
+        const isPoster =
+          !isCustom &&
+          (item.kind === 'poster' || item.id?.startsWith('poster-') || item.niche === 'Cinema');
         const vId = item.videoId || item.id?.replace(/^.*-/, '') || (isPoster ? 'poster' : 'thumb');
         const cleanTitle = (item.title || (isPoster ? 'poster' : 'thumb'))
           .replace(/[^a-zA-Z0-9_\-\s]/g, '')
@@ -171,10 +180,13 @@ export async function POST(req: NextRequest) {
           .slice(0, 40) || (isPoster ? 'poster' : 'thumb');
         const randSuffix = Math.random().toString(36).slice(2, 7);
 
-        // Store posters under the 'posters/' directory inside the Supabase Storage 'Thumbnails' bucket
-        const storagePath = isPoster
-          ? `posters/poster_${Date.now()}_${cleanTitle}_${randSuffix}.jpg`
-          : sanitizeFilename(item.title || 'Thumbnail', vId);
+        // Posters and custom uploads each get their own directory inside the
+        // 'Thumbnails' bucket so the two never collide with imported rows.
+        const storagePath = isCustom
+          ? `uploads/upload_${Date.now()}_${cleanTitle}_${randSuffix}.jpg`
+          : isPoster
+            ? `posters/poster_${Date.now()}_${cleanTitle}_${randSuffix}.jpg`
+            : sanitizeFilename(item.title || 'Thumbnail', vId);
 
         let finalPublicUrl = item.imageUrl;
         let thumbSmallUrl: string | null = null;
@@ -256,31 +268,43 @@ export async function POST(req: NextRequest) {
         }
 
         // Upsert record into Supabase database table 'thumbnails'
-        const assignedId = isPoster
-          ? (item.id && item.id.startsWith('poster-') ? item.id : `poster-${Date.now()}-${randSuffix}`)
-          : (item.id || (item.videoId ? `thumb-yt-${item.videoId}` : `thumb-storage-${vId}`));
+        const assignedId = isCustom
+          ? (item.id && item.id.startsWith(CUSTOM_ID_PREFIX) ? item.id : `${CUSTOM_ID_PREFIX}${Date.now()}-${randSuffix}`)
+          : isPoster
+            ? (item.id && item.id.startsWith('poster-') ? item.id : `poster-${Date.now()}-${randSuffix}`)
+            : (item.id || (item.videoId ? `thumb-yt-${item.videoId}` : `thumb-storage-${vId}`));
 
         let dbSaved = false;
         try {
           const viewsValue = item.views || item.viewsEstimate || null;
-          const baseNote = isPoster ? 'Uploaded movie poster.' : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
+          const baseNote = isPoster
+            ? 'Uploaded movie poster.'
+            : isCustom
+              ? 'Custom upload.'
+              : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
           const notes = withDimensions(baseNote, dimensions?.width, dimensions?.height);
           const record = {
             id: assignedId,
-            title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
-            creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
+            title: item.title || (isPoster ? 'Movie Poster' : isCustom ? 'Upload' : 'Thumbnail'),
+            creator: item.creator || (isPoster ? 'Cinema' : isCustom ? 'My Uploads' : 'YouTube Creator'),
             image_url: finalPublicUrl,
             source_url: item.sourceUrl || finalPublicUrl,
             niche: isPoster ? 'Cinema' : (item.niche || ''),
-            styles: item.styles || [],
-            tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : (item.niche ? [item.niche] : [])),
+            tags:
+              item.tags && item.tags.length > 0
+                ? item.tags
+                : isPoster
+                  ? ['Movie Poster', 'Cinema']
+                  : isCustom
+                    ? (item.niche ? [item.niche] : [])
+                    : (item.niche ? [item.niche] : []),
             colors,
             // Null when the small variant failed, so an older row's stale
             // value is cleared rather than left pointing at a deleted object.
             thumb_small_url: thumbSmallUrl,
             views_estimate: viewsValue,
             breakdown_notes: notes,
-            source: isPoster ? 'poster' : 'supabase-storage',
+            source: isPoster ? 'poster' : isCustom ? CUSTOM_SOURCE : 'supabase-storage',
             created_at: new Date().toISOString()
           };
 
@@ -297,7 +321,7 @@ export async function POST(req: NextRequest) {
         uploadedResults.push({
           id: assignedId,
           originalId: item.id,
-          kind: isPoster ? 'poster' : 'thumbnail',
+          kind: isPoster ? 'poster' : isCustom ? 'custom' : 'thumbnail',
           videoId: item.videoId,
           title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
           creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),

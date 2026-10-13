@@ -30,6 +30,38 @@ function storagePathFromUrl(imageUrl: string): string {
 }
 
 /**
+ * Server half of the local-development unlock in lib/authContext.
+ *
+ * On localhost the client grants admin through a synthetic LOCAL_DEV_USER,
+ * because Google sign-in refuses unauthorized origins and the project never
+ * listed localhost. That fake user cannot mint a Firebase ID token, so the
+ * admin check below would reject every delete on a dev machine even though the
+ * UI happily offers the button -- the two halves disagreed about what "admin"
+ * means and bulk delete simply never worked locally.
+ *
+ * This mirrors the client's conditions exactly and fails closed:
+ *   - NODE_ENV === 'development'  (false in any `next build` output)
+ *   - the request arrived on a loopback host
+ * A deployed build satisfies neither, so production keeps the real token check.
+ *
+ * The host header is attacker-controlled, so this is not a security boundary
+ * on its own -- it never needs to be. The dev server only listens on loopback
+ * and is not reachable from outside the machine.
+ */
+function isLocalDevRequest(req: NextRequest): boolean {
+  if (process.env.NODE_ENV !== 'development') return false;
+  const host = (req.headers.get('host') || '').toLowerCase().split(',')[0].trim();
+  return (
+    host === 'localhost' ||
+    host.startsWith('localhost:') ||
+    host === '127.0.0.1' ||
+    host.startsWith('127.0.0.1:') ||
+    host === '[::1]' ||
+    host.startsWith('[::1]:')
+  );
+}
+
+/**
  * Verify the caller's Firebase ID token server-side.
  *
  * The single-thumbnail delete route has no auth check at all; adding one only to
@@ -82,7 +114,9 @@ export async function POST(req: NextRequest) {
     }
     const name = category.trim();
 
-    const authError = await verifyAdmin(idToken);
+    // On a dev machine the caller is the synthetic local-dev admin and holds
+    // no real token, so the check is skipped there and only there.
+    const authError = isLocalDevRequest(req) ? null : await verifyAdmin(idToken);
     if (authError) {
       return NextResponse.json({ error: authError }, { status: 403 });
     }

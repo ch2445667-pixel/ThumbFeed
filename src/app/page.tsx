@@ -549,10 +549,19 @@ export default function HomePage() {
         isLoadingFacets={facetsQuery.isLoading}
         showCategories={section !== 'posters'}
         canDeleteCategories={isAdmin}
-        onCategoryDeleted={() => {
+        onCategoryDeleted={(_category, result) => {
           // Facet counts come from a ten-minute cache, so a deleted category
           // would keep showing its old total until it expires.
           facetsQuery.refetch();
+          // The tiles themselves come from the gallery query. Without this the
+          // pill vanished but every thumbnail it covered stayed on screen, so a
+          // successful delete looked like it had done nothing at all.
+          invalidateGallery();
+          const message = (result as { message?: string } | null)?.message;
+          if (message) {
+            setToastMessage(message);
+            window.setTimeout(() => setToastMessage(null), 6000);
+          }
         }}
       />
 

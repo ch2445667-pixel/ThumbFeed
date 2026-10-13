@@ -490,7 +490,11 @@ export default function HomePage() {
                     item={item}
                     index={index}
                     poster={false}
-                    showCardInfo={showCardInfo}
+                    // Uploads are a personal image shelf, so they render
+                    // image-only by default. The Details/Compact toggle is
+                    // scoped to the thumbnails wall, so this stays fixed
+                    // rather than following that wall's saved preference.
+                    showCardInfo={section === 'uploads' ? false : showCardInfo}
                     onInspect={handleInspect}
                     onDelete={isAdmin ? handleRequestDelete : undefined}
                   />

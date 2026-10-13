@@ -49,9 +49,8 @@ const config: Config = {
         // Legacy aliases retained so existing utilities resolve unchanged.
         background: "var(--background)",
         foreground: "var(--foreground)",
-        cream: "#E6E8EC",
-        white: "#E6E8EC",
-        espresso: "#0d0e10",
+        cream: "var(--cream)",
+        espresso: "var(--espresso)",
         brand: "var(--brand)",
       },
       fontFamily: {

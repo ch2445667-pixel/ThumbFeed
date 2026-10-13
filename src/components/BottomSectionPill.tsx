@@ -79,7 +79,7 @@ export const BottomSectionPill: React.FC<BottomSectionPillProps> = ({
           segments stay legible instead of wrapping into two rows, which would
           break the pill's single-slide geometry. */}
       <div
-        className="pointer-events-auto max-w-[calc(100vw-2rem)] overflow-x-auto overflow-y-hidden rounded-lg border border-line bg-surface shadow-elevated scrollbar-none"
+        className="pointer-events-auto max-w-[calc(100vw-2rem)] overflow-x-auto overflow-y-hidden rounded-lg border border-line bg-surface dark:bg-black dark:border-white/15 shadow-elevated scrollbar-none"
         role="group"
         aria-label="Library section"
       >

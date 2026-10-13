@@ -328,7 +328,9 @@ export async function POST(req: NextRequest) {
     }
 
     const results: Record<string, VideoDetail> = {};
-    const apiKey = (process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_DATA_API_KEY || '').trim();
+    const headerKey = req.headers.get('x-youtube-api-key') || '';
+    const bodyKey = typeof body?.apiKey === 'string' ? body.apiKey : '';
+    const apiKey = (headerKey || bodyKey || process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_DATA_API_KEY || '').trim();
 
     let idsToFallback = videoIds;
 
@@ -387,7 +389,9 @@ export async function GET(req: NextRequest) {
   }
 
   const results: Record<string, VideoDetail> = {};
-  const apiKey = (process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_DATA_API_KEY || '').trim();
+  const headerKey = req.headers.get('x-youtube-api-key') || '';
+  const queryKey = searchParams.get('apiKey') || '';
+  const apiKey = (headerKey || queryKey || process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_DATA_API_KEY || '').trim();
   let idsToFallback = videoIds;
 
   if (apiKey) {

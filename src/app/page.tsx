@@ -22,6 +22,7 @@ import {
   updateStoredThumbnail
 } from '../lib/storage';
 import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE, type GalleryPage, type GallerySection } from '../lib/useGallery';
+import { fetchMissingYouTubeDetails } from '../lib/youtubeMetadataCache';
 import { BottomSectionPill } from '../components/BottomSectionPill';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -212,6 +213,13 @@ export default function HomePage() {
   // and the seeded shuffle all happened server-side, so there is no second
   // client-side pass and paging can never reshuffle what is on screen.
   const filteredThumbnails = galleryItems;
+
+  // Proactively fetch YouTube metrics (views, upload date, channel) via YouTube Data API v3
+  useEffect(() => {
+    if (galleryItems.length > 0) {
+      fetchMissingYouTubeDetails(galleryItems);
+    }
+  }, [galleryItems]);
 
   // Shuffle Inspiration - shuffles all items on explicit user button click
   const handleShuffle = useCallback(() => {
@@ -460,7 +468,7 @@ export default function HomePage() {
             </p>
             <button
               onClick={resetFilters}
-              className="mt-5 cursor-pointer rounded-md bg-accent px-3.5 py-2 text-xs font-medium text-accent-on transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
+              className="mt-5 cursor-pointer rounded-md bg-black px-4 py-2 text-xs font-semibold text-white shadow-card transition-opacity duration-200 hover:opacity-90 active:scale-[0.98] dark:bg-black dark:text-white dark:border dark:border-white/15"
             >
               Reset filters
             </button>
@@ -510,7 +518,7 @@ export default function HomePage() {
                   type="button"
                   onClick={() => gallery.fetchNextPage()}
                   disabled={gallery.isFetchingNextPage}
-                  className="cursor-pointer rounded-md border border-line bg-surface px-4 py-2 text-xs font-medium text-ink shadow-card transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised active:scale-[0.98] disabled:opacity-60"
+                  className="cursor-pointer rounded-md bg-black px-4 py-2 text-xs font-semibold text-white shadow-card transition-all duration-200 hover:bg-black/85 active:scale-[0.98] disabled:opacity-60 dark:bg-black dark:text-white dark:border dark:border-white/15"
                 >
                   {gallery.isFetchingNextPage ? 'Loading…' : 'Load more'}
                 </button>

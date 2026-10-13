@@ -106,7 +106,7 @@ const SearchField: React.FC<SearchFieldProps> = ({
         </button>
       </span>
     ) : (
-      <kbd className="hidden shrink-0 items-center gap-0.5 rounded-sm border border-line bg-surface-sunken px-1.5 py-0.5 font-mono text-[10px] text-ink-faint lg:inline-flex">
+      <kbd className="hidden shrink-0 items-center gap-0.5 rounded-sm border border-black/30 bg-black px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white shadow-xs lg:inline-flex dark:border-white/20">
         <span>Ctrl</span>
         <span>K</span>
       </kbd>
@@ -226,7 +226,13 @@ export const TopBar: React.FC<TopBarProps> = ({
         />
 
         <div className="relative flex h-16 items-center justify-between gap-2 px-4 sm:px-6 lg:px-10">
-          <div className="pointer-events-auto flex min-w-0 shrink-0 items-center">
+          <div className="pointer-events-auto flex min-w-0 shrink-0 items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="grid h-7 w-7 select-none place-items-center rounded-md bg-black text-[11px] font-black tracking-wider text-[#56c565] shadow-xs dark:bg-black dark:text-[#56c565] dark:border dark:border-white/10"
+            >
+              TF
+            </span>
             <span className="font-brand select-none text-[19px] leading-none tracking-tight text-ink">
               Thumb<span className="text-ink-faint">Feed</span>
             </span>
@@ -315,7 +321,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={1.75} />
                 <span className="hidden sm:inline">Filter</span>
                 {activeFilterCount > 0 && (
-                  <span className="grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-on tabular">
+                  <span className="grid h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[10px] font-bold text-white tabular shadow-xs dark:bg-black dark:text-[#56c565] dark:border dark:border-white/10">
                     {activeFilterCount}
                   </span>
                 )}
@@ -341,7 +347,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                       ? 'Add to My Uploads'
                       : 'Add thumbnails'
                 }
-                className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-on shadow-card ease-spring transition-all duration-200 hover:opacity-90 active:scale-[0.94] active:opacity-100"
+                className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-black px-2.5 text-xs font-semibold text-white shadow-card ease-spring transition-all duration-200 hover:bg-black/85 active:scale-[0.94] dark:bg-black dark:text-white dark:border dark:border-white/15"
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2} />
                 <span className="hidden sm:inline">Add</span>

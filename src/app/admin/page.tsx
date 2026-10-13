@@ -51,6 +51,7 @@ export default function AdminPage() {
   const [ocrText, setOcrText] = useState('');
   const [breakdownNotes, setBreakdownNotes] = useState('');
   const [viewsEstimate, setViewsEstimate] = useState('1.5M');
+  const [publishedTime, setPublishedTime] = useState('');
   const [emotion, setEmotion] = useState<any>('Shocked');
 
   useEffect(() => {
@@ -75,8 +76,30 @@ export default function AdminPage() {
     const resolvedImageUrl = extractYoutubeThumbnail(inputUrl.trim());
     setPreviewImage(resolvedImageUrl);
 
-    // Categories come from a human reading the title. There is no automatic
-    // analyser: any value left blank here is filled in deliberately.
+    const matchWatch = inputUrl.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (matchWatch && matchWatch[1]) {
+      const videoId = matchWatch[1];
+      try {
+        const res = await fetch('/api/youtube/details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoIds: [videoId] }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const detail = data?.details?.[videoId];
+          if (detail) {
+            if (detail.title) setTitle(detail.title);
+            if (detail.creator && detail.creator !== 'Unknown') setCreator(detail.creator);
+            if (detail.views) setViewsEstimate(detail.views);
+            if (detail.publishedTime) setPublishedTime(detail.publishedTime);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch YouTube details in admin:', err);
+      }
+    }
+
     setIsAnalyzing(false);
   };
 
@@ -119,7 +142,9 @@ export default function AdminPage() {
       emotion,
       breakdownNotes,
       viewsEstimate,
-      source: 'upload',
+      publishedTime: publishedTime || undefined,
+      sourceUrl: inputUrl.startsWith('http') ? inputUrl : undefined,
+      source: inputUrl.includes('youtube.com') || inputUrl.includes('youtu.be') ? 'youtube' : 'upload',
       createdAt: new Date().toISOString(),
       likesCount: Math.floor(Math.random() * 500) + 100
     };
@@ -134,6 +159,8 @@ export default function AdminPage() {
     setVideoTitleInput('');
     setPreviewImage('');
     setTitle('');
+    setCreator('');
+    setPublishedTime('');
     setBreakdownNotes('');
     setOcrText('');
   };

@@ -139,12 +139,17 @@ export async function fetchMissingYouTubeDetails(
 
   // Fetch up to 30 at a time
   const batch = missingVideoIds.slice(0, 30);
+  const clientApiKey = typeof window !== 'undefined' ? localStorage.getItem('thumbfeed_youtube_api_key') || '' : '';
 
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (clientApiKey) {
+      headers['x-youtube-api-key'] = clientApiKey;
+    }
     const res = await fetch('/api/youtube/details', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoIds: batch }),
+      headers,
+      body: JSON.stringify({ videoIds: batch, apiKey: clientApiKey || undefined }),
     });
 
     if (res.ok) {
@@ -168,6 +173,9 @@ export async function fetchMissingYouTubeDetails(
         }
       }
       saveToStorage();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('thumbfeed_yt_cache_updated'));
+      }
     }
   } catch (err) {
     console.warn('Failed to fetch missing YouTube details:', err);

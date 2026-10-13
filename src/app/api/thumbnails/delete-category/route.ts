@@ -101,8 +101,8 @@ async function verifyAdmin(idToken: string): Promise<string | null> {
  * "Drop the category" has no column of its own: a category is just a value that
  * appears in the tags array (or the niche column), so removing it means
  * stripping it from every row that still holds it rather than deleting a
- * dictionary row. A row tagged only with that category keeps its image and
- * loses the tag.
+ * dictionary row. A row left with no other category is removed outright,
+ * since a thumbnail with nowhere to belong has no place in the library.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -173,8 +173,13 @@ export async function POST(req: NextRequest) {
     for (const row of rows) {
       const tags = Array.isArray(row.tags) ? row.tags : [];
       const remaining = tags.filter((t) => !matches(t));
-      const nicheStillMatches = matches(row.niche || '');
-      if (remaining.length === 0 && !nicheStillMatches) {
+      // The niche only keeps the row alive when it holds a *different*
+      // category. A niche equal to the deleted category is itself stripped
+      // below (falling back to the first surviving tag), so it must not count
+      // as a survivor -- otherwise a row whose sole category is this one ends
+      // up tagless and nicheless, orphaned in the library instead of removed.
+      const nicheKeepsRow = !!row.niche && !matches(row.niche);
+      if (remaining.length === 0 && !nicheKeepsRow) {
         toDelete.push(row);
       } else {
         toStrip.push({ ...row, tags: remaining });

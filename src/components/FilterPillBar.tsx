@@ -156,12 +156,44 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   }, [categoryCounts]);
 
   // Dismiss on Escape or outside click while open.
+  //
+  // The bulk-delete confirm is portaled to document.body, outside the panel
+  // element. A mousedown inside it still bubbles to this document listener,
+  // and mousedown fires before click -- so without the guard below, pressing
+  // the dialog's own "Delete category" button first closed the whole panel,
+  // unmounting the button before its click could fire. The confirm never ran,
+  // pendingDelete stayed set, and reopening the panel showed the dialog again:
+  // an infinite loop in which nothing was ever deleted. Synthetic
+  // element.click() testing never caught it because it dispatches click with
+  // no preceding mousedown.
   useEffect(() => {
     if (!isVisible) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Escape') return;
+      // Escape dismisses the dialog first; the panel only once it is gone.
+      // Nothing may be dismissed while a delete is in flight.
+      if (pendingDelete) {
+        if (!isDeletingCategory) {
+          setPendingDelete(null);
+          setCategoryError(null);
+        }
+        return;
+      }
+      onClose();
     };
     const onPointer = (e: MouseEvent) => {
+      const target = e.target as Element | null;
+      // Clicks inside the confirm dialog belong to the dialog, never here.
+      if (target && typeof target.closest === 'function' && target.closest('[role="alertdialog"]')) return;
+      if (pendingDelete) {
+        // A dialog is open: an outside click dismisses the dialog and keeps
+        // the panel, so the next open starts clean instead of re-asking.
+        if (!isDeletingCategory) {
+          setPendingDelete(null);
+          setCategoryError(null);
+        }
+        return;
+      }
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -172,7 +204,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
       window.removeEventListener('keydown', onKey);
       document.removeEventListener('mousedown', onPointer);
     };
-  }, [isVisible, onClose]);
+  }, [isVisible, onClose, pendingDelete, isDeletingCategory]);
 
   if (!isVisible) return null;
 
@@ -198,6 +230,9 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   // through the confirm dialog below rather than firing on the click.
   const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    // A previous attempt may have left an error behind; a fresh dialog starts
+    // clean rather than showing a stale failure for a new category.
+    setCategoryError(null);
     setPendingDelete(cat);
   };
 

@@ -227,12 +227,6 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         <div className="relative flex h-16 items-center justify-between gap-2 px-4 sm:px-6 lg:px-10">
           <div className="pointer-events-auto flex min-w-0 shrink-0 items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="grid h-7 w-7 select-none place-items-center rounded-md bg-black text-[11px] font-black tracking-wider text-[#56c565] shadow-xs dark:bg-black dark:text-[#56c565] dark:border dark:border-white/10"
-            >
-              TF
-            </span>
             <span className="font-brand select-none text-[19px] leading-none tracking-tight text-ink">
               Thumb<span className="text-ink-faint">Feed</span>
             </span>

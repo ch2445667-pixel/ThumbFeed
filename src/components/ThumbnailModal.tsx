@@ -157,7 +157,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   rel="noreferrer"
                   download="thumbnail.jpg"
                   title="Download HD Image"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold bg-[#0d0e10] text-[#E6E8EC] dark:bg-[#E6E8EC] dark:text-[#0d0e10] hover:opacity-90 shadow-xs active:scale-[0.96] transition-all duration-150 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold bg-accent text-accent-on hover:opacity-90 shadow-xs active:scale-[0.96] transition-all duration-150 cursor-pointer"
                 >
                   <IconDownload className="w-4 h-4" />
                   <span className="hidden sm:inline">Download</span>
@@ -169,7 +169,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                     type="button"
                     onClick={() => setIsConfirmingDelete(true)}
                     title="Delete permanently from database"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold text-[#0d0e10] dark:text-[#D8DBE0] bg-[#E6E8EC]/40 dark:bg-[#E6E8EC]/10 hover:bg-[#E6E8EC] border border-[#0d0e10]/20 dark:border-[#D8DBE0]/30 shadow-xs active:scale-[0.96] transition-all duration-150 cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold text-ink bg-surface-raised border border-line shadow-xs hover:border-line-strong active:scale-[0.96] transition-all duration-150 cursor-pointer"
                   >
                     <IconTrash className="w-4 h-4" />
                     <span className="hidden sm:inline">Delete</span>

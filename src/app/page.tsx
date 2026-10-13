@@ -424,7 +424,9 @@ export default function HomePage() {
         onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
         section={section}
         isDetailView={showCardInfo}
-        onToggleDetailView={handleToggleCardInfo}
+        // Only the thumbnail grid has a metadata footer to toggle. Posters and
+        // uploads have no title/creator block, so the control would be inert.
+        onToggleDetailView={section === 'thumbnails' ? handleToggleCardInfo : undefined}
       />
 
       {/* Library switcher: docked at the bottom, out of the reading column. */}
@@ -526,9 +528,11 @@ export default function HomePage() {
         onResetFilters={resetFilters}
         onClose={() => setIsFilterBarOpen(false)}
         categoryCounts={categoryCounts}
-        colorLibrary={section === 'thumbnails' ? colorLibrary : []}
+        // Posters carry no category or colour taxonomy, so they hide both sections.
+        // Thumbnails and uploads both have real values to filter on.
+        colorLibrary={section === 'posters' ? [] : colorLibrary}
         resultCount={galleryTotal}
-        showCategories={section === 'thumbnails'}
+        showCategories={section !== 'posters'}
         canDeleteCategories={isAdmin}
         onCategoryDeleted={() => {
           // Facet counts come from a ten-minute cache, so a deleted category

@@ -558,7 +558,12 @@ export const AddModal: React.FC<AddModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setMediaKind(initialMediaKind);
+      // Posters have no YouTube tab and My Uploads has no Pinterest tab, so a
+      // tab left selected by the previous section may not exist here.
       if (initialMediaKind === 'poster' && activeTab === 'youtube') {
+        setActiveTab('upload');
+      }
+      if (initialMediaKind === 'custom' && activeTab === 'pinterest') {
         setActiveTab('upload');
       }
     } else {
@@ -1249,18 +1254,26 @@ export const AddModal: React.FC<AddModalProps> = ({
     setIsUploadingToCloud(true);
     setCloudError('');
     const isPoster = mediaKind === 'poster';
-    setUploadStatusText(`Saving ${uniqueItems.length} ${isPoster ? 'posters' : 'thumbnails'} to cloud...`);
+    const isCustomKind = mediaKind === 'custom';
+    const unitLabel = isPoster ? 'posters' : isCustomKind ? 'uploads' : 'thumbnails';
+    setUploadStatusText(`Saving ${uniqueItems.length} ${unitLabel} to cloud...`);
 
     let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
       const chosenCategories = item.tags || [];
-      const assignedId = isPoster
-        ? `poster-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`
-        : (item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`));
+      // A YouTube import carries a videoId, which would otherwise mint a
+      // thumb-yt-* id identical to the batch importer's -- colliding with the
+      // imported feed and leaving the row out of My Uploads entirely. Custom
+      // rows always get their own upload- prefix.
+      const assignedId = isCustomKind
+        ? (item.id && item.id.startsWith('upload-') ? item.id : `upload-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`)
+        : isPoster
+          ? `poster-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`
+          : (item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`));
       return {
         id: assignedId,
         kind: mediaKind,
         title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
-        creator: item.creator || (isPoster ? 'Cinema' : 'Creator'),
+        creator: item.creator || (isPoster ? 'Cinema' : isCustomKind ? 'My Uploads' : 'Creator'),
         imageUrl: item.imageUrl,
         sourceUrl: item.url,
         niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
@@ -1268,7 +1281,11 @@ export const AddModal: React.FC<AddModalProps> = ({
         colors: [],
         ocrText: '',
         emotion: 'Curious',
-        breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Auto-extracted inspiration thumbnail.',
+        breakdownNotes: isPoster
+          ? 'Uploaded movie poster.'
+          : isCustomKind
+            ? 'Custom upload.'
+            : 'Auto-extracted inspiration thumbnail.',
         viewsEstimate: item.views,
         publishedTime: item.publishedTime,
         source: 'supabase-storage',
@@ -1289,7 +1306,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           imageUrl: item.imageUrl,
           sourceUrl: item.url,
           title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
-          creator: item.creator || (isPoster ? 'Cinema' : 'Creator'),
+          creator: item.creator || (isPoster ? 'Cinema' : isCustomKind ? 'My Uploads' : 'Creator'),
           niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
           tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
           views: item.views,
@@ -1407,11 +1424,15 @@ export const AddModal: React.FC<AddModalProps> = ({
               <IconPlus className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-ink tracking-tight">Add {mediaKind === 'poster' ? 'Posters' : 'Thumbnails'}</h2>
+              <h2 className="font-bold text-sm text-ink tracking-tight">
+                Add {mediaKind === 'poster' ? 'Posters' : mediaKind === 'custom' ? 'to My Uploads' : 'Thumbnails'}
+              </h2>
               <p className="text-[11px] text-ink-muted">
                 {mediaKind === 'poster'
                   ? 'Import movie posters from files, clipboard or Pinterest'
-                  : 'Import from files, clipboard paste, YouTube, or Pinterest'}
+                  : mediaKind === 'custom'
+                    ? 'Add from files, clipboard paste, or YouTube. Saved to My Uploads.'
+                    : 'Import from files, clipboard paste, YouTube, or Pinterest'}
               </p>
             </div>
           </div>
@@ -1448,10 +1469,13 @@ export const AddModal: React.FC<AddModalProps> = ({
                 aria-selected={mediaKind === key}
                 onClick={() => {
                   setMediaKind(key);
-                  // YouTube and Pinterest both resolve to a public thumbnail
-                  // URL for an existing video, which is not the user's own
-                  // image, so neither applies to the uploads wall.
-                  if (key !== 'thumbnail' && activeTab !== 'upload') setActiveTab('upload');
+                  // Posters have no YouTube source, so the tab is hidden there;
+                  // leaving it selected would show a body with no tab. My
+                  // Uploads keeps YouTube and only drops Pinterest.
+                  if (key === 'poster' && activeTab === 'youtube') setActiveTab('upload');
+                  if (key !== 'poster' && activeTab === 'pinterest' && mediaKind === 'custom') {
+                    setActiveTab('upload');
+                  }
                 }}
                 className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
                   mediaKind === key
@@ -1498,8 +1522,11 @@ export const AddModal: React.FC<AddModalProps> = ({
               )}
             </button>
 
-            {/* YouTube has no posters, so this source only applies to thumbnails */}
-            {mediaKind === 'thumbnail' && (
+            {/* YouTube has no posters, so it does not apply there. On My Uploads it
+                takes Pinterest's place: both resolve to an existing public
+                thumbnail URL, and Pinterest is the one source that would
+                import art into what is meant to be your own wall. */}
+            {mediaKind !== 'poster' && (
             <button
               type="button"
               id="tab-youtube-import"
@@ -1515,6 +1542,8 @@ export const AddModal: React.FC<AddModalProps> = ({
             </button>
             )}
 
+            {/* Pinterest is not offered on My Uploads; YouTube takes that slot. */}
+            {mediaKind !== 'custom' && (
             <button
               type="button"
               id="tab-pinterest-import"
@@ -1528,6 +1557,7 @@ export const AddModal: React.FC<AddModalProps> = ({
               <IconPinterest className="w-3.5 h-3.5" />
               <span>Pinterest</span>
             </button>
+            )}
           </div>
         </div>
 

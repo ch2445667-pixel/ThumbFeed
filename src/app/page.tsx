@@ -529,6 +529,12 @@ export default function HomePage() {
         colorLibrary={section === 'thumbnails' ? colorLibrary : []}
         resultCount={galleryTotal}
         showCategories={section === 'thumbnails'}
+        canDeleteCategories={isAdmin}
+        onCategoryDeleted={() => {
+          // Facet counts come from a ten-minute cache, so a deleted category
+          // would keep showing its old total until it expires.
+          facetsQuery.refetch();
+        }}
       />
 
       {/* Add Modal with Automatic Color Palette & Tag Extraction (Only accessible by owner) */}

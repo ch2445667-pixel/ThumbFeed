@@ -1,11 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   IconClose,
   IconRotateCcw,
-  IconPlus
+  IconPlus,
+  IconTrash
 } from './icons/AppIcons';
+import { auth } from '../lib/firebase';
+
+/** Fresh Firebase ID token for the server-side admin check. */
+async function getAuthToken(): Promise<string> {
+  const user = auth.currentUser;
+  if (!user) return '';
+  try {
+    return await user.getIdToken();
+  } catch {
+    return '';
+  }
+}
 import { NicheCategory, FilterState, ThumbnailItem } from '../lib/types';
 import { COLOR_FAMILY_ORDER, familiesForItem, familyOfHex, type ColorFamily } from '../lib/colorFamilies';
 import {
@@ -40,6 +54,10 @@ interface FilterPillBarProps {
   resultCount?: number;
   // The posters wall has no niche taxonomy, so its category section hides.
   showCategories?: boolean;
+  /** Owner only. Reveals the per-category bulk delete control. */
+  canDeleteCategories?: boolean;
+  /** Lets the page refresh its facet counts once a category is removed. */
+  onCategoryDeleted?: (category: string, result: unknown) => void;
 }
 
 /**
@@ -104,8 +122,13 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   colorLibrary = [],
   resultCount = 0,
   showCategories = true,
+  canDeleteCategories = false,
+  onCategoryDeleted,
 }) => {
   const [categories, setCategories] = useState<string[]>(['All']);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newCatInput, setNewCatInput] = useState('');
@@ -166,6 +189,43 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
     removeCustomCategory(cat);
     if (filters.selectedNiche === cat) {
       onSelectCategory('All');
+    }
+  };
+
+  // Bulk category delete is destructive and irreversible, so it always goes
+  // through the confirm dialog below rather than firing on the click.
+  const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPendingDelete(cat);
+  };
+
+  const confirmDeleteCategory = async () => {
+    const cat = pendingDelete;
+    if (!cat) return;
+    setIsDeletingCategory(true);
+    setCategoryError(null);
+    try {
+      const token = await getAuthToken();
+      const res = await fetch('/api/thumbnails/delete-category', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: cat, idToken: token }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCategoryError(json.error || `Delete failed (HTTP ${res.status}).`);
+        return;
+      }
+      // A locally added category also has to disappear from this browser's
+      // list, otherwise the pill lingers with no rows behind it.
+      removeCustomCategory(cat);
+      if (filters.selectedNiche === cat) onSelectCategory('All');
+      setPendingDelete(null);
+      onCategoryDeleted?.(cat, json);
+    } catch (err) {
+      setCategoryError(err instanceof Error ? err.message : 'Delete failed');
+    } finally {
+      setIsDeletingCategory(false);
     }
   };
 
@@ -252,7 +312,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                   type="button"
                   onClick={() => onSelectCategory(cat)}
                   aria-pressed={isSelected}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors duration-150 active:scale-[0.97] ${
+                  className={`group/cat flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors duration-150 active:scale-[0.97] ${
                     isSelected
                       ? 'border-transparent bg-accent text-accent-on shadow-card'
                       : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
@@ -278,6 +338,26 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                       className="grid h-4 w-4 cursor-pointer place-items-center rounded-full text-xs leading-none opacity-60 hover:bg-black/15 hover:opacity-100 dark:hover:bg-[#E6E8EC]/20"
                     >
                       &times;
+                    </span>
+                  )}
+                  {/* Owner-only: strips the category from the whole library.
+                      Thumbnails left with no other category are removed. */}
+                  {canDeleteCategories && cat !== 'All' && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Delete category ${cat} and its thumbnails`}
+                      onClick={(e) => handleDeleteCategory(cat, e)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleDeleteCategory(cat, e as unknown as React.MouseEvent);
+                        }
+                      }}
+                      title={`Delete "${cat}" and every thumbnail carrying it`}
+                      className="grid h-4 w-4 cursor-pointer place-items-center rounded-full text-ink-faint opacity-0 transition-opacity hover:bg-danger-soft hover:text-danger focus-visible:opacity-100 group-hover/cat:opacity-100 group-hover/cat:hover:opacity-100"
+                    >
+                      <IconTrash className="h-3 w-3" />
                     </span>
                   )}
                 </button>
@@ -368,6 +448,72 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
           Show {resultCount} {resultCount === 1 ? 'result' : 'results'}
         </button>
       </div>
+
+      {/* Bulk category delete confirm. Portal-rendered: the panel is nested in
+          transformed ancestors that would become its containing block. */}
+      {pendingDelete &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => !isDeletingCategory && setPendingDelete(null)}
+              aria-hidden="true"
+            />
+            <div
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="delete-category-title"
+              className="relative z-10 w-full max-w-sm overflow-hidden rounded-lg border border-line bg-surface p-5 shadow-elevated"
+            >
+              <div className="flex items-start gap-3">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-danger-line bg-danger-soft text-danger">
+                  <IconTrash className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 id="delete-category-title" className="text-sm font-bold text-ink">
+                    Delete &ldquo;{pendingDelete}&rdquo;?
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                    {categoryCounts[pendingDelete] ?? 0} thumbnail
+                    {(categoryCounts[pendingDelete] ?? 0) === 1 ? '' : 's'} carry this
+                    category. Those with no other category are deleted for good, including
+                    their images; the rest simply lose the tag.
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-faint">
+                    This cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              {categoryError && (
+                <p className="mt-3 rounded-md border border-danger-line bg-danger-soft px-2.5 py-2 text-[11px] text-danger">
+                  {categoryError}
+                </p>
+              )}
+
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPendingDelete(null)}
+                  disabled={isDeletingCategory}
+                  className="flex-1 cursor-pointer rounded-md border border-line bg-surface px-3 py-2 text-xs font-semibold text-ink transition-colors hover:bg-surface-raised disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteCategory}
+                  disabled={isDeletingCategory}
+                  className="flex-1 cursor-pointer rounded-md bg-danger px-3 py-2 text-xs font-semibold text-on-danger transition-opacity hover:opacity-90 disabled:opacity-60"
+                >
+                  {isDeletingCategory ? 'Deleting…' : 'Delete category'}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

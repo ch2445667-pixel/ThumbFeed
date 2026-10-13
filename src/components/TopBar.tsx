@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, X, AlertCircle, Search, Info, ShieldCheck, FileText, Minus, Plus, Shuffle, SlidersHorizontal } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { ThemeColorEditor } from './ThemeColorEditor';
 import { ViewModeToggle } from './ViewModeToggle';
 import { useAuth } from '../lib/authContext';
 
@@ -350,7 +349,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
 
             <ThemeToggle />
-            <ThemeColorEditor />
 
             {!loading && !user && (
               <button

@@ -432,9 +432,7 @@ export default function HomePage() {
         onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
         section={section}
         isDetailView={showCardInfo}
-        // Only the thumbnail grid has a metadata footer to toggle. Posters and
-        // uploads have no title/creator block, so the control would be inert.
-        onToggleDetailView={section === 'thumbnails' ? handleToggleCardInfo : undefined}
+        onToggleDetailView={handleToggleCardInfo}
       />
 
       {/* Library switcher: docked at the bottom, out of the reading column. */}
@@ -498,11 +496,7 @@ export default function HomePage() {
                     item={item}
                     index={index}
                     poster={false}
-                    // Uploads are a personal image shelf, so they render
-                    // image-only by default. The Details/Compact toggle is
-                    // scoped to the thumbnails wall, so this stays fixed
-                    // rather than following that wall's saved preference.
-                    showCardInfo={section === 'uploads' ? false : showCardInfo}
+                    showCardInfo={showCardInfo}
                     onInspect={handleInspect}
                     onDelete={isAdmin ? handleRequestDelete : undefined}
                   />
@@ -540,20 +534,9 @@ export default function HomePage() {
         onResetFilters={resetFilters}
         onClose={() => setIsFilterBarOpen(false)}
         categoryCounts={categoryCounts}
-        // Posters carry no category or colour taxonomy, so they hide both sections.
-        // Thumbnails and uploads both have real values to filter on.
-        colorLibrary={section === 'posters' ? [] : colorLibrary}
+        colorLibrary={section === 'thumbnails' ? colorLibrary : []}
         resultCount={galleryTotal}
-        // Facet counts walk the whole wall before they arrive, so the panel
-        // can open with nothing in it. Say so rather than rendering an empty bar.
-        isLoadingFacets={facetsQuery.isLoading}
-        showCategories={section !== 'posters'}
-        canDeleteCategories={isAdmin}
-        onCategoryDeleted={() => {
-          // Facet counts come from a ten-minute cache, so a deleted category
-          // would keep showing its old total until it expires.
-          facetsQuery.refetch();
-        }}
+        showCategories={section === 'thumbnails'}
       />
 
       {/* Add Modal with Automatic Color Palette & Tag Extraction (Only accessible by owner) */}

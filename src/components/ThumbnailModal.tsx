@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Pencil, Check, X as XIcon, Eye, Calendar, ExternalLink, User } from 'lucide-react';
 import { IconClose, IconDownload, IconTrash } from './icons/AppIcons';
 import { ThumbnailItem } from '../lib/types';
-import { getCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
+import { getCachedYouTubeDetail, fetchMissingYouTubeDetails } from '../lib/youtubeMetadataCache';
 
 interface ThumbnailModalProps {
   item: ThumbnailItem | null;
@@ -23,12 +23,29 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState('');
+  const [cachedYT, setCachedYT] = useState<ReturnType<typeof getCachedYouTubeDetail>>(null);
 
   // Reset transient state whenever a new item is selected or closed
   useEffect(() => {
     setIsConfirmingDelete(false);
     setIsEditingTitle(false);
     setDraftTitle('');
+    if (item) {
+      setCachedYT(getCachedYouTubeDetail(item));
+      fetchMissingYouTubeDetails([item]);
+    } else {
+      setCachedYT(null);
+    }
+  }, [item]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      if (item) {
+        setCachedYT(getCachedYouTubeDetail(item));
+      }
+    };
+    window.addEventListener('thumbfeed_yt_cache_updated', handleUpdate);
+    return () => window.removeEventListener('thumbfeed_yt_cache_updated', handleUpdate);
   }, [item]);
 
   // Close on Escape key. While editing, Escape cancels the edit first.
@@ -88,7 +105,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
             exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             id="thumbnail-modal-content"
-            className="relative w-full max-w-4xl bg-[#D8DBE0] dark:bg-surface-raised border border-[#0d0e10]/15 dark:border-line rounded-[18px] shadow-[0_25px_50px_-12px_rgba(13,14,16,0.35)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95)] overflow-hidden z-10 my-auto flex flex-col p-4 sm:p-6 gap-3 gpu-layer"
+            className="relative w-full max-w-4xl bg-surface border border-line rounded-[18px] shadow-elevated overflow-hidden z-10 my-auto flex flex-col p-4 sm:p-6 gap-3 gpu-layer"
           >
             {/* Floating Close & Download Header */}
             <div className="flex items-center justify-between gap-2">
@@ -105,14 +122,14 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                       }}
                       aria-label="Edit video title"
                       maxLength={140}
-                      className="min-w-0 flex-1 rounded-[8px] border border-[#0d0e10]/30 dark:border-line-2 bg-transparent px-2 py-1 text-xs sm:text-sm font-semibold text-[#0d0e10] dark:text-ink outline-none"
+                      className="min-w-0 flex-1 rounded-[8px] border border-line bg-surface-raised px-2 py-1 text-xs sm:text-sm font-semibold text-ink outline-none"
                     />
                     <button
                       type="button"
                       onClick={handleSaveTitle}
                       title="Save title"
                       aria-label="Save title"
-                      className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-[8px] bg-accent text-accent-on hover:opacity-90 active:scale-95"
+                      className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-[8px] bg-accent text-on-accent hover:opacity-90 active:scale-95"
                     >
                       <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                     </button>
@@ -121,14 +138,14 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                       onClick={() => setIsEditingTitle(false)}
                       title="Cancel"
                       aria-label="Cancel editing"
-                      className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-[8px] text-[#0d0e10]/70 hover:bg-[#E6E8EC]/40 dark:text-ink-2 dark:hover:bg-[#E6E8EC]/10 active:scale-95"
+                      className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-[8px] text-ink-muted hover:bg-surface-raised active:scale-95"
                     >
                       <XIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
                     </button>
                   </>
                 ) : (
                   <>
-                    <h3 className="truncate text-xs sm:text-sm font-bold text-[#0d0e10] dark:text-ink">
+                    <h3 className="truncate text-xs sm:text-sm font-bold text-ink">
                       {item.title}
                     </h3>
                     {onEditTitle && (
@@ -140,7 +157,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                         }}
                         title="Edit title"
                         aria-label="Edit video title"
-                        className="grid h-6 w-6 shrink-0 cursor-pointer place-items-center rounded-[6px] text-[#0d0e10]/50 hover:bg-[#E6E8EC]/40 hover:text-[#0d0e10] dark:text-ink-3 dark:hover:bg-[#E6E8EC]/10 dark:hover:text-[#D8DBE0] active:scale-95"
+                        className="grid h-6 w-6 shrink-0 cursor-pointer place-items-center rounded-[6px] text-ink-faint hover:bg-surface-raised hover:text-ink active:scale-95"
                       >
                         <Pencil className="h-3 w-3" strokeWidth={2} />
                       </button>
@@ -157,7 +174,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   rel="noreferrer"
                   download="thumbnail.jpg"
                   title="Download HD Image"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold bg-accent text-accent-on hover:opacity-90 shadow-xs active:scale-[0.96] transition-all duration-150 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold bg-black text-white hover:bg-black/85 shadow-xs active:scale-[0.96] transition-all duration-150 cursor-pointer dark:bg-black dark:text-white dark:border dark:border-white/15"
                 >
                   <IconDownload className="w-4 h-4" />
                   <span className="hidden sm:inline">Download</span>
@@ -169,7 +186,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                     type="button"
                     onClick={() => setIsConfirmingDelete(true)}
                     title="Delete permanently from database"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold text-ink bg-surface-raised border border-line shadow-xs hover:border-line-strong active:scale-[0.96] transition-all duration-150 cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold text-ink bg-surface-raised hover:bg-surface-sunken border border-line shadow-xs active:scale-[0.96] transition-all duration-150 cursor-pointer"
                   >
                     <IconTrash className="w-4 h-4" />
                     <span className="hidden sm:inline">Delete</span>
@@ -180,7 +197,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   id="thumbnail-close-btn"
                   onClick={onClose}
                   title="Close"
-                  className="p-1.5 rounded-[10px] text-[#0d0e10]/70 hover:text-[#0d0e10] dark:text-ink-2 dark:hover:text-[#D8DBE0] bg-[#E6E8EC]/30 dark:bg-ink/10 hover:bg-[#E6E8EC] dark:hover:bg-[#E6E8EC]/20 border border-[#0d0e10]/15 dark:border-line active:scale-[0.94] transition-all duration-150 flex items-center justify-center cursor-pointer"
+                  className="p-1.5 rounded-[10px] text-ink-muted hover:text-ink bg-surface-raised hover:bg-surface-sunken border border-line active:scale-[0.94] transition-all duration-150 flex items-center justify-center cursor-pointer"
                 >
                   <IconClose className="w-5 h-5" />
                 </button>
@@ -191,17 +208,17 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
             {isConfirmingDelete && (
               <div
                 id="delete-confirmation-banner"
-                className="p-3 bg-[#E6E8EC]/60 dark:bg-surface-raised border border-[#0d0e10]/30 dark:border-line-2 rounded-[12px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150"
+                className="p-3 bg-surface-raised border border-line rounded-[12px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-150"
               >
                 <div className="flex items-start sm:items-center gap-2.5">
-                  <div className="p-1.5 rounded-full bg-[#0d0e10]/10 dark:bg-ink/20 text-[#0d0e10] dark:text-ink shrink-0">
+                  <div className="p-1.5 rounded-full bg-accent/15 text-ink shrink-0">
                     <IconTrash className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-[#0d0e10] dark:text-ink">
+                    <p className="text-xs font-bold text-ink">
                       Permanently delete from database?
                     </p>
-                    <p className="text-[11px] text-[#0d0e10]/80 dark:text-ink-2">
+                    <p className="text-[11px] text-ink-muted">
                       This thumbnail will be erased forever from PostgreSQL database and storage.
                     </p>
                   </div>
@@ -211,7 +228,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsConfirmingDelete(false)}
-                    className="px-3 py-1.5 rounded-[8px] text-xs font-semibold text-[#0d0e10] dark:text-ink hover:bg-[#E6E8EC]/40 dark:hover:bg-[#E6E8EC]/10 transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-[8px] text-xs font-semibold text-ink hover:bg-surface-sunken transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -219,7 +236,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                     id="confirm-delete-permanent-btn"
                     type="button"
                     onClick={handleConfirmDelete}
-                    className="px-3.5 py-1.5 rounded-[8px] text-xs font-bold bg-accent text-accent-on hover:opacity-90 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-[8px] text-xs font-bold text-white bg-danger hover:opacity-90 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                   >
                     <IconTrash className="w-3.5 h-3.5" />
                     <span>Delete Permanently</span>
@@ -229,7 +246,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
             )}
 
             {/* Thumbnail / Poster Image View */}
-            <div className={`relative w-full rounded-[14px] overflow-hidden bg-[#0d0e10]/10 dark:bg-black/60 border border-[#0d0e10]/20 dark:border-line shadow-inner flex items-center justify-center ${item.kind === 'poster' ? 'max-h-[78vh] py-1' : 'aspect-video bg-[#0d0e10]'}`}>
+            <div className={`relative w-full rounded-[14px] overflow-hidden bg-stage border border-line shadow-inner flex items-center justify-center ${item.kind === 'poster' ? 'max-h-[78vh] py-1' : 'aspect-video bg-stage'}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.imageUrl}
@@ -243,8 +260,8 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
 
             {/* Metadata Footer: Channel name with link, Views count, Upload date */}
             {(() => {
-              const cachedYT = getCachedYouTubeDetail(item);
-              const rawCreator = cachedYT?.creator || item.creator || '';
+              const currentYT = cachedYT || getCachedYouTubeDetail(item);
+              const rawCreator = currentYT?.creator || item.creator || '';
               const isTanzeeOrUnknown =
                 !rawCreator ||
                 rawCreator.trim() === '' ||
@@ -253,14 +270,14 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                 rawCreator.trim() === 'Unknown';
 
               const creatorName = isTanzeeOrUnknown ? null : rawCreator;
-              const rawViews = cachedYT?.views || item.viewsEstimate || '';
+              const rawViews = currentYT?.views || item.viewsEstimate || '';
               const viewsText = rawViews
                 ? rawViews.toLowerCase().includes('view')
                   ? rawViews
                   : `${rawViews} views`
                 : null;
-              const publishedDate = cachedYT?.publishedTime || item.publishedTime || null;
-              const subsText = cachedYT?.subscribers || item.subscribersCount || null;
+              const publishedDate = currentYT?.publishedTime || item.publishedTime || null;
+              const subsText = currentYT?.subscribers || item.subscribersCount || null;
               const isYouTube =
                 item.sourceUrl &&
                 (item.sourceUrl.includes('youtube.com') || item.sourceUrl.includes('youtu.be'));
@@ -270,27 +287,27 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
               }
 
               return (
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#0d0e10]/10 dark:border-line text-xs text-[#0d0e10]/80 dark:text-ink-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-line text-xs text-ink-muted">
                   <div className="flex flex-wrap items-center gap-2.5">
                     {creatorName && (
-                      <div className="flex items-center gap-1.5 font-semibold text-[#0d0e10] dark:text-ink">
+                      <div className="flex items-center gap-1.5 font-semibold text-ink">
                         <User className="w-3.5 h-3.5 opacity-70" />
                         <span>{creatorName}</span>
                       </div>
                     )}
                     {subsText && (
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#0d0e10]/5 dark:bg-ink/10 text-[11px] text-[#0d0e10]/70 dark:text-ink-2">
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-raised text-[11px] text-ink-muted">
                         <span>{subsText}</span>
                       </div>
                     )}
                     {viewsText && (
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#0d0e10]/5 dark:bg-ink/10 font-medium text-[#0d0e10] dark:text-ink">
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-raised font-medium text-ink">
                         <Eye className="w-3.5 h-3.5 opacity-70" />
                         <span>{viewsText}</span>
                       </div>
                     )}
                     {publishedDate && (
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#0d0e10]/5 dark:bg-ink/10 text-xs">
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-raised text-xs text-ink-muted">
                         <Calendar className="w-3.5 h-3.5 opacity-70" />
                         <span>{publishedDate}</span>
                       </div>
@@ -302,7 +319,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                       href={item.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs font-semibold text-[#0d0e10] dark:text-ink hover:underline ml-auto"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black text-white hover:bg-black/85 transition-colors text-xs font-semibold shadow-xs ml-auto dark:bg-black dark:text-emerald-300 dark:border dark:border-white/10"
                     >
                       <span>{isYouTube ? 'Watch on YouTube' : 'View Source'}</span>
                       <ExternalLink className="w-3.5 h-3.5" />

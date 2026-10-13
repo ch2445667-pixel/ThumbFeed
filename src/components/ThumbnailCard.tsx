@@ -42,16 +42,19 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   poster = false,
 }) => {
   const [mounted, setMounted] = React.useState(false);
+  const [cachedYT, setCachedYT] = React.useState<ReturnType<typeof getCachedYouTubeDetail>>(null);
 
   React.useEffect(() => {
     setMounted(true);
-  }, []);
+    setCachedYT(getCachedYouTubeDetail(item));
 
-  // Native lazy loading is cheaper than a per-card observer: the browser
-  // batches visibility tracking internally instead of running one
-  // IntersectionObserver per tile.
+    const handleUpdate = () => {
+      setCachedYT(getCachedYouTubeDetail(item));
+    };
 
-  const cachedYT = mounted ? getCachedYouTubeDetail(item) : null;
+    window.addEventListener('thumbfeed_yt_cache_updated', handleUpdate);
+    return () => window.removeEventListener('thumbfeed_yt_cache_updated', handleUpdate);
+  }, [item]);
 
   // Normalize creator: if missing, 'TanzeelGFX', 'tanzeegfx', or 'YouTube Creator', display 'Unknown'
   const rawCreator = cachedYT?.creator || item.creator || '';
@@ -114,13 +117,13 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
     <div
       onClick={() => onInspect(item)}
       suppressHydrationWarning
-      className={`group relative w-full cursor-pointer select-none rounded-lg border border-[#1e2024] bg-[#0d0e10] shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.02] hover:border-[#3a3c42] hover:shadow-card-hover active:scale-[0.99] dark:border-line dark:bg-surface dark:hover:border-line-2 ${
+      className={`group relative w-full cursor-pointer select-none rounded-lg border border-line bg-surface shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.02] hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] ${
         shouldRenderFooter ? 'p-2 flex flex-col' : 'overflow-hidden'
       }`}
     >
       {/* Artwork stage. Neutral backdrop preserves true color; posters use standard 4:5 ratio */}
       <div
-        className={`thumb-stage relative ${frameAspect} w-full overflow-hidden ${
+        className={`thumb-stage relative ${frameAspect} w-full overflow-hidden bg-black ${
           shouldRenderFooter ? 'rounded-sm' : poster ? 'rounded-lg' : 'rounded-t-[13px]'
         }`}
         style={frameRatio}
@@ -149,7 +152,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
             }}
             title="Delete thumbnail permanently"
             aria-label="Delete thumbnail permanently"
-            className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-sm border border-white/15 bg-black/55 text-white opacity-0 transition-opacity duration-200 ease-fluid hover:bg-danger hover:border-transparent focus-visible:opacity-100 group-hover:opacity-100 active:scale-95"
+            className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-sm border border-white/20 bg-black/85 text-white opacity-0 transition-opacity duration-200 ease-fluid hover:bg-danger hover:border-transparent focus-visible:opacity-100 group-hover:opacity-100 active:scale-95 shadow-xs"
           >
             <IconTrash className="h-3.5 w-3.5" />
           </button>
@@ -162,7 +165,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
             <h4
               title={displayTitle}
               suppressHydrationWarning
-              className="line-clamp-2 text-sm font-semibold leading-snug text-[#E6E8EC] dark:text-ink"
+              className="line-clamp-2 text-sm font-semibold leading-snug text-ink"
             >
               {displayTitle}
             </h4>
@@ -170,7 +173,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
           {showCreator && (
             <p
-              className="mt-1.5 truncate text-[13px] text-[#E6E8EC]/80 dark:text-ink-2"
+              className="mt-1.5 truncate text-[13px] text-ink-muted"
               title={displayCreator}
             >
               {displayCreator}
@@ -180,7 +183,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
           {/* One separator maximum, tabular figures for the numbers to line up
               down the grid. */}
           {(displayViews || displaySubs || displayTime) && (
-            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-[#E6E8EC]/60 dark:text-ink-3 tabular">
+            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-ink-faint tabular">
               {displaySubs && <span className="truncate">{displaySubs}</span>}
               {displaySubs && (displayViews || displayTime) && (
                 <span aria-hidden="true">·</span>

@@ -20,50 +20,46 @@
 :root {
   color-scheme: light;
 
-  /* Brand (locked): dark black / whitish-grey */
-  --espresso: #0d0e10;
-  --cream: #E6E8EC;
+  /* Brand: deep evergreen / light meadow wash */
+  --espresso: #1b5a3b;
+  --cream: #dff4e1;
 
-  /* Surfaces: whitish-grey canvas, deeper-grey cards and controls */
-  --canvas: #E6E8EC;
-  --surface: #D8DBE0;
-  --surface-raised: #EFF1F4;
-  --surface-sunken: #CFD3D8;
+  /* Surfaces: light celadon canvas, pastel pistachio surface, clean raised controls */
+  --canvas: #dff4e1;
+  --surface: #bae6c1;
+  --surface-raised: #ebf8ed;
+  --surface-sunken: #a7d6b0;
 
   /* Ink. Alphas are floored so the faintest step still clears WCAG AA (4.5:1)
-     against its own surface. Hierarchy comes from size and weight too. */
-  --ink: #0d0e10;
-  --ink-2: rgba(13, 14, 16, 0.78);
-  --ink-3: rgba(13, 14, 16, 0.66);
+     against its own surface. Deep forest pine on light backgrounds. */
+  --ink: #1b5a3b;
+  --ink-2: rgba(27, 90, 59, 0.80);
+  --ink-3: rgba(27, 90, 59, 0.65);
 
-  /* Accent is the same emerald used in dark mode, so the brand colour does not
-     change when the theme does. On-accent content is near-black: a saturated
-     green fill swallows light text, so the pairing has to invert here. */
-  --accent: #2ecc71;
-  --accent-hover: #27b863;
-  --on-accent: #05130a;
-  /* Alpha variants declared as tokens. Tailwind cannot apply an /opacity
-     modifier to a var() color, so these are pre-resolved. */
-  --on-accent-dim: rgba(5, 19, 10, 0.82);
-  --on-accent-line: rgba(5, 19, 10, 0.30);
-  --accent-veil: rgba(46, 204, 113, 0.16);
+  /* Accent is deep forest green (#1b5a3b). On-accent content is light wash (#dff4e1). */
+  --accent: #1b5a3b;
+  --accent-hover: #14462e;
+  --on-accent: #dff4e1;
+  /* Alpha variants declared as tokens. */
+  --on-accent-dim: rgba(223, 244, 225, 0.85);
+  --on-accent-line: rgba(223, 244, 225, 0.35);
+  --accent-veil: rgba(27, 90, 59, 0.12);
 
-  /* Hairlines */
-  --line: rgba(13, 14, 16, 0.14);
-  --line-2: rgba(13, 14, 16, 0.26);
+  /* Hairlines & Borders */
+  --line: rgba(27, 90, 59, 0.18);
+  --line-2: rgba(27, 90, 59, 0.32);
 
   /* Focus ring, used by every interactive element */
-  --focus: #2ecc71;
+  --focus: #1b5a3b;
 
-  /* Semantic (destructive actions only, never decoration). Red so a delete
-     action can never be mistaken for the accent. */
-  --danger: #ef5350;
-  --danger-soft: rgba(239, 83, 80, 0.12);
-  --danger-line: rgba(239, 83, 80, 0.40);
-  --on-danger: #3a0d0c;
+  /* Semantic (destructive actions only, never decoration) */
+  --danger: #b83232;
+  --danger-soft: rgba(184, 50, 50, 0.12);
+  --danger-line: rgba(184, 50, 50, 0.30);
+  --on-danger: #ffffff;
 
   /* Image stage behind every thumbnail, light mode */
-  --stage: #0d0e10;
+  --stage: #000000;
 
   /* Legacy aliases kept so existing utility classes resolve identically */
   --background: var(--canvas);
@@ -88,53 +84,50 @@
   --r-lg: 14px;
   --r-xl: 18px;
 
-  /* Elevation, tinted to the ink hue. Never pure black on grey. */
-  --shadow-card: 0 1px 2px rgba(13, 14, 16, 0.05), 0 0 0 0.5px rgba(13, 14, 16, 0.10);
-  --shadow-card-hover: 0 6px 18px -6px rgba(13, 14, 16, 0.22), 0 0 0 0.5px rgba(13, 14, 16, 0.24);
-  --shadow-elevated: 0 2px 6px rgba(13, 14, 16, 0.06), 0 12px 32px -10px rgba(13, 14, 16, 0.24);
-  --shadow-dock: 0 2px 8px rgba(13, 14, 16, 0.10), 0 18px 40px -12px rgba(13, 14, 16, 0.38);
+  /* Elevation, tinted to the forest ink hue. */
+  --shadow-card: 0 1px 2px rgba(27, 90, 59, 0.06), 0 0 0 0.5px rgba(27, 90, 59, 0.12);
+  --shadow-card-hover: 0 6px 18px -6px rgba(27, 90, 59, 0.22), 0 0 0 0.5px rgba(27, 90, 59, 0.24);
+  --shadow-elevated: 0 2px 6px rgba(27, 90, 59, 0.08), 0 12px 32px -10px rgba(27, 90, 59, 0.22);
+  --shadow-dock: 0 2px 8px rgba(27, 90, 59, 0.12), 0 18px 40px -12px rgba(27, 90, 59, 0.38);
 }
 
 .dark {
   color-scheme: dark;
 
-  /* Near-black canvas carrying a faint green cast, with a vivid emerald
-     accent on active pills and primary buttons. Ink is a green-tinted
-     off-white rather than pure grey, so text sits in the same family. */
-  --canvas: #0a0f0b;
-  --surface: #131a15;
-  --surface-raised: #1b241d;
-  --surface-sunken: #060a07;
+  /* Nocturnal black canvas with vibrant emerald accents and celadon ink. */
+  --canvas: #000000;
+  --surface: #0a170f;
+  --surface-raised: #143522;
+  --surface-sunken: #000000;
 
-  --ink: #e9f1eb;
-  --ink-2: rgba(233, 241, 235, 0.76);
-  --ink-3: rgba(233, 241, 235, 0.54);
+  --ink: #dff4e1;
+  --ink-2: rgba(223, 244, 225, 0.82);
+  --ink-3: rgba(223, 244, 225, 0.60);
 
-  /* Emerald accent. Content on it is near-black so the label stays legible
-     against the saturated fill. */
-  --accent: #2ecc71;
-  --accent-hover: #27b863;
-  --on-accent: #05130a;
-  --on-accent-dim: rgba(5, 19, 10, 0.82);
-  --on-accent-line: rgba(5, 19, 10, 0.30);
-  --accent-veil: rgba(46, 204, 113, 0.16);
+  /* Vibrant emerald accent. On-accent content is pure black. */
+  --accent: #56c565;
+  --accent-hover: #45ab53;
+  --on-accent: #000000;
+  --on-accent-dim: rgba(0, 0, 0, 0.85);
+  --on-accent-line: rgba(0, 0, 0, 0.30);
+  --accent-veil: rgba(86, 197, 101, 0.16);
 
-  --line: rgba(233, 241, 235, 0.12);
-  --line-2: rgba(233, 241, 235, 0.22);
-  --focus: #2ecc71;
+  --line: rgba(186, 230, 193, 0.20);
+  --line-2: rgba(186, 230, 193, 0.34);
+  --focus: #56c565;
 
-  /* Destructive actions stay red so they never read as the accent. */
-  --danger: #ef5350;
-  --danger-soft: rgba(239, 83, 80, 0.14);
-  --danger-line: rgba(239, 83, 80, 0.42);
-  --on-danger: #ffe9e8;
+  /* Destructive surfaces */
+  --danger: #e04545;
+  --danger-soft: rgba(224, 69, 69, 0.25);
+  --danger-line: rgba(224, 69, 69, 0.40);
+  --on-danger: #ffffff;
 
-  --stage: #060a07;
+  --stage: #000000;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(46, 204, 113, 0.10);
-  --shadow-card-hover: 0 8px 22px -8px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(46, 204, 113, 0.24);
-  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.55), 0 18px 44px -12px rgba(0, 0, 0, 0.7);
-  --shadow-dock: 0 2px 10px rgba(0, 0, 0, 0.5), 0 20px 44px -12px rgba(0, 0, 0, 0.75);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(186, 230, 193, 0.15);
+  --shadow-card-hover: 0 8px 22px -8px rgba(0, 0, 0, 0.8), 0 0 0 0.5px rgba(186, 230, 193, 0.28);
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.65), 0 18px 44px -12px rgba(0, 0, 0, 0.8);
+  --shadow-dock: 0 2px 10px rgba(0, 0, 0, 0.6), 0 20px 44px -12px rgba(0, 0, 0, 0.85);
 }
 
 /* ==========================================================================

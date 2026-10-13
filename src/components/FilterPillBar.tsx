@@ -431,7 +431,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                 >
                   {/* Real palette from the library. Each slice is flex-grown by
                       how many thumbnails actually carry that hex. */}
-                  <span className="flex h-4 w-9 shrink-0 overflow-hidden rounded-[3px] ring-1 ring-black/10 dark:ring-[#E6E8EC]/15">
+                  <span className="flex h-4 w-9 shrink-0 overflow-hidden rounded-[3px] ring-1 ring-black/10 dark:ring-line">
                     {entry.swatches.map((swatch) => (
                       <span
                         key={swatch.hex}

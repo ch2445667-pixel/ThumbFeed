@@ -95,38 +95,41 @@
 .dark {
   color-scheme: dark;
 
-  /* Near-black canvas with whitish-grey ink and dark black accent. */
-  --canvas: #0d0e10;
-  --surface: #121316;
-  --surface-raised: #1c1d22;
-  --surface-sunken: #060607;
+  /* Near-black canvas carrying a faint green cast, with a vivid emerald
+     accent on active pills and primary buttons. Ink is a green-tinted
+     off-white rather than pure grey, so text sits in the same family. */
+  --canvas: #0a0f0b;
+  --surface: #131a15;
+  --surface-raised: #1b241d;
+  --surface-sunken: #060a07;
 
-  --ink: #E6E8EC;
-  --ink-2: rgba(230, 232, 236, 0.78);
-  --ink-3: rgba(230, 232, 236, 0.56);
+  --ink: #e9f1eb;
+  --ink-2: rgba(233, 241, 235, 0.76);
+  --ink-3: rgba(233, 241, 235, 0.54);
 
-  /* Dark black accent. On-accent content stays whitish-grey in both themes. */
-  --accent: #1c1d22;
-  --accent-hover: #26282f;
-  --on-accent: #E6E8EC;
-  --on-accent-dim: rgba(230, 232, 236, 0.82);
-  --on-accent-line: rgba(230, 232, 236, 0.28);
-  --accent-veil: rgba(230, 232, 236, 0.14);
+  /* Emerald accent. Content on it is near-black so the label stays legible
+     against the saturated fill. */
+  --accent: #2ecc71;
+  --accent-hover: #27b863;
+  --on-accent: #05130a;
+  --on-accent-dim: rgba(5, 19, 10, 0.82);
+  --on-accent-line: rgba(5, 19, 10, 0.30);
+  --accent-veil: rgba(46, 204, 113, 0.16);
 
-  --line: rgba(230, 232, 236, 0.14);
-  --line-2: rgba(230, 232, 236, 0.26);
-  --focus: #E6E8EC;
+  --line: rgba(233, 241, 235, 0.12);
+  --line-2: rgba(233, 241, 235, 0.22);
+  --focus: #2ecc71;
 
-  /* Destructive surfaces use dark black with grey content. */
-  --danger: #1c1d22;
-  --danger-soft: rgba(13, 14, 16, 0.55);
-  --danger-line: rgba(230, 232, 236, 0.30);
-  --on-danger: #E6E8EC;
+  /* Destructive actions stay red so they never read as the accent. */
+  --danger: #ef5350;
+  --danger-soft: rgba(239, 83, 80, 0.14);
+  --danger-line: rgba(239, 83, 80, 0.42);
+  --on-danger: #ffe9e8;
 
-  --stage: #060607;
+  --stage: #060a07;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(230, 232, 236, 0.10);
-  --shadow-card-hover: 0 8px 22px -8px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(230, 232, 236, 0.24);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(46, 204, 113, 0.10);
+  --shadow-card-hover: 0 8px 22px -8px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(46, 204, 113, 0.24);
   --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.55), 0 18px 44px -12px rgba(0, 0, 0, 0.7);
   --shadow-dock: 0 2px 10px rgba(0, 0, 0, 0.5), 0 20px 44px -12px rgba(0, 0, 0, 0.75);
 }

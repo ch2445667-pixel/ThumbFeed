@@ -36,28 +36,31 @@
   --ink-2: rgba(13, 14, 16, 0.78);
   --ink-3: rgba(13, 14, 16, 0.66);
 
-  /* Accent is dark black (#0d0e10). On-accent content is always whitish-grey (#E6E8EC). */
-  --accent: #0d0e10;
-  --accent-hover: #1e2025;
-  --on-accent: #E6E8EC;
+  /* Accent is the same emerald used in dark mode, so the brand colour does not
+     change when the theme does. On-accent content is near-black: a saturated
+     green fill swallows light text, so the pairing has to invert here. */
+  --accent: #2ecc71;
+  --accent-hover: #27b863;
+  --on-accent: #05130a;
   /* Alpha variants declared as tokens. Tailwind cannot apply an /opacity
      modifier to a var() color, so these are pre-resolved. */
-  --on-accent-dim: rgba(230, 232, 236, 0.82);
-  --on-accent-line: rgba(230, 232, 236, 0.30);
-  --accent-veil: rgba(13, 14, 16, 0.12);
+  --on-accent-dim: rgba(5, 19, 10, 0.82);
+  --on-accent-line: rgba(5, 19, 10, 0.30);
+  --accent-veil: rgba(46, 204, 113, 0.16);
 
   /* Hairlines */
   --line: rgba(13, 14, 16, 0.14);
   --line-2: rgba(13, 14, 16, 0.26);
 
   /* Focus ring, used by every interactive element */
-  --focus: #0d0e10;
+  --focus: #2ecc71;
 
-  /* Semantic (destructive actions only, never decoration). Uses dark black. */
-  --danger: #0d0e10;
-  --danger-soft: rgba(13, 14, 16, 0.10);
-  --danger-line: rgba(13, 14, 16, 0.32);
-  --on-danger: #E6E8EC;
+  /* Semantic (destructive actions only, never decoration). Red so a delete
+     action can never be mistaken for the accent. */
+  --danger: #ef5350;
+  --danger-soft: rgba(239, 83, 80, 0.12);
+  --danger-line: rgba(239, 83, 80, 0.40);
+  --on-danger: #3a0d0c;
 
   /* Image stage behind every thumbnail, light mode */
   --stage: #0d0e10;

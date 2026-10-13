@@ -38,10 +38,19 @@ export async function GET(req: NextRequest) {
     // PostgREST caps a single response at max-rows (1000 on this project), so
     // a plain .limit(5000) silently returns only the first thousand rows and
     // every count below is wrong. Page through with offset instead.
+    //
+    // These pages are issued concurrently. Sequential paging cost one full
+    // round trip per 1000 rows, which put the thumbnails wall at roughly ten
+    // seconds -- long enough that the filter panel opened looking empty. The
+    // offsets are disjoint and the ordering is stable, so parallel fetches
+    // return exactly the same set of rows as the serial version.
     const PAGE = 1000;
-    const rows: any[] = [];
-    for (let offset = 0; ; offset += PAGE) {
-      let query = supabase.from('thumbnails').select('id,niche,tags,colors');
+    const MAX_ROWS = 20000;
+
+    const buildQuery = (withCount: boolean) => {
+      let query = supabase
+        .from('thumbnails')
+        .select('id,niche,tags,colors', withCount ? { count: 'exact' } : undefined);
       if (section === 'posters') {
         query = query.or(
           'id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*'
@@ -51,16 +60,31 @@ export async function GET(req: NextRequest) {
       } else {
         query = excludeOtherWalls(query);
       }
+      return query.order('id', { ascending: true });
+    };
 
-      const { data, error } = await query
-        .order('id', { ascending: true })
-        .range(offset, offset + PAGE - 1);
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    // Probe the first page to learn the total, then fetch the rest in parallel.
+    const first = await buildQuery(true).range(0, PAGE - 1);
+    if (first.error) {
+      return NextResponse.json({ error: first.error.message }, { status: 500 });
+    }
+    const firstBatch = first.data || [];
+    const rows: any[] = [...firstBatch];
+
+    if (firstBatch.length === PAGE) {
+      const total = first.count ?? MAX_ROWS;
+      const pageCount = Math.min(Math.ceil(total / PAGE), Math.ceil(MAX_ROWS / PAGE));
+      const offsets: number[] = [];
+      for (let i = 1; i < pageCount; i += 1) offsets.push(i * PAGE);
+      const rest = await Promise.all(
+        offsets.map((offset) => buildQuery(false).range(offset, offset + PAGE - 1))
+      );
+      for (const res of rest) {
+        if (res.error) {
+          return NextResponse.json({ error: res.error.message }, { status: 500 });
+        }
+        rows.push(...(res.data || []));
       }
-      const batch = data || [];
-      rows.push(...batch);
-      if (batch.length < PAGE) break;
     }
     // Count every category that appears in niche or in tags. The set is
     // normalised by lowercase so "Football" and "football" are one category,

@@ -52,6 +52,7 @@ interface FilterPillBarProps {
   categoryCounts?: Record<string, number>;
   colorLibrary?: ColorLibraryEntry[];
   resultCount?: number;
+  isLoadingFacets?: boolean;
   // The posters wall has no niche taxonomy, so its category section hides.
   showCategories?: boolean;
   /** Owner only. Reveals the per-category bulk delete control. */
@@ -121,6 +122,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
   categoryCounts = {},
   colorLibrary = [],
   resultCount = 0,
+  isLoadingFacets = false,
   showCategories = true,
   canDeleteCategories = false,
   onCategoryDeleted,
@@ -300,7 +302,17 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
           }
         >
           <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => {
+            {/* Counts arrive from a facets query that walks the whole wall, so
+                on the large thumbnails wall the panel can open before they land.
+                Rendering the bare "All" pill in that window read as an empty
+                filter, so say we are loading instead of showing a blank bar. */}
+            {isLoadingFacets && (
+              <span className="flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-1.5 text-xs text-ink-muted">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink-faint" />
+                Loading categories…
+              </span>
+            )}
+            {!isLoadingFacets && categories.map((cat) => {
               const isSelected = filters.selectedNiche === cat;
               const count = categoryCounts[cat];
               const isCustom = customCategories.some(
@@ -399,7 +411,7 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
         </PanelSection>
         )}
 
-        {colorLibrary.length > 0 && (
+        {(colorLibrary.length > 0 || isLoadingFacets) && (
         <PanelSection title="Colour">
           <div className="flex flex-wrap gap-2">
             {colorLibrary.map((entry) => {
@@ -433,6 +445,12 @@ export const FilterPillBar: React.FC<FilterPillBarProps> = ({
                 </button>
               );
             })}
+            {isLoadingFacets && (
+              <span className="flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-1.5 text-xs text-ink-muted">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink-faint" />
+                Loading…
+              </span>
+            )}
           </div>
         </PanelSection>
         )}

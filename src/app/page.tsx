@@ -532,6 +532,9 @@ export default function HomePage() {
         // Thumbnails and uploads both have real values to filter on.
         colorLibrary={section === 'posters' ? [] : colorLibrary}
         resultCount={galleryTotal}
+        // Facet counts walk the whole wall before they arrive, so the panel
+        // can open with nothing in it. Say so rather than rendering an empty bar.
+        isLoadingFacets={facetsQuery.isLoading}
         showCategories={section !== 'posters'}
         canDeleteCategories={isAdmin}
         onCategoryDeleted={() => {

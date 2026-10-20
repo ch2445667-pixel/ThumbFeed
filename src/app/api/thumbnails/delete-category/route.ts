@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteStorageObjects, getServiceRoleClient, hasServiceRoleKey } from '../../../../lib/supabaseServer';
-import { internalError, requireAdmin } from '../../../../lib/apiSecurity';
+import {
+  deleteStorageObjects,
+  getAnonClient,
+  getServiceRoleClient,
+  hasServiceRoleKey,
+} from '../../../../lib/supabaseServer';
+import { internalError, requireAdmin, sanitizeFilterValue } from '../../../../lib/apiSecurity';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,19 +55,25 @@ export async function POST(req: NextRequest) {
     const denied = await requireAdmin(req, idToken);
     if (denied) return denied;
 
-    // The service-role client is required to read and strip every row without
-    // the publishable key's row limits. Without it we refuse rather than
-    // half-delete.
-    const client = getServiceRoleClient();
-    if (!client) {
+    // The name is interpolated into a PostgREST `or` filter, whose values can
+    // contain commas, quotes and braces that add clauses. Category names are
+    // plain words, so refuse anything else instead of building a filter from it.
+    const safeName = sanitizeFilterValue(name);
+    if (!safeName) {
       return NextResponse.json(
-        {
-          error:
-            'SUPABASE_SERVICE_ROLE_KEY is not configured, so a bulk delete cannot be done safely.',
-        },
-        { status: 501 }
+        { error: 'That category name contains characters a filter cannot carry.' },
+        { status: 400 }
       );
     }
+
+    // Prefer the service-role key: it reads and writes without the publishable
+    // key's row limits and keeps working after RLS denies public writes. When
+    // the hosting platform has not been given that key, fall back to the
+    // publishable client so the owner can still manage the library -- the
+    // caller has already been verified as the owner above, and the write is
+    // re-checked below instead of being assumed to have happened.
+    const usingServiceRole = hasServiceRoleKey();
+    const client = getServiceRoleClient() ?? getAnonClient();
 
     // 1. Collect every row that carries the category, in either the niche
     //    column or the tags array -- the same match the gallery filter uses.
@@ -71,7 +82,11 @@ export async function POST(req: NextRequest) {
       const { data, error } = await client
         .from('thumbnails')
         .select('id,tags,niche,image_url')
-        .or(`niche.eq.${name},tags.cs.{"${name}"}`)
+        .or(`niche.eq.${safeName},tags.cs.{"${safeName}"}`)
+        // Ordering by the primary key is what makes paging stable. Without a
+        // sort, PostgREST may return rows in a different order per request, so
+        // an offset page can repeat some rows and skip others.
+        .order('id', { ascending: true })
         .range(offset, offset + PAGE - 1);
       if (error) {
         return NextResponse.json({ error: `Read failed: ${error.message}` }, { status: 500 });
@@ -119,14 +134,26 @@ export async function POST(req: NextRequest) {
     let stripped = 0;
     for (const row of toStrip) {
       const nextNiche = matches(row.niche || '') ? (row.tags?.[0] || '') : row.niche;
-      const { error } = await client
+      const { data, error } = await client
         .from('thumbnails')
         .update({ tags: row.tags, niche: nextNiche })
-        .eq('id', row.id);
+        .eq('id', row.id)
+        // Ask for the touched row back. A blocked write answers 2xx with no
+        // rows, which would otherwise be reported as a successful strip.
+        .select('id');
       if (error) {
         return NextResponse.json(
           { error: `Stripping "${name}" from ${row.id} failed: ${error.message}` },
           { status: 500 }
+        );
+      }
+      if (!data || data.length === 0) {
+        return NextResponse.json(
+          {
+            error:
+              'The database refused the update. If public writes are locked down, configure SUPABASE_SERVICE_ROLE_KEY in the hosting platform and redeploy.',
+          },
+          { status: 503 }
         );
       }
       stripped++;
@@ -140,14 +167,30 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < toDelete.length; i += BATCH) {
       const chunk = toDelete.slice(i, i + BATCH);
       const ids = chunk.map((r) => r.id);
-      const { error } = await client.from('thumbnails').delete().in('id', ids);
+      const { data: removedRows, error } = await client
+        .from('thumbnails')
+        .delete()
+        .in('id', ids)
+        .select('id');
       if (error) {
         return NextResponse.json(
           { error: `Deleting rows failed: ${error.message}` },
           { status: 500 }
         );
       }
-      deleted += chunk.length;
+      const removedCount = Array.isArray(removedRows) ? removedRows.length : 0;
+      if (removedCount === 0) {
+        return NextResponse.json(
+          {
+            error:
+              'The database refused the delete. If public writes are locked down, configure SUPABASE_SERVICE_ROLE_KEY in the hosting platform and redeploy.',
+            removed: deleted,
+            strippedFrom: stripped,
+          },
+          { status: 503 }
+        );
+      }
+      deleted += removedCount;
 
       const paths = chunk
         .map((r) => storagePathFromUrl(r.image_url))
@@ -167,7 +210,8 @@ export async function POST(req: NextRequest) {
       strippedFrom: stripped,
       storageDeleted,
       storageSkipped: storageSkipped > 0,
-      canDeleteStorageObjects: hasServiceRoleKey(),
+      canDeleteStorageObjects: usingServiceRole,
+      usedServiceRole: usingServiceRole,
       message:
         deleted > 0
           ? `Removed ${deleted} thumbnail${deleted === 1 ? '' : 's'} that had no other category, and stripped "${name}" from ${stripped}.`

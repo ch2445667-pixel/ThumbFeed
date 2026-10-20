@@ -295,7 +295,7 @@ export async function fetchWithLimit(
 export function sanitizeFilterValue(value: string, maxLength = 60): string | null {
   const trimmed = String(value ?? '').trim();
   if (!trimmed || trimmed.length > maxLength) return null;
-  if (!/^[A-Za-z0-9][A-Za-z0-9 &'._/-]*$/.test(trimmed)) return null;
+  if (!/^[A-Za-z0-9_][A-Za-z0-9 &'._/-]*$/.test(trimmed)) return null;
   return trimmed;
 }
 

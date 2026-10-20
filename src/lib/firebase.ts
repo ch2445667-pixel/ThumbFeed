@@ -7,12 +7,10 @@ import {
   onAuthStateChanged,
   User
 } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 export const googleProvider = new GoogleAuthProvider();
 
 // Suggest account selection prompt
@@ -26,6 +24,11 @@ export async function signInWithGoogle(): Promise<User | null> {
     const user = result.user;
     if (user) {
       try {
+        // Loaded on demand: the Firestore SDK is large and only a signed-in
+        // owner ever needs it. Importing it at module scope made every
+        // anonymous visitor download it to render the gallery.
+        const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+        const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
         const userRef = doc(db, 'users', user.uid);
         await setDoc(userRef, {
           id: user.uid,

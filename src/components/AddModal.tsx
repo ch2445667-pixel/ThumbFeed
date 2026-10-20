@@ -17,6 +17,7 @@ import {
   IconFilm
 } from './icons/AppIcons';
 import { ThumbnailItem, NicheCategory } from '../lib/types';
+import { adminFetch } from '../lib/adminFetch';
 import { convertToJpg, getYoutubeJpgUrl } from '../lib/imageOptimizer';
 import {
   getAllCategories,
@@ -929,7 +930,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     });
 
     try {
-      const res = await fetch('/api/supabase/upload-thumbnail', {
+      const res = await adminFetch('/api/supabase/upload-thumbnail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: payload })
@@ -1073,7 +1074,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         const videoIds = videoMatches.map(m => m.id);
         let detailsMap: Record<string, any> = {};
         try {
-          const detRes = await fetch('/api/youtube/details', {
+          const detRes = await adminFetch('/api/youtube/details', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ videoIds })
@@ -1136,7 +1137,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         setYoutubeItems(items);
       } else {
         // 2. Channel Bulk Extraction
-        const res = await fetch('/api/youtube/channel', {
+        const res = await adminFetch('/api/youtube/channel', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1196,7 +1197,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     setPinterestItems([]);
 
     try {
-      const res = await fetch('/api/pinterest/extract', {
+      const res = await adminFetch('/api/pinterest/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: trimmed })
@@ -1315,7 +1316,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         };
       });
 
-      const res = await fetch('/api/supabase/upload-thumbnail', {
+      const res = await adminFetch('/api/supabase/upload-thumbnail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: uploadPayload })
@@ -1415,6 +1416,9 @@ export const AddModal: React.FC<AddModalProps> = ({
       {/* Main Modal Box - Clean Multi-surface */}
       <div
         id="add-modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add thumbnails"
         className="relative w-full max-w-2xl bg-surface-raised text-ink rounded-xl shadow-elevated border border-line overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in"
       >
         {/* Header */}

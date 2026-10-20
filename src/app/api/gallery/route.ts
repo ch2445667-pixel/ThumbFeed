@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAnonClient } from '../../../lib/supabaseServer';
+import { internalError, sanitizeFilterValue } from '../../../lib/apiSecurity';
 import { parseDimensions } from '../../../lib/dimensions';
 import { familiesFromHexes, type ColorFamily } from '../../../lib/colorFamilies';
 import {
@@ -73,17 +74,6 @@ function applySharedFilters(query: any, params: { niche: string; search: string 
   return q;
 }
 
-function applySearch(query: any, search: string) {
-  if (!search) return query;
-  const esc = search.replace(/[%*,()]/g, '');
-  if (!esc) return query;
-  // Title, creator, niche and on-image text. Tags-substring matching lived
-  // client-side before; the light-query path below covers it exactly.
-  return query.or(
-    `title.ilike.*${esc}*,creator.ilike.*${esc}*,niche.ilike.*${esc}*,ocr_text.ilike.*${esc}*`
-  );
-}
-
 function rowToItem(row: any, section: string): any {
   const dims = parseDimensions(row.breakdown_notes);
   const isCustom = section === 'uploads' || isCustomUploadRow(row);
@@ -152,7 +142,11 @@ export async function GET(req: NextRequest) {
     const section =
       sectionParam === 'posters' ? 'posters' : sectionParam === 'uploads' ? 'uploads' : 'thumbnails';
     const search = (url.searchParams.get('search') || '').trim();
-    const niche = url.searchParams.get('niche') || 'All';
+    // The category is interpolated into a PostgREST filter, which is its own
+    // mini-language: a comma or brace could append clauses. Only plain
+    // category names are accepted; anything else falls back to "All".
+    const nicheParam = url.searchParams.get('niche') || 'All';
+    const niche = nicheParam === 'All' ? 'All' : sanitizeFilterValue(nicheParam) ?? 'All';
     const colors = (url.searchParams.get('colors') || '').split(',').map((s) => s.trim()).filter(Boolean) as ColorFamily[];
     const sort = url.searchParams.get('sort') || 'random';
     const seed = Number(url.searchParams.get('seed') || 882391) || 882391;
@@ -173,7 +167,7 @@ export async function GET(req: NextRequest) {
         : query.order('created_at', { ascending: false });
       const { data, error, count } = await query.range(from, to);
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return internalError('Gallery feed (SQL path)', error);
       }
       return NextResponse.json({
         items: (data || []).map((row: any) => rowToItem(row, section)),
@@ -189,7 +183,7 @@ export async function GET(req: NextRequest) {
     light = applySharedFilters(light, { niche, search: '' });
     const { data: lightRows, error: lightError } = await light.limit(5000);
     if (lightError) {
-      return NextResponse.json({ error: lightError.message }, { status: 500 });
+      return internalError('Gallery feed (pre-pass)', lightError);
     }
 
     let candidates = lightRows || [];
@@ -222,7 +216,7 @@ export async function GET(req: NextRequest) {
       .select(GRID_COLUMNS)
       .in('id', pageIds);
     if (pageError) {
-      return NextResponse.json({ error: pageError.message }, { status: 500 });
+      return internalError('Gallery feed (page fetch)', pageError);
     }
 
     // Restore page order: .in() returns rows in table order, not ours.
@@ -230,8 +224,7 @@ export async function GET(req: NextRequest) {
     const items = pageIds.map((id: string) => byId.get(id)).filter(Boolean).map((row: any) => rowToItem(row, section));
 
     return NextResponse.json({ items, total, page, pageSize: PAGE_SIZE });
-  } catch (err: any) {
-    console.error('Gallery feed error:', err);
-    return NextResponse.json({ error: err.message || 'Failed to load gallery' }, { status: 500 });
+  } catch (err) {
+    return internalError('Gallery feed error', err);
   }
 }

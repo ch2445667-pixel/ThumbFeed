@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAnonClient } from '../../../../lib/supabaseServer';
+import { internalError } from '../../../../lib/apiSecurity';
 import { parseDimensions } from '../../../../lib/dimensions';
 
 export const runtime = 'nodejs';
@@ -38,7 +39,7 @@ export async function GET() {
     if (error) {
       console.warn('Poster sync DB error:', error.message);
       return NextResponse.json(
-        { success: false, count: 0, posters: [], error: error.message },
+        { success: false, count: 0, posters: [], error: 'Could not load posters.' },
         { status: 200 }
       );
     }
@@ -73,8 +74,7 @@ export async function GET() {
     });
 
     return NextResponse.json({ success: true, count: posters.length, posters });
-  } catch (err: any) {
-    console.error('Posters sync error:', err);
-    return NextResponse.json({ error: err.message || 'Failed to sync posters' }, { status: 500 });
+  } catch (err) {
+    return internalError('Posters sync error', err);
   }
 }

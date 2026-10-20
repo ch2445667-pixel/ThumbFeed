@@ -47,6 +47,9 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           id="delete-confirm-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Delete thumbnail"
           className="relative w-full max-w-md bg-[#D8DBE0] dark:bg-surface-raised border border-[#0d0e10]/15 dark:border-line rounded-[20px] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 z-10"
         >
           {/* Header */}

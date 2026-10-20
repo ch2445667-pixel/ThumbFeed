@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteStorageObjects, getServiceRoleClient, hasServiceRoleKey } from '../../../../lib/supabaseServer';
-import firebaseConfig from '../../../../../firebase-applet-config.json';
+import { internalError, requireAdmin } from '../../../../lib/apiSecurity';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const BUCKET = 'Thumbnails';
-
-/** Kept in sync with ADMIN_EMAIL in lib/authContext. */
-const ADMIN_EMAIL = 'shivashiva66407@gmail.com';
 
 /** PostgREST caps a response at max-rows; page rather than trusting one read. */
 const PAGE = 1000;
@@ -30,72 +27,6 @@ function storagePathFromUrl(imageUrl: string): string {
 }
 
 /**
- * Server half of the local-development unlock in lib/authContext.
- *
- * On localhost the client grants admin through a synthetic LOCAL_DEV_USER,
- * because Google sign-in refuses unauthorized origins and the project never
- * listed localhost. That fake user cannot mint a Firebase ID token, so the
- * admin check below would reject every delete on a dev machine even though the
- * UI happily offers the button -- the two halves disagreed about what "admin"
- * means and bulk delete simply never worked locally.
- *
- * This mirrors the client's conditions exactly and fails closed:
- *   - NODE_ENV === 'development'  (false in any `next build` output)
- *   - the request arrived on a loopback host
- * A deployed build satisfies neither, so production keeps the real token check.
- *
- * The host header is attacker-controlled, so this is not a security boundary
- * on its own -- it never needs to be. The dev server only listens on loopback
- * and is not reachable from outside the machine.
- */
-function isLocalDevRequest(req: NextRequest): boolean {
-  if (process.env.NODE_ENV !== 'development') return false;
-  const host = (req.headers.get('host') || '').toLowerCase().split(',')[0].trim();
-  return (
-    host === 'localhost' ||
-    host.startsWith('localhost:') ||
-    host === '127.0.0.1' ||
-    host.startsWith('127.0.0.1:') ||
-    host === '[::1]' ||
-    host.startsWith('[::1]:')
-  );
-}
-
-/**
- * Verify the caller's Firebase ID token server-side.
- *
- * The single-thumbnail delete route has no auth check at all; adding one only to
- * this bulk route would leave the cheaper destructive path open, so this route
- * at least holds a real boundary: the token is checked against Google's
- * identity service and must belong to the admin account. The API key used here
- * is the public web config key, which ships in every client bundle anyway.
- *
- * Returns an error string on failure rather than throwing.
- */
-async function verifyAdmin(idToken: string): Promise<string | null> {
-  if (!idToken) return 'Sign in as the owner to delete a category.';
-  try {
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${firebaseConfig.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      }
-    );
-    if (!res.ok) return `Sign-in check failed (HTTP ${res.status}). Please sign in again.`;
-    const data = await res.json();
-    const email = data?.users?.[0]?.email || '';
-    if (email.trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-      return 'Only the owner can delete a category.';
-    }
-    return null;
-  } catch (err) {
-    return `Sign-in check could not run: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
-
-/**
  * Delete every thumbnail carrying a category, then drop the category itself.
  *
  * "Drop the category" has no column of its own: a category is just a value that
@@ -114,12 +45,10 @@ export async function POST(req: NextRequest) {
     }
     const name = category.trim();
 
-    // On a dev machine the caller is the synthetic local-dev admin and holds
-    // no real token, so the check is skipped there and only there.
-    const authError = isLocalDevRequest(req) ? null : await verifyAdmin(idToken);
-    if (authError) {
-      return NextResponse.json({ error: authError }, { status: 403 });
-    }
+    // The local-dev unlock lives inside requireAdmin, so this route and every
+    // other mutating route agree on what "admin" means.
+    const denied = await requireAdmin(req, idToken);
+    if (denied) return denied;
 
     // The service-role client is required to read and strip every row without
     // the publishable key's row limits. Without it we refuse rather than
@@ -244,8 +173,7 @@ export async function POST(req: NextRequest) {
           ? `Removed ${deleted} thumbnail${deleted === 1 ? '' : 's'} that had no other category, and stripped "${name}" from ${stripped}.`
           : `Stripped "${name}" from ${stripped} thumbnail${stripped === 1 ? '' : 's'}.`,
     });
-  } catch (err: any) {
-    console.error('Delete category error:', err);
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+  } catch (err) {
+    return internalError('Delete category error', err);
   }
 }

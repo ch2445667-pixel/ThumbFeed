@@ -88,6 +88,9 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
             exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             id="thumbnail-modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-label={item.title || 'Thumbnail details'}
             className="relative w-full max-w-4xl bg-[#D8DBE0] dark:bg-surface-raised border border-[#0d0e10]/15 dark:border-line rounded-[18px] shadow-[0_25px_50px_-12px_rgba(13,14,16,0.35)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95)] overflow-hidden z-10 my-auto flex flex-col p-4 sm:p-6 gap-3 gpu-layer"
           >
             {/* Floating Close & Download Header */}

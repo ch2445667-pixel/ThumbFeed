@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAnonClient } from '../../../../lib/supabaseServer';
+import { internalError } from '../../../../lib/apiSecurity';
 import { COLOR_FAMILY_ORDER, familyOfHex, familiesForItem, type ColorFamily } from '../../../../lib/colorFamilies';
 import { customUploadPredicate, excludeOtherWalls } from '../../../../lib/customUploads';
 
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
     // Probe the first page to learn the total, then fetch the rest in parallel.
     const first = await buildQuery(true).range(0, PAGE - 1);
     if (first.error) {
-      return NextResponse.json({ error: first.error.message }, { status: 500 });
+      return internalError('Gallery facets (first page)', first.error);
     }
     const firstBatch = first.data || [];
     const rows: any[] = [...firstBatch];
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
       );
       for (const res of rest) {
         if (res.error) {
-          return NextResponse.json({ error: res.error.message }, { status: 500 });
+          return internalError('Gallery facets (paging)', res.error);
         }
         rows.push(...(res.data || []));
       }
@@ -145,8 +146,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ nicheCounts, colorLibrary, total: rows.length });
-  } catch (err: any) {
-    console.error('Gallery facets error:', err);
-    return NextResponse.json({ error: err.message || 'Failed to load facets' }, { status: 500 });
+  } catch (err) {
+    return internalError('Gallery facets error', err);
   }
 }

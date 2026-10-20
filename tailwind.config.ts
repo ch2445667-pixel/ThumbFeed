@@ -75,8 +75,6 @@ const config: Config = {
         "card-hover": "var(--shadow-card-hover)",
         elevated: "var(--shadow-elevated)",
         dock: "var(--shadow-dock)",
-        // Retained for Navbar.tsx, which is currently unimported.
-        glow: "var(--shadow-elevated)",
       },
       transitionTimingFunction: {
         fluid: "var(--ease-fluid)",

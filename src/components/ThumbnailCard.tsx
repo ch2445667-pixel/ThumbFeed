@@ -112,12 +112,25 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
   return (
     <div
-      onClick={() => onInspect(item)}
       suppressHydrationWarning
       className={`group relative w-full cursor-pointer select-none rounded-lg border border-[#1e2024] bg-[#0d0e10] shadow-card transition-[border-color,box-shadow,transform] duration-200 ease-fluid hover:z-10 hover:scale-[1.02] hover:border-[#3a3c42] hover:shadow-card-hover active:scale-[0.99] dark:border-line dark:bg-surface dark:hover:border-line-2 ${
         shouldRenderFooter ? 'p-2 flex flex-col' : 'overflow-hidden'
       }`}
     >
+      {/*
+        The whole tile opens the inspector. This used to be an onClick on the
+        wrapper div, which made it mouse-only: no tab stop, no Enter/Space, and
+        nothing announced to a screen reader. A transparent overlay button keeps
+        the same mouse behaviour while giving keyboard users a real control.
+        It sits below the delete button so that stays independently reachable.
+      */}
+      <button
+        type="button"
+        onClick={() => onInspect(item)}
+        aria-label={`Open details for ${displayTitle || 'thumbnail'}`}
+        className="absolute inset-0 z-[1] cursor-pointer rounded-lg bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+      />
+
       {/* Artwork stage. Neutral backdrop preserves true color; posters use standard 4:5 ratio */}
       <div
         className={`thumb-stage relative ${frameAspect} w-full overflow-hidden ${

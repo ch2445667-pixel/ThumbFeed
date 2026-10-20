@@ -2,16 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { extractColorProfile } from '../../../../lib/colorExtract';
 import { withDimensions } from '../../../../lib/dimensions';
+import {
+  assertPublicUrl,
+  fetchWithLimit,
+  internalError,
+  rateLimit,
+  requireAdmin,
+} from '../../../../lib/apiSecurity';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+/** Guards against one request pinning the server while it downloads images. */
+const MAX_ITEMS_PER_REQUEST = 50;
+const MAX_DATA_URL_BYTES = 12 * 1024 * 1024;
 
 let supabaseClient: any = null;
 
 function getSupabase(): any {
   if (!supabaseClient) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co';
+    // This route runs only on the server. When the service key is present it
+    // is the correct identity for writing rows and objects: it bypasses
+    // row-level security, so the public key can be denied writes entirely.
     const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
       'sb_publishable_QprT-ekIg6xv77IwL9p81g_GR5-tdiy';
     supabaseClient = createClient(supabaseUrl, supabaseKey, {
@@ -58,39 +73,43 @@ function sanitizeFilename(title: string, videoId: string): string {
 }
 
 async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ buffer: Buffer; contentType: string } | null> {
-  if (imageUrl.startsWith('data:image/')) {
-    const matches = imageUrl.match(/^data:(image\/[a-zA-Z0-9\+\-\.]+);base64,(.+)$/);
-    if (matches) {
-      const contentType = matches[1];
-      const buffer = Buffer.from(matches[2], 'base64');
-      return { buffer, contentType };
-    }
+  if (typeof imageUrl === 'string' && imageUrl.startsWith('data:image/')) {
+    const matches = imageUrl.match(/^data:(image\/[a-zA-Z0-9+\-.]+);base64,([\s\S]+)$/);
+    if (!matches) return null;
+    // Reject before decoding: base64 is ~4/3 the byte size, so an unbounded
+    // string is an unbounded allocation.
+    if (matches[2].length > MAX_DATA_URL_BYTES) return null;
+    const buffer = Buffer.from(matches[2], 'base64');
+    if (buffer.length === 0 || buffer.length > MAX_DATA_URL_BYTES) return null;
+    return { buffer, contentType: matches[1] };
   }
 
-  const urlsToTry = [imageUrl];
+  const urlsToTry: string[] = [];
+  if (typeof imageUrl === 'string' && imageUrl) urlsToTry.push(imageUrl);
   if (videoId) {
     urlsToTry.push(`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`);
     urlsToTry.push(`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`);
   }
 
   for (const url of urlsToTry) {
-    try {
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      });
-      if (res.ok) {
-        const arrayBuffer = await res.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        if (buffer.length > 2000 || url.includes('hqdefault')) {
-          const contentType = res.headers.get('content-type') || 'image/jpeg';
-          return { buffer, contentType };
-        }
-      }
-    } catch {
-      // try next
-    }
+    // Refuse loopback/private/metadata addresses. The server fetches these
+    // URLs, so an unchecked value is a request into its own network.
+    const safe = await assertPublicUrl(url);
+    if (!safe.ok) continue;
+
+    const fetched = await fetchWithLimit(safe.url.toString(), {
+      timeoutMs: 15000,
+      maxBytes: 20 * 1024 * 1024,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        Accept: 'image/*',
+      },
+    });
+    if (!fetched) continue;
+
+    const type = (fetched.contentType || '').toLowerCase();
+    if (type && !type.startsWith('image/')) continue;
+    if (fetched.buffer.length > 2000 || url.includes('hqdefault')) return fetched;
   }
 
   return null;
@@ -152,12 +171,28 @@ async function readDimensions(input: Buffer): Promise<{ width: number; height: n
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { key: 'upload-thumbnail', limit: 30, windowMs: 60_000 });
+    if (limited) return limited;
+
     const body = await req.json();
     const items: UploadItemPayload[] = Array.isArray(body.items) ? body.items : [body];
 
     if (items.length === 0) {
       return NextResponse.json({ error: 'No items to upload' }, { status: 400 });
     }
+    if (items.length > MAX_ITEMS_PER_REQUEST) {
+      return NextResponse.json(
+        { error: `Too many items at once (maximum ${MAX_ITEMS_PER_REQUEST}).` },
+        { status: 413 }
+      );
+    }
+
+    // Uploading writes rows and storage objects. That is owner-only.
+    const denied = await requireAdmin(
+      req,
+      typeof body?.idToken === 'string' ? body.idToken : ''
+    );
+    if (denied) return denied;
 
     const uploadedResults: any[] = [];
     const warnings: string[] = [];
@@ -354,8 +389,7 @@ export async function POST(req: NextRequest) {
       warnings: warnings.length > 0 ? warnings : undefined,
       items: uploadedResults
     });
-  } catch (err: any) {
-    console.error('Supabase upload handler error:', err);
-    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });
+  } catch (err) {
+    return internalError('Supabase upload handler error', err);
   }
 }

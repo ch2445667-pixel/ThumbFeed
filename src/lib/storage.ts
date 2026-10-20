@@ -2,6 +2,7 @@ import { ThumbnailItem, CollectionBoard } from './types';
 import { INITIAL_THUMBNAILS } from './mockData';
 import { INITIAL_POSTERS } from './posters';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { adminFetch } from './adminFetch';
 import { parseDimensions } from './dimensions';
 
 const USER_IMPORTED_KEY = 'thumbvault_user_imported_v1000_wiped';
@@ -540,7 +541,7 @@ export async function deleteStoredThumbnailPermanently(
   //    the object was really removed so a genuine failure can be surfaced.
   let storageRemovalFailed = false;
   try {
-    const res = await fetch('/api/thumbnails/delete', {
+    const res = await adminFetch('/api/thumbnails/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -563,32 +564,15 @@ export async function deleteStoredThumbnailPermanently(
     console.warn('Server delete endpoint note:', apiErr);
   }
 
-  // 6. Redundant client-side database delete, kept as a belt-and-braces
-  //    measure. Storage is deliberately NOT touched here: the publishable key
-  //    cannot delete objects, and the attempt failed silently for a long time.
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (target.id) {
-        await supabase.from('thumbnails').delete().eq('id', target.id);
-      }
-      if (target.imageUrl) {
-        await supabase.from('thumbnails').delete().eq('image_url', target.imageUrl);
-      }
-    } catch (sbErr) {
-      console.warn('Direct Supabase delete note:', sbErr);
-    }
-  }
+  // 6. The server route above is the only database delete. A redundant
+  //    client-side delete used to run here; it was a second anonymous write
+  //    path that could never delete the stored file and is no longer possible
+  //    once the database stops accepting anonymous writes.
 
-  // 7. Delete from Firebase Firestore if doc exists
-  try {
-    const { doc, deleteDoc } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
-    if (db && target.id) {
-      await deleteDoc(doc(db, 'thumbnails', target.id)).catch(() => {});
-    }
-  } catch {
-    // Ignore if not present in firestore
-  }
+  // 7. Firestore is not a storage location for thumbnails: the only document
+  //    ever written there is the owner's `users` profile at sign-in. The old
+  //    "delete the thumbnail document" step could therefore never match a row
+  //    and only served to download the Firestore SDK on every delete.
 
   return { items: updatedList, storageRemovalFailed };
 }
@@ -608,24 +592,34 @@ export function updateStoredThumbnail(updatedItem: ThumbnailItem): ThumbnailItem
   const updated = list.map(t => (t.id === updatedItem.id || t.imageUrl === updatedItem.imageUrl ? updatedItem : t));
   localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updated));
 
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('thumbnails').upsert({
-      id: updatedItem.id,
-      title: updatedItem.title,
-      creator: updatedItem.creator,
-      image_url: updatedItem.imageUrl,
-      source_url: updatedItem.sourceUrl,
-      niche: updatedItem.niche,
-      tags: updatedItem.tags,
-      colors: updatedItem.colors,
-      ocr_text: updatedItem.ocrText,
-      emotion: updatedItem.emotion,
-      breakdown_notes: updatedItem.breakdownNotes,
-      views_estimate: updatedItem.viewsEstimate,
-      source: updatedItem.source,
-      likes_count: updatedItem.likesCount || 0
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase thumbnail update error:', error.message);
+  if (isSupabaseConfigured) {
+    // Owner-only route; the browser no longer holds a writable database key.
+    adminFetch('/api/thumbnails/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        includeColors: true,
+        items: [{
+          id: updatedItem.id,
+          title: updatedItem.title,
+          creator: updatedItem.creator,
+          imageUrl: updatedItem.imageUrl,
+          sourceUrl: updatedItem.sourceUrl,
+          niche: updatedItem.niche,
+          tags: updatedItem.tags,
+          colors: updatedItem.colors,
+          ocrText: updatedItem.ocrText,
+          emotion: updatedItem.emotion,
+          breakdownNotes: updatedItem.breakdownNotes,
+          viewsEstimate: updatedItem.viewsEstimate,
+          source: updatedItem.source,
+          likesCount: updatedItem.likesCount || 0
+        }]
+      })
+    }).then((res) => {
+      if (!res.ok) console.warn('Thumbnail update failed:', res.status);
+    }).catch((err) => {
+      console.warn('Thumbnail update failed:', err);
     });
   }
 
@@ -654,25 +648,31 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
   // The server upload route is authoritative for colours — it extracts them
   // from the image bytes. Re-writing them here would clobber that with the
   // client's (possibly empty) array, so `colors` is left untouched here.
-  if (isSupabaseConfigured && supabase && newItems.length > 0) {
-    const records = newItems.map(item => ({
+  if (isSupabaseConfigured && newItems.length > 0) {
+    const items = newItems.map(item => ({
       id: item.id,
       title: item.title,
       creator: item.creator,
-      image_url: item.imageUrl,
-      source_url: item.sourceUrl,
+      imageUrl: item.imageUrl,
+      sourceUrl: item.sourceUrl,
       niche: item.niche,
       tags: item.tags,
-      ocr_text: item.ocrText,
+      ocrText: item.ocrText,
       emotion: item.emotion,
-      breakdown_notes: item.publishedTime ? `Published: ${item.publishedTime}${item.breakdownNotes ? ` | ${item.breakdownNotes}` : ''}` : (item.breakdownNotes || ''),
-      views_estimate: item.viewsEstimate,
+      breakdownNotes: item.publishedTime ? `Published: ${item.publishedTime}${item.breakdownNotes ? ` | ${item.breakdownNotes}` : ''}` : (item.breakdownNotes || ''),
+      viewsEstimate: item.viewsEstimate,
       source: item.source,
-      likes_count: item.likesCount || 0
+      likesCount: item.likesCount || 0
     }));
 
-    supabase.from('thumbnails').upsert(records).then(({ error }) => {
-      if (error) console.warn('Supabase bulk thumbnail sync error:', error.message);
+    adminFetch('/api/thumbnails/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    }).then((res) => {
+      if (!res.ok) console.warn('Bulk thumbnail sync failed:', res.status);
+    }).catch((err) => {
+      console.warn('Bulk thumbnail sync failed:', err);
     });
   }
 
@@ -888,64 +888,4 @@ export function getStoredCollections(): CollectionBoard[] {
   } catch {
     return DEFAULT_COLLECTIONS;
   }
-}
-
-export function saveCollection(collection: CollectionBoard): CollectionBoard[] {
-  if (typeof window === 'undefined') return [collection, ...DEFAULT_COLLECTIONS];
-  const list = getStoredCollections();
-  const existsIndex = list.findIndex(c => c.id === collection.id);
-  let updated: CollectionBoard[];
-  if (existsIndex >= 0) {
-    updated = [...list];
-    updated[existsIndex] = collection;
-  } else {
-    updated = [collection, ...list];
-  }
-  localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
-
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('collections').upsert({
-      id: collection.id,
-      name: collection.name,
-      description: collection.description,
-      thumbnail_ids: collection.thumbnailIds,
-      color_theme: collection.colorTheme
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase collection sync error:', error.message);
-    });
-  }
-
-  return updated;
-}
-
-export function toggleThumbnailInCollection(collectionId: string, thumbId: string): CollectionBoard[] {
-  const collections = getStoredCollections();
-  const updated = collections.map(c => {
-    if (c.id === collectionId) {
-      const exists = c.thumbnailIds.includes(thumbId);
-      return {
-        ...c,
-        thumbnailIds: exists
-          ? c.thumbnailIds.filter(id => id !== thumbId)
-          : [...c.thumbnailIds, thumbId]
-      };
-    }
-    return c;
-  });
-  localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
-
-  const target = updated.find(c => c.id === collectionId);
-  if (target && isSupabaseConfigured && supabase) {
-    supabase.from('collections').upsert({
-      id: target.id,
-      name: target.name,
-      description: target.description,
-      thumbnail_ids: target.thumbnailIds,
-      color_theme: target.colorTheme
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase toggle sync error:', error.message);
-    });
-  }
-
-  return updated;
 }

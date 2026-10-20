@@ -33,35 +33,27 @@ CREATE TABLE IF NOT EXISTS public.collections (
   color_theme TEXT DEFAULT '#6366f1'
 );
 
--- 3. Enable Row Level Security (RLS) - Public Read & Write
+-- 3. Enable Row Level Security (RLS) - Public Read, Owner-only Write
+--
+-- The publishable key is public: it ships in the browser bundle. A policy that
+-- lets it write means anyone who copies the key can insert or delete rows
+-- without opening the app. Reads stay public because the gallery is a public
+-- wall; every mutation goes through an owner-only API route that uses
+-- SUPABASE_SERVICE_ROLE_KEY, which bypasses RLS.
+-- Existing projects: run supabase/migrations/2026-10-20_lock_down_public_writes.sql
 ALTER TABLE public.thumbnails ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.collections ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read access on thumbnails"
   ON public.thumbnails FOR SELECT USING (true);
 
-CREATE POLICY "Allow public insert on thumbnails"
-  ON public.thumbnails FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Allow public update on thumbnails"
-  ON public.thumbnails FOR UPDATE USING (true);
-
-CREATE POLICY "Allow public delete on thumbnails"
-  ON public.thumbnails FOR DELETE USING (true);
-
 CREATE POLICY "Allow public read access on collections"
   ON public.collections FOR SELECT USING (true);
 
-CREATE POLICY "Allow public insert on collections"
-  ON public.collections FOR INSERT WITH CHECK (true);
+-- No public INSERT/UPDATE/DELETE policies on either table: writes are
+-- service-role only.
 
-CREATE POLICY "Allow public update on collections"
-  ON public.collections FOR UPDATE USING (true);
-
-CREATE POLICY "Allow public delete on collections"
-  ON public.collections FOR DELETE USING (true);
-
--- 4. Enable Row Level Security (RLS) on Storage Objects for Thumbnails and Posters
+-- 4. Enable Row Level Security (RLS) on Storage for public reads only.
 DO $$
 BEGIN
   -- Storage object read access
@@ -69,15 +61,11 @@ BEGIN
   CREATE POLICY "Allow public read access on storage objects"
     ON storage.objects FOR SELECT USING (true);
 
-  -- Storage object insert access
+  -- No public insert/update/delete: uploads and removals go through the
+  -- service role in the API routes.
   DROP POLICY IF EXISTS "Allow public insert on storage objects" ON storage.objects;
-  CREATE POLICY "Allow public insert on storage objects"
-    ON storage.objects FOR INSERT WITH CHECK (true);
-
-  -- Storage object delete access
+  DROP POLICY IF EXISTS "Allow public update on storage objects" ON storage.objects;
   DROP POLICY IF EXISTS "Allow public delete on storage objects" ON storage.objects;
-  CREATE POLICY "Allow public delete on storage objects"
-    ON storage.objects FOR DELETE USING (true);
 EXCEPTION WHEN OTHERS THEN
   NULL;
 END $$;

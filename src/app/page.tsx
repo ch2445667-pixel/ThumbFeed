@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { TopBar } from '../components/TopBar';
 import { ThumbnailCard } from '../components/ThumbnailCard';
 import { FilterPillBar } from '../components/FilterPillBar';
 import { type ColorFamily } from '../lib/colorFamilies';
-import { AddModal } from '../components/AddModal';
-import { ThumbnailModal } from '../components/ThumbnailModal';
-import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 import { IconTrash, IconFilm, IconImage, IconUploadCloud as IconUpload } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
 import { SlidingTabs } from '../components/SlidingTabs';
@@ -25,6 +23,30 @@ import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE, 
 import { fetchMissingYouTubeDetails } from '../lib/youtubeMetadataCache';
 import { BottomSectionPill } from '../components/BottomSectionPill';
 import { useQueryClient } from '@tanstack/react-query';
+
+/**
+ * The Add sheet is the single largest component in the app (~2,100 lines) and
+ * is opened only by the owner, so shipping it in the first visit's bundle made
+ * every anonymous visitor pay for it. Loading it on demand keeps the gallery
+ * lean without changing the flow.
+ */
+const AddModal = dynamic(() => import('../components/AddModal').then((mod) => mod.AddModal), {
+  ssr: false,
+});
+
+/**
+ * Both inspect and delete sheets pull in framer-motion, a large chunk an
+ * anonymous visitor who never opens a tile does not need. They load on first
+ * use; the click that opens one also starts the fetch.
+ */
+const ThumbnailModal = dynamic(
+  () => import('../components/ThumbnailModal').then((mod) => mod.ThumbnailModal),
+  { ssr: false }
+);
+const DeleteConfirmModal = dynamic(
+  () => import('../components/DeleteConfirmModal').then((mod) => mod.DeleteConfirmModal),
+  { ssr: false }
+);
 
 /** Shuffle seed, also sent to the gallery API so server-side random order matches. */
 const DEFAULT_SHUFFLE_SEED = 882391;
@@ -328,14 +350,17 @@ export default function HomePage() {
 
   // Infinite scroll sentinel. One shared observer for the whole grid.
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
+  // Destructured so the effect depends on stable callbacks rather than the
+  // query object, whose identity changes every render.
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = gallery;
   useEffect(() => {
-    if (!gallery.hasNextPage || gallery.isFetchingNextPage) return;
+    if (!hasNextPage || isFetchingNextPage) return;
     const el = loadMoreRef.current;
     if (!el || typeof IntersectionObserver === 'undefined') return;
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          gallery.fetchNextPage();
+          fetchNextPage();
         }
       },
       // Prefetch well ahead so scrolling never visibly stalls. Kept under the
@@ -345,7 +370,7 @@ export default function HomePage() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [gallery.hasNextPage, gallery.isFetchingNextPage, gallery.fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Stable identities so React.memo on ThumbnailCard actually holds. Passing
   // inline arrows here used to hand every card a new prop object on each

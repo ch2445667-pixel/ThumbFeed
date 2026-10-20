@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { internalError, rateLimit, requireAdmin } from '@/lib/apiSecurity';
 import { NicheCategory } from '@/lib/types';
 
 interface ExtractedChannelVideo {
@@ -313,8 +314,19 @@ function extractAllVideos(obj: any, channelFallbackName: string, seenIds: Set<st
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { key: 'youtube-channel', limit: 20, windowMs: 60_000 });
+    if (limited) return limited;
+
     const body = await req.json();
-    const { channelUrl, limit = 60 } = body;
+    const { channelUrl, limit = 60 } = body || {};
+
+    // Channel extraction is part of the owner's Add flow and walks YouTube on
+    // the caller's behalf, so it is not a public endpoint.
+    const denied = await requireAdmin(
+      req,
+      typeof body?.idToken === 'string' ? body.idToken : ''
+    );
+    if (denied) return denied;
 
     const requestedLimit = Math.min(Math.max(Number(limit) || 60, 1), 100);
 
@@ -723,8 +735,7 @@ export async function POST(req: NextRequest) {
       items: extractedVideos
     });
 
-  } catch (err: any) {
-    console.error('Channel extractor error:', err);
-    return NextResponse.json({ error: err.message || 'Failed to extract channel videos' }, { status: 500 });
+  } catch (err) {
+    return internalError('Channel extractor error', err);
   }
 }

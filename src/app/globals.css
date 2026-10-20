@@ -9,9 +9,9 @@
    are fixed and must not drift. Everything else is derived from them so surfaces
    can be re-tinted without touching a component.
 
-   Light mode pairs a whitish-grey canvas with deeper grey surfaces, dark black ink
-   and a dark black accent; dark mode inverts to a dark black canvas with grey
-   ink and the same dark black accent. On-accent content is always whitish-grey.
+   Light mode pairs a whitish-grey canvas with deeper grey surfaces and dark ink;
+   dark mode inverts to a near-black canvas with green-tinted off-white ink. Both
+   modes share the same emerald accent, with near-black on-accent content.
 
    Radius rule (Shape Consistency Lock): 6px chips / 10px controls /
    14px cards+panels / 18px sheets / full for pills.
@@ -56,8 +56,10 @@
   --focus: #2ecc71;
 
   /* Semantic (destructive actions only, never decoration). Red so a delete
-     action can never be mistaken for the accent. */
-  --danger: #ef5350;
+     action can never be mistaken for the accent. Deeper in light mode: the
+     brighter #ef5350 only reaches 3.08:1 on the light surface at 12px, below
+     the 4.5:1 needed for small text. Dark mode keeps the brighter tone. */
+  --danger: #c62828;
   --danger-soft: rgba(239, 83, 80, 0.12);
   --danger-line: rgba(239, 83, 80, 0.40);
   --on-danger: #3a0d0c;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '../../../../lib/apiSecurity';
 
 function formatViews(count: number): string {
   if (isNaN(count) || count < 0) return '';
@@ -308,6 +309,11 @@ async function fetchViaFallback(cleanId: string): Promise<VideoDetail | null> {
 
 export async function POST(req: NextRequest) {
   try {
+    // Public: the gallery enriches visible cards for every visitor. Rate
+    // limited because each call can spend a metered YouTube API key.
+    const limited = rateLimit(req, { key: 'youtube-details', limit: 120, windowMs: 60_000 });
+    if (limited) return limited;
+
     const body = await req.json();
     const rawIds: string[] = Array.isArray(body?.videoIds)
       ? body.videoIds
@@ -358,16 +364,19 @@ export async function POST(req: NextRequest) {
       sourceUsed: apiKey ? 'youtube-api-v3' : 'fallback-scraper',
       apiConfigured: Boolean(apiKey),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('YouTube details API error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch details', details: {} },
+      { error: 'Could not fetch video details.', details: {} },
       { status: 500 }
     );
   }
 }
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, { key: 'youtube-details', limit: 120, windowMs: 60_000 });
+  if (limited) return limited;
+
   const { searchParams } = new URL(req.url);
   const singleId = searchParams.get('videoId') || searchParams.get('id');
   const multipleIds = searchParams.get('videoIds');

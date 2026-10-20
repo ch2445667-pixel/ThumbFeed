@@ -2,8 +2,11 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { auth, signInWithGoogle, logout, onAuthStateChanged, User } from './firebase';
+import { ADMIN_EMAIL } from './admin';
 
-export const ADMIN_EMAIL = 'shivashiva66407@gmail.com';
+// Re-exported so existing client imports keep working; the value itself lives
+// in a server-safe module so API routes can read it too.
+export { ADMIN_EMAIL };
 
 /**
  * Local development unlock.

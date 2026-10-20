@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteStorageObjects, getAnonClient, hasServiceRoleKey } from '../../../../lib/supabaseServer';
+import {
+  deleteStorageObjects,
+  getAnonClient,
+  getServiceRoleClient,
+  hasServiceRoleKey,
+} from '../../../../lib/supabaseServer';
+import { internalError, rateLimit, requireAdmin } from '../../../../lib/apiSecurity';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,14 +41,33 @@ function storagePathFromUrl(imageUrl: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { id, imageUrl } = body;
+    const limited = rateLimit(req, { key: 'thumbnails-delete', limit: 120, windowMs: 60_000 });
+    if (limited) return limited;
+
+    const body = await req.json().catch(() => ({}));
+    const id = typeof body?.id === 'string' ? body.id.trim() : '';
+    const imageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl.trim() : '';
 
     if (!id && !imageUrl) {
       return NextResponse.json({ error: 'Thumbnail ID or imageUrl is required' }, { status: 400 });
     }
+    if ((id && id.length > 200) || (imageUrl && imageUrl.length > 2000)) {
+      return NextResponse.json({ error: 'Invalid thumbnail reference' }, { status: 400 });
+    }
 
-    const client = getAnonClient();
+    // Deleting is owner-only. This route previously had no check at all: an id
+    // was enough for anyone to erase a thumbnail and its stored file.
+    const denied = await requireAdmin(
+      req,
+      typeof body?.idToken === 'string' ? body.idToken : ''
+    );
+    if (denied) return denied;
+
+    // Prefer the service role, which bypasses row-level security and is
+    // required once anonymous writes are withdrawn. Falling back to the
+    // publishable key keeps an environment without the key working exactly as
+    // it does today rather than breaking deletes outright.
+    const client = getServiceRoleClient() ?? getAnonClient();
     const errors: string[] = [];
 
     // 1. Remove the database record. The publishable key is sufficient here.
@@ -103,8 +128,7 @@ export async function POST(req: NextRequest) {
             ? 'Deleted from database only; the stored file remains in the bucket'
             : 'Delete incomplete',
     });
-  } catch (err: any) {
-    console.error('Delete thumbnail error:', err);
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+  } catch (err) {
+    return internalError('Delete thumbnail error', err);
   }
 }

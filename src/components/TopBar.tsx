@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, X, AlertCircle, Search, Info, ShieldCheck, FileText, Minus, Plus, Shuffle, SlidersHorizontal } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { ViewModeToggle } from './ViewModeToggle';
 import { useAuth } from '../lib/authContext';
 
 // Google brand mark. Kept as literal brand geometry, not a hand-drawn icon.
@@ -41,10 +40,6 @@ interface TopBarProps {
   isFilterOpen?: boolean;
   activeFilterCount?: number;
   onOpenAdd?: () => void;
-  section?: 'thumbnails' | 'posters' | 'uploads';
-  /** Details/Compact lives in the bar; the bottom pill owns the section switch. */
-  isDetailView?: boolean;
-  onToggleDetailView?: () => void;
 }
 
 interface SearchFieldProps {
@@ -131,9 +126,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   isFilterOpen = false,
   activeFilterCount = 0,
   onOpenAdd,
-  section = 'thumbnails',
-  isDetailView,
-  onToggleDetailView,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -322,25 +314,11 @@ export const TopBar: React.FC<TopBarProps> = ({
               </button>
             )}
 
-            {typeof onToggleDetailView === 'function' && (
-              <ViewModeToggle
-                isDetail={Boolean(isDetailView)}
-                onToggle={onToggleDetailView}
-                className="hidden sm:inline-flex"
-              />
-            )}
-
             {onOpenAdd && (
               <button
                 type="button"
                 onClick={onOpenAdd}
-                title={
-                  section === 'posters'
-                    ? 'Add posters'
-                    : section === 'uploads'
-                      ? 'Add to My Uploads'
-                      : 'Add thumbnails'
-                }
+                title="Add to My Uploads"
                 className="flex h-9 cursor-pointer items-center gap-1 rounded-md bg-black px-2.5 text-xs font-semibold text-white shadow-card ease-spring transition-all duration-200 hover:bg-black/85 active:scale-[0.94] dark:bg-black dark:text-white dark:border dark:border-white/15"
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2} />

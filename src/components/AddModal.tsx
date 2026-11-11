@@ -13,8 +13,7 @@ import {
   IconTag,
   IconPinterest,
   IconClipboardPaste,
-  IconImage,
-  IconFilm
+  IconImage
 } from './icons/AppIcons';
 import { ThumbnailItem, NicheCategory } from '../lib/types';
 import { adminFetch } from '../lib/adminFetch';
@@ -31,7 +30,6 @@ interface AddModalProps {
   onClose: () => void;
   onAddThumbnail: (item: ThumbnailItem) => void;
   onAddMultipleThumbnails?: (items: ThumbnailItem[]) => void;
-  initialMediaKind?: 'thumbnail' | 'poster' | 'custom';
 }
 
 type AddTabMode = 'upload' | 'youtube' | 'pinterest';
@@ -504,12 +502,12 @@ export const AddModal: React.FC<AddModalProps> = ({
   onClose,
   onAddThumbnail,
   onAddMultipleThumbnails,
-  initialMediaKind = 'thumbnail'
 }) => {
   const [activeTab, setActiveTab] = useState<AddTabMode>('upload');
-  // What is being added. Posters skip the YouTube tab and land in the
-  // posters wall with kind: 'poster' instead of the thumbnails gallery.
-  const [mediaKind, setMediaKind] = useState<AddMediaKind>(initialMediaKind);
+  // The library is uploads-only, so there is no media-kind switch any more.
+  // Typed as the wider union so the shared copy/fallback branches still type
+  // check while only the 'custom' path can ever be taken.
+  const mediaKind = 'custom' as AddMediaKind;
   // Human word for the media being added, used across button and fallback copy.
   const unitWord = mediaKind === 'poster' ? 'Poster' : mediaKind === 'custom' ? 'Upload' : 'Thumbnail';
   const isCustomKind = mediaKind === 'custom';
@@ -539,11 +537,12 @@ export const AddModal: React.FC<AddModalProps> = ({
   const [pinterestError, setPinterestError] = useState('');
   const [pinterestItems, setPinterestItems] = useState<BatchExtractedItem[]>([]);
 
-  // --- Uploading to Cloud (Supabase) State ---
+  // --- Saving State ---
   const [isUploadingToCloud, setIsUploadingToCloud] = useState(false);
   const [uploadStatusText, setUploadStatusText] = useState('');
-  // Set when the bucket/DB sync failed: items on screen are local-only and
-  // will not survive a refresh. Shown as a banner above the save buttons.
+  // Set when saving to local storage failed (e.g. storage quota): items on
+  // screen are not persisted and will not survive a refresh. Shown as a banner
+  // above the save buttons.
   const [cloudError, setCloudError] = useState('');
 
   // Subscribe to category updates
@@ -558,15 +557,9 @@ export const AddModal: React.FC<AddModalProps> = ({
   // Reset modal state on open/close
   useEffect(() => {
     if (isOpen) {
-      setMediaKind(initialMediaKind);
-      // Posters have no YouTube tab and My Uploads has no Pinterest tab, so a
-      // tab left selected by the previous section may not exist here.
-      if (initialMediaKind === 'poster' && activeTab === 'youtube') {
-        setActiveTab('upload');
-      }
-      if (initialMediaKind === 'custom' && activeTab === 'pinterest') {
-        setActiveTab('upload');
-      }
+      // My Uploads has no Pinterest tab, so a tab left selected by a previous
+      // session may not exist here.
+      if (activeTab === 'pinterest') setActiveTab('upload');
     } else {
       setQueuedImages([]);
       setYoutubeInput('');
@@ -578,13 +571,12 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadCategories([]);
       setYoutubeCategories([]);
       setPinterestCategories([]);
-      setMediaKind(initialMediaKind);
       setActiveTab('upload');
       setIsUploadingToCloud(false);
       setUploadStatusText('');
       setCloudError('');
     }
-  }, [isOpen, initialMediaKind, activeTab]);
+  }, [isOpen, activeTab]);
 
   // Process a File or Blob into a QueuedImageItem
   const processImageFile = useCallback(async (file: File | Blob, customName?: string): Promise<QueuedImageItem | null> => {
@@ -892,148 +884,37 @@ export const AddModal: React.FC<AddModalProps> = ({
     }));
   };
 
-  // Upload Queued Images to Supabase and Save
+  // Save queued images to My Uploads
   const handleUploadQueuedImages = async () => {
     if (queuedImages.length === 0) return;
     setIsUploadingToCloud(true);
     setCloudError('');
-    const isPoster = mediaKind === 'poster';
-    const isCustomKind = mediaKind === 'custom';
-    const unitLabel = isPoster ? 'posters' : isCustomKind ? 'uploads' : 'thumbnails';
-    setUploadStatusText(`Uploading ${queuedImages.length} ${unitLabel} to Supabase...`);
+    setUploadStatusText(`Saving ${queuedImages.length} uploads...`);
 
-    let finalItems: ThumbnailItem[] = [];
-    let cloudOk = false;
-    const payload = queuedImages.map(item => {
-      const itemCategories = item.tags || [];
-      const assignedId = item.id.startsWith('poster-')
-          ? item.id
-          : isCustomKind
-            ? `upload-${item.id}`
-            : isPoster
-              ? `poster-${item.id}`
-              : item.id;
+    const finalItems: ThumbnailItem[] = queuedImages.map((img) => {
+      const itemCategories = img.tags || [];
+      const assignedId = img.id.startsWith('upload-') ? img.id : `upload-${img.id}`;
       return {
         id: assignedId,
         kind: mediaKind,
-        imageUrl: item.dataUrl,
-        title: item.title || `Curated ${unitWord}`,
-        creator: item.creator || (isPoster ? 'Cinema' : isCustomKind ? 'My Uploads' : 'Creator'),
-        niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-        tags:
-          itemCategories.length > 0
-            ? itemCategories
-            : isPoster
-              ? ['Movie Poster', 'Cinema']
-              : []
+        title: img.title || `Untitled ${unitWord}`,
+        creator: img.creator || 'My Uploads',
+        imageUrl: img.dataUrl,
+        sourceUrl: img.dataUrl,
+        niche: (itemCategories[0] || '') as NicheCategory,
+        tags: itemCategories,
+        colors: [],
+        ocrText: '',
+        emotion: 'Curious',
+        breakdownNotes: 'Custom upload.',
+        source: 'upload',
+        createdAt: new Date().toISOString(),
+        likesCount: Math.floor(Math.random() * 80) + 40
       };
     });
 
-    try {
-      const res = await adminFetch('/api/supabase/upload-thumbnail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: payload })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const uploadedMap = new Map<string, string>();
-        const smallMap = new Map<string, string | undefined>();
-        const dimsMap = new Map<string, { width?: number; height?: number }>();
-        const colorMap = new Map<string, string[]>();
-        let allDbSaved = true;
-        if (data.items && Array.isArray(data.items)) {
-          data.items.forEach((item: any) => {
-            const key1 = item.originalId;
-            const key2 = item.id;
-            if (item.imageUrl) {
-              if (key1) uploadedMap.set(key1, item.imageUrl);
-              if (key2) uploadedMap.set(key2, item.imageUrl);
-            }
-            if (item.thumbSmallUrl) {
-              if (key1) smallMap.set(key1, item.thumbSmallUrl);
-              if (key2) smallMap.set(key2, item.thumbSmallUrl);
-            }
-            if (item.width || item.height) {
-              const d = { width: item.width, height: item.height };
-              if (key1) dimsMap.set(key1, d);
-              if (key2) dimsMap.set(key2, d);
-            }
-            if (Array.isArray(item.colors)) {
-              if (key1) colorMap.set(key1, item.colors);
-              if (key2) colorMap.set(key2, item.colors);
-            }
-            if (item.dbSaved === false) allDbSaved = false;
-          });
-        }
-        if (data.allDbSaved === false) allDbSaved = false;
-        cloudOk = allDbSaved;
-
-        finalItems = queuedImages.map((img, idx) => {
-          const itemCategories = img.tags || [];
-          const payloadItem = payload[idx];
-          const assignedId = data.items?.[idx]?.id || payloadItem?.id || img.id;
-          const supaUrl = uploadedMap.get(img.id) || uploadedMap.get(payloadItem?.id) || uploadedMap.get(assignedId) || img.dataUrl;
-          const smallUrl = smallMap.get(img.id) || smallMap.get(payloadItem?.id) || smallMap.get(assignedId);
-          const dims = dimsMap.get(img.id) || dimsMap.get(payloadItem?.id) || dimsMap.get(assignedId);
-
-          return {
-            id: assignedId,
-            kind: mediaKind,
-            title: img.title || `Curated ${unitWord}`,
-            creator: img.creator || (isPoster ? 'Cinema' : 'Creator'),
-            imageUrl: supaUrl,
-            thumbSmallUrl: smallUrl,
-            sourceUrl: supaUrl,
-            niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-                tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
-            colors: colorMap.get(img.id) ?? colorMap.get(assignedId) ?? [],
-            width: dims?.width,
-            height: dims?.height,
-            ocrText: '',
-            emotion: 'Curious',
-            breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
-            source: 'supabase-storage',
-            createdAt: new Date().toISOString(),
-            likesCount: Math.floor(Math.random() * 80) + 40
-          };
-        });
-      } else {
-        throw new Error('Supabase upload route returned non-ok');
-      }
-    } catch (err) {
-      console.warn('Fallback to local storage upload:', err);
-      finalItems = queuedImages.map((img, idx) => {
-        const itemCategories = img.tags || [];
-        const payloadItem = payload[idx];
-        const assignedId = payloadItem?.id || img.id;
-        return {
-          id: assignedId,
-          kind: mediaKind,
-          title: img.title || `Curated ${unitWord}`,
-          creator: img.creator || (isPoster ? 'Cinema' : 'Creator'),
-          imageUrl: img.dataUrl,
-          sourceUrl: img.dataUrl,
-          niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-            tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
-          colors: [],
-          ocrText: '',
-          emotion: 'Curious',
-          breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
-          source: 'supabase-storage',
-          createdAt: new Date().toISOString(),
-          likesCount: Math.floor(Math.random() * 80) + 40
-        };
-      });
-    } finally {
-      setIsUploadingToCloud(false);
-      setUploadStatusText('');
-    }
-
-    if (!cloudOk) {
-      setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
-    }
+    setIsUploadingToCloud(false);
+    setUploadStatusText('');
 
     if (finalItems.length > 0) {
       if (onAddMultipleThumbnails) {
@@ -1041,12 +922,9 @@ export const AddModal: React.FC<AddModalProps> = ({
       } else {
         finalItems.forEach(item => onAddThumbnail(item));
       }
-      // Stay open on sync failure so the warning banner is seen; the user
-      // can retry instead of losing the queue.
-      if (cloudOk) onClose();
+      onClose();
     }
   };
-
   // --- YouTube Extraction Execution ---
   const handleExtractYoutube = async () => {
     const trimmed = youtubeInput.trim();
@@ -1236,7 +1114,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     }
   };
 
-  // Save extracted batch items (YouTube or Pinterest) to Supabase and library
+  // Save extracted batch items (YouTube or Pinterest) to My Uploads
   const handleSaveBatchItems = async (items: BatchExtractedItem[]) => {
     const selected = items.filter(i => i.selected !== false);
     if (selected.length === 0) return;
@@ -1254,153 +1132,46 @@ export const AddModal: React.FC<AddModalProps> = ({
 
     setIsUploadingToCloud(true);
     setCloudError('');
-    const isPoster = mediaKind === 'poster';
-    const isCustomKind = mediaKind === 'custom';
-    const unitLabel = isPoster ? 'posters' : isCustomKind ? 'uploads' : 'thumbnails';
-    setUploadStatusText(`Saving ${uniqueItems.length} ${unitLabel} to cloud...`);
+    setUploadStatusText(`Saving ${uniqueItems.length} uploads...`);
 
-    let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
+    const finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
       const chosenCategories = item.tags || [];
       // A YouTube import carries a videoId, which would otherwise mint a
-      // thumb-yt-* id identical to the batch importer's -- colliding with the
-      // imported feed and leaving the row out of My Uploads entirely. Custom
-      // rows always get their own upload- prefix.
-      const assignedId = isCustomKind
-        ? (item.id && item.id.startsWith('upload-') ? item.id : `upload-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`)
-        : isPoster
-          ? `poster-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`
-          : (item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`));
+      // thumb-yt-* id identical to a previously imported one. Uploads always
+      // get their own upload- prefix so they never collide.
+      const assignedId = item.id && item.id.startsWith('upload-')
+        ? item.id
+        : `upload-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`;
       return {
         id: assignedId,
         kind: mediaKind,
-        title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
-        creator: item.creator || (isPoster ? 'Cinema' : isCustomKind ? 'My Uploads' : 'Creator'),
+        title: item.title || 'Upload',
+        creator: item.creator || 'My Uploads',
         imageUrl: item.imageUrl,
         sourceUrl: item.url,
-        niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-        tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
+        niche: (chosenCategories[0] || '') as NicheCategory,
+        tags: chosenCategories,
         colors: [],
         ocrText: '',
         emotion: 'Curious',
-        breakdownNotes: isPoster
-          ? 'Uploaded movie poster.'
-          : isCustomKind
-            ? 'Custom upload.'
-            : 'Auto-extracted inspiration thumbnail.',
+        breakdownNotes: 'Custom upload.',
         viewsEstimate: item.views,
         publishedTime: item.publishedTime,
-        source: 'supabase-storage',
+        source: 'upload',
         createdAt: new Date().toISOString(),
         likesCount: Math.floor(Math.random() * 150) + 40
       };
     });
 
-    let syncFailed = false;
-    try {
-      const uploadPayload = uniqueItems.map((item, idx) => {
-        const chosenCategories = item.tags || [];
-        const assignedId = finalThumbnails[idx].id;
-        return {
-          id: assignedId,
-          kind: mediaKind,
-          videoId: item.videoId,
-          imageUrl: item.imageUrl,
-          sourceUrl: item.url,
-          title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
-          creator: item.creator || (isPoster ? 'Cinema' : isCustomKind ? 'My Uploads' : 'Creator'),
-          niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-          tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
-          views: item.views,
-          viewsEstimate: item.views,
-          publishedTime: item.publishedTime
-        };
-      });
-
-      const res = await adminFetch('/api/supabase/upload-thumbnail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: uploadPayload })
-      });
-
-      if (res.ok) {
-        const resData = await res.json();
-        let allDbSaved = true;
-        if (resData.allDbSaved === false) allDbSaved = false;
-        if (resData.items && Array.isArray(resData.items)) {
-          const map = new Map<string, string>();
-          const smallMap = new Map<string, string | undefined>();
-          const dimsMap = new Map<string, { width?: number; height?: number }>();
-          const colorMap = new Map<string, string[]>();
-          resData.items.forEach((it: any) => {
-            const key1 = it.originalId;
-            const key2 = it.id;
-            const key3 = it.videoId;
-            if (it.imageUrl) {
-              if (key1) map.set(key1, it.imageUrl);
-              if (key2) map.set(key2, it.imageUrl);
-              if (key3) map.set(key3, it.imageUrl);
-            }
-            if (it.thumbSmallUrl) {
-              if (key1) smallMap.set(key1, it.thumbSmallUrl);
-              if (key2) smallMap.set(key2, it.thumbSmallUrl);
-              if (key3) smallMap.set(key3, it.thumbSmallUrl);
-            }
-            if (it.width || it.height) {
-              const d = { width: it.width, height: it.height };
-              if (key1) dimsMap.set(key1, d);
-              if (key2) dimsMap.set(key2, d);
-              if (key3) dimsMap.set(key3, d);
-            }
-            if (Array.isArray(it.colors)) {
-              if (key1) colorMap.set(key1, it.colors);
-              if (key2) colorMap.set(key2, it.colors);
-              if (key3) colorMap.set(key3, it.colors);
-            }
-            if (it.dbSaved === false) allDbSaved = false;
-          });
-
-          finalThumbnails = finalThumbnails.map((item, idx) => {
-            const vId = uniqueItems[idx]?.videoId;
-            const origId = uploadPayload[idx]?.id;
-            const supaUrl = (vId ? map.get(vId) : null) || map.get(origId) || map.get(item.id) || item.imageUrl;
-            const smallUrl = (vId ? smallMap.get(vId) : null) || smallMap.get(origId) || smallMap.get(item.id);
-            const dims = (vId ? dimsMap.get(vId) : null) || dimsMap.get(origId) || dimsMap.get(item.id);
-            return {
-              ...item,
-              imageUrl: supaUrl,
-              thumbSmallUrl: smallUrl,
-              width: dims?.width ?? item.width,
-              height: dims?.height ?? item.height,
-              colors: (vId ? colorMap.get(vId) : null) ?? colorMap.get(origId) ?? colorMap.get(item.id) ?? [],
-              viewsEstimate: uniqueItems[idx]?.views || item.viewsEstimate,
-              publishedTime: uniqueItems[idx]?.publishedTime || item.publishedTime
-            };
-          });
-        }
-        if (!allDbSaved) {
-          setCloudError('Cloud database sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
-          syncFailed = true;
-        }
-      } else {
-        setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
-        syncFailed = true;
-      }
-    } catch (err) {
-      console.warn('Supabase batch upload notice:', err);
-      setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
-      syncFailed = true;
-    } finally {
-      setIsUploadingToCloud(false);
-      setUploadStatusText('');
-    }
+    setIsUploadingToCloud(false);
+    setUploadStatusText('');
 
     if (onAddMultipleThumbnails) {
       onAddMultipleThumbnails(finalThumbnails);
     } else {
       finalThumbnails.forEach(t => onAddThumbnail(t));
     }
-    // Stay open when the sync failed so the warning is seen and retry is possible.
-    if (!syncFailed) onClose();
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -1450,54 +1221,6 @@ export const AddModal: React.FC<AddModalProps> = ({
           >
             <IconClose className="w-4 h-4" />
           </button>
-        </div>
-
-        {/* What is being added */}
-        <div className="px-5 pt-3">
-          <div
-            className="grid grid-cols-3 gap-1 rounded-xl border border-line bg-surface p-1"
-            role="tablist"
-            aria-label="What are you adding?"
-          >
-            {(
-              [
-                { key: 'thumbnail', label: 'Thumbnails', Icon: IconImage },
-                { key: 'poster', label: 'Posters', Icon: IconFilm },
-                { key: 'custom', label: 'My Uploads', Icon: IconUploadCloud },
-              ] as const
-            ).map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={mediaKind === key}
-                onClick={() => {
-                  setMediaKind(key);
-                  // Posters have no YouTube source, so the tab is hidden there;
-                  // leaving it selected would show a body with no tab. My
-                  // Uploads keeps YouTube and only drops Pinterest.
-                  if (key === 'poster' && activeTab === 'youtube') setActiveTab('upload');
-                  if (key !== 'poster' && activeTab === 'pinterest' && mediaKind === 'custom') {
-                    setActiveTab('upload');
-                  }
-                }}
-                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
-                  mediaKind === key
-                    ? 'bg-accent text-accent-on shadow-xs'
-                    : 'text-ink-muted hover:text-ink'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-          {mediaKind === 'custom' && (
-            <p className="mt-2 px-1 text-[11px] leading-relaxed text-ink-faint">
-              Saves to your own <strong className="text-ink-muted">My Uploads</strong> wall.
-              Kept separate from the imported feed and from posters.
-            </p>
-          )}
         </div>
 
         {/* Minimalist Tab Switcher */}
@@ -1803,13 +1526,13 @@ export const AddModal: React.FC<AddModalProps> = ({
                       {isUploadingToCloud ? (
                         <>
                           <IconSpinner className="w-4 h-4 animate-spin" />
-                          <span>{uploadStatusText || 'Saving to Cloud...'}</span>
+                          <span>{uploadStatusText || 'Saving...'}</span>
                         </>
                       ) : (
                         <>
                           <IconCheck className="w-4 h-4" />
                           <span>
-                            Upload {queuedImages.length} {queuedImages.length === 1 ? unitWord : `${unitWord}s`} to Cloud
+                            Save {queuedImages.length} {queuedImages.length === 1 ? unitWord : `${unitWord}s`}
                           </span>
                         </>
                       )}
@@ -2043,7 +1766,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <>
                           <IconCheck className="w-4 h-4" />
                           <span>
-                            Import {youtubeItems.filter(i => i.selected !== false).length} Thumbnails
+                            Save {youtubeItems.filter(i => i.selected !== false).length} Uploads
                           </span>
                         </>
                       )}
@@ -2251,7 +1974,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <>
                           <IconCheck className="w-4 h-4" />
                           <span>
-                            Import {pinterestItems.filter(i => i.selected !== false).length} {mediaKind === 'poster' ? 'Posters' : 'Pins'}
+                            Save {pinterestItems.filter(i => i.selected !== false).length} Uploads
                           </span>
                         </>
                       )}

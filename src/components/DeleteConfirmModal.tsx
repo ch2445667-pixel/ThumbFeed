@@ -103,7 +103,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
 
           {/* Warning text */}
           <p className="text-xs text-[#0d0e10]/80 dark:text-ink-2 leading-relaxed">
-            Are you sure you want to permanently delete this thumbnail? It will be removed immediately from your database, storage bucket, and feed.
+            Are you sure you want to permanently delete this thumbnail? It will be removed immediately from storage on this device and your feed.
           </p>
 
           {/* Action buttons */}

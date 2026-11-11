@@ -46,7 +46,7 @@ export interface ThumbnailItem {
   viewsEstimate?: string;
   subscribersCount?: string;
   publishedTime?: string;
-  source: 'pinterest' | 'youtube' | 'upload' | 'curated' | 'supabase-storage';
+  source: 'pinterest' | 'youtube' | 'upload' | 'curated';
   createdAt: string;
   likesCount?: number;
 }

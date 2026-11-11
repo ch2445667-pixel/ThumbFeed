@@ -6,22 +6,17 @@ import { TopBar } from '../components/TopBar';
 import { ThumbnailCard } from '../components/ThumbnailCard';
 import { FilterPillBar } from '../components/FilterPillBar';
 import { type ColorFamily } from '../lib/colorFamilies';
-import { IconTrash, IconFilm, IconImage, IconUploadCloud as IconUpload } from '../components/icons/AppIcons';
+import { IconUploadCloud as IconUpload } from '../components/icons/AppIcons';
 import { ThumbnailItem, FilterState, NicheCategory } from '../lib/types';
-import { SlidingTabs } from '../components/SlidingTabs';
 import { useAuth } from '../lib/authContext';
 import {
   saveStoredThumbnail,
   saveStoredThumbnails,
-  getStoredPosters,
-  saveStoredPosters,
-  persistPosterList,
   deleteStoredThumbnailPermanently,
   updateStoredThumbnail
 } from '../lib/storage';
 import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE, type GalleryPage, type GallerySection } from '../lib/useGallery';
 import { fetchMissingYouTubeDetails } from '../lib/youtubeMetadataCache';
-import { BottomSectionPill } from '../components/BottomSectionPill';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -48,8 +43,11 @@ const DeleteConfirmModal = dynamic(
   { ssr: false }
 );
 
-/** Shuffle seed, also sent to the gallery API so server-side random order matches. */
+/** Shuffle seed, so a shuffle is stable for the lifetime of the page. */
 const DEFAULT_SHUFFLE_SEED = 882391;
+
+/** The library is a single wall now: the owner's uploads. */
+const SECTION: GallerySection = 'uploads';
 
 /** Debounce the search box before it becomes part of the query key, so every
     keystroke does not fire a new request. */
@@ -62,27 +60,14 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-// Tiles per server page. One page is metadata for 36 tiles -- tens of
-// kilobytes -- and the infinite query accumulates pages only as the user
-// scrolls, so a visit never downloads the table.
+// Tiles per page. Paging keeps the first paint small even when the library
+// grows to thousands of uploads.
 const PAGE_SIZE = GALLERY_PAGE_SIZE;
 
 export default function HomePage() {
   const { isAdmin } = useAuth();
 
-  // The gallery lives on the server now, paged 36 at a time through
-  // /api/gallery and cached by React Query. There is no local mirror state:
-  // pages accumulate in the query cache, mutations invalidate it, and the
-  // realtime channel invalidates on any database change.
-
-  // Library section. Three disjoint walls: the imported feed, portrait posters,
-  // and the user's own uploads. Switched from the bottom pill.
-  const [section, setSection] = useState<GallerySection>('thumbnails');
-
-  // Grid density is remembered per section. Portraits read better denser.
-  const [posterColumns, setPosterColumns] = useState<number>(5);
-  
-  // UI Grid Zoom / Columns Slider: Default to 3 columns (Maximum zoom with 3 thumbnails on single row)
+  // Grid Zoom / Columns Slider: Default to 3 columns (Maximum zoom with 3 thumbnails on single row)
   const [columns, setColumns] = useState<number>(3);
   const [shuffleSeed, setShuffleSeed] = useState<number>(DEFAULT_SHUFFLE_SEED);
 
@@ -93,58 +78,14 @@ export default function HomePage() {
   const [thumbnailToDelete, setThumbnailToDelete] = useState<ThumbnailItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Option state: Toggle thumbnail card metadata footer (channel name, video title, views count)
-  const [showCardInfo, setShowCardInfo] = useState<boolean>(true);
-
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('thumbfeed_show_card_info');
-      if (stored !== null) {
-        setShowCardInfo(stored === 'true');
-      }
       const storedCols = localStorage.getItem('thumbfeed_columns');
       if (storedCols) {
         const val = parseInt(storedCols, 10);
         if (val >= 3 && val <= 6) setColumns(val);
       }
-      const storedPosterCols = localStorage.getItem('thumbfeed_poster_columns');
-      if (storedPosterCols) {
-        const val = parseInt(storedPosterCols, 10);
-        if (val >= 3 && val <= 6) setPosterColumns(val);
-      }
-      const storedSection = localStorage.getItem('thumbfeed_section');
-      if (storedSection === 'posters' || storedSection === 'thumbnails' || storedSection === 'uploads') {
-        setSection(storedSection as GallerySection);
-      }
     } catch {}
-  }, []);
-
-  // Switching walls resets the category scope, which belongs to thumbnails.
-  // No explicit sync call: the section is part of the gallery query key, so
-  // switching mounts the other wall's cached pages (or fetches page 0 once).
-  const handleSectionChange = useCallback((next: GallerySection) => {
-    setSection(next);
-    try {
-      localStorage.setItem('thumbfeed_section', next);
-    } catch {}
-    setFilters(prev => ({
-      ...prev,
-      selectedNiche: 'All',
-          selectedColors: [],
-      selectedEmotion: null,
-    }));
-  }, []);
-
-  const handleToggleCardInfo = useCallback(() => {
-    setShowCardInfo((prev) => {
-      const next = !prev;
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('thumbfeed_show_card_info', String(next));
-        } catch {}
-      }
-      return next;
-    });
   }, []);
 
   const handleColumnsChange = useCallback((cols: number) => {
@@ -155,28 +96,7 @@ export default function HomePage() {
     } catch {}
   }, []);
 
-  const handlePosterColumnsChange = useCallback((cols: number) => {
-    const val = Math.min(6, Math.max(3, cols));
-    setPosterColumns(val);
-    try {
-      localStorage.setItem('thumbfeed_poster_columns', String(val));
-    } catch {}
-  }, []);
-
-  const activeColumns = section === 'posters' ? posterColumns : columns;
-  const handleActiveColumnsChange = useCallback((cols: number) => {
-    if (section === 'posters') {
-      handlePosterColumnsChange(cols);
-    } else {
-      handleColumnsChange(cols);
-    }
-  }, [section, handleColumnsChange, handlePosterColumnsChange]);
-
-  // The wall being browsed. Everything below (counts, filters, paging)
-  // is served by the gallery query keyed on the section, so both walls share
-  // one pipeline without a local mirror.
-
-  // Default sort is 'random' (Shuffle) so feed is always dynamically shuffled from start
+  // Default sort is 'random' (Shuffle) so the wall is always freshly shuffled.
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     selectedNiche: 'All',
@@ -185,30 +105,20 @@ export default function HomePage() {
     sortBy: 'random'
   });
 
-  // The wall is server state now. One infinite query per filter combination,
-  // paged 36 rows at a time through /api/gallery. Filtering, sorting and the
-  // seeded shuffle all happen server-side, so the client never holds the table
-  // and a filter change costs one page, not a full sync.
-  //
-  // Deliberately gone from the old implementation:
-  //  - the 60s poll that re-downloaded the table on a timer;
-  //  - the window-focus and visibilitychange handlers that refetched on every
-  //    tab switch (a focus event is not new data);
-  //  - client-side filtering over a full local mirror.
-  // Live updates arrive through the realtime channel in useGallery, which
-  // invalidates the query instead of polling.
+  // Uploads come from the local store. Filtering, sorting and the seeded
+  // shuffle run in memory; a filter change costs one pass, not a network trip.
   const debouncedSearch = useDebouncedValue(filters.searchQuery.trim(), 500);
   const galleryKey = useMemo(() => ({
-    section,
+    section: SECTION,
     search: debouncedSearch,
     niche: filters.selectedNiche,
       colors: filters.selectedColors,
     sort: filters.sortBy,
     seed: shuffleSeed,
-  }), [section, debouncedSearch, filters.selectedNiche, filters.selectedColors, filters.sortBy, shuffleSeed]);
+  }), [debouncedSearch, filters.selectedNiche, filters.selectedColors, filters.sortBy, shuffleSeed]);
 
   const gallery = useGallery(galleryKey);
-  const facetsQuery = useGalleryFacets(section);
+  const facetsQuery = useGalleryFacets(SECTION);
   const invalidateGallery = useInvalidateGallery();
   const queryClient = useQueryClient();
 
@@ -218,10 +128,6 @@ export default function HomePage() {
   );
   const galleryTotal = gallery.data?.pages[0]?.total ?? 0;
 
-
-  // Category counts and the colour library arrive with the facets query,
-  // computed server-side over the whole wall. The grid pages below never need
-  // the full list, so counts no longer require downloading it.
   const categoryCounts = useMemo(
     () => facetsQuery.data?.nicheCounts ?? { All: 0 },
     [facetsQuery.data]
@@ -231,10 +137,7 @@ export default function HomePage() {
     [facetsQuery.data]
   );
 
-  // The wall renders the accumulated server pages in order. Filtering, sorting
-  // and the seeded shuffle all happened server-side, so there is no second
-  // client-side pass and paging can never reshuffle what is on screen.
-  const filteredThumbnails = galleryItems;
+  const visibleThumbnails = galleryItems;
 
   // Proactively fetch YouTube metrics (views, upload date, channel) via YouTube Data API v3
   useEffect(() => {
@@ -249,41 +152,23 @@ export default function HomePage() {
     setShuffleSeed(Date.now());
   }, []);
 
-  // Add Thumbnail / Poster (Restricted to shivashiva66407@gmail.com)
-  const handleAddThumbnail = (item: ThumbnailItem) => {
+  // Add an upload (Restricted to the owner account)
+  const handleAddThumbnail = async (item: ThumbnailItem) => {
     if (!isAdmin) return;
-    const isPoster = item.kind === 'poster' || item.id?.startsWith('poster-') || section === 'posters';
-    if (isPoster) {
-      saveStoredPosters([{ ...item, kind: 'poster' }]);
-    } else {
-      saveStoredThumbnail(item);
-    }
+    await saveStoredThumbnail(item);
     invalidateGallery();
   };
 
-  // Add Multiple Thumbnails / Posters in batch (Restricted to shivashiva66407@gmail.com)
-  const handleAddMultipleThumbnails = (items: ThumbnailItem[]) => {
+  // Add multiple uploads in batch (Restricted to the owner account)
+  const handleAddMultipleThumbnails = async (items: ThumbnailItem[]) => {
     if (!isAdmin) return;
-    const isPosterSection = section === 'posters';
-    const posterItems = items
-      .filter(i => i.kind === 'poster' || i.id?.startsWith('poster-') || (isPosterSection && i.kind !== 'thumbnail'))
-      .map(i => ({ ...i, kind: 'poster' as const }));
-    const thumbItems = items.filter(i => !posterItems.some(p => p.id === i.id));
-    if (posterItems.length > 0) {
-      saveStoredPosters(posterItems);
-    }
-    if (thumbItems.length > 0) {
-      saveStoredThumbnails(thumbItems);
-    }
-    // The rows already exist server-side (the upload route wrote them), so a
-    // single invalidation brings them into the feed.
+    await saveStoredThumbnails(items);
     invalidateGallery();
   };
 
-  // Permanently delete a thumbnail. The tile vanishes optimistically from every
-  // cached page at once and every modal closes; the storage, database and
-  // bucket deletes run in the background and never block the UI. Only a
-  // failure surfaces a message.
+  // Permanently delete an upload. The tile vanishes optimistically from every
+  // cached page at once and every modal closes; the local store write happens
+  // in the background and never blocks the UI.
   const handleDeleteThumbnail = useCallback((item: ThumbnailItem) => {
     if (!isAdmin) return;
     const matches = (t: ThumbnailItem) => t.id === item.id || t.imageUrl === item.imageUrl;
@@ -300,25 +185,15 @@ export default function HomePage() {
     });
     setSelectedItem(prev => (prev && matches(prev) ? null : prev));
     setThumbnailToDelete(null);
-    deleteStoredThumbnailPermanently(item).then((result) => {
-      // The tile is already gone from the UI. If the server could not also
-      // remove the stored file, say so rather than reporting a clean delete.
-      if (result && result.storageRemovalFailed) {
-        setToastMessage(
-          'Removed from the app, but the file is still in the Supabase bucket. ' +
-            'Add SUPABASE_SERVICE_ROLE_KEY to .env to allow permanent file deletion.'
-        );
-        window.setTimeout(() => setToastMessage(null), 6000);
-      }
-    }).catch((err) => {
+    deleteStoredThumbnailPermanently(item).catch((err) => {
       console.error('Permanent delete failed:', err);
-      setToastMessage('Delete failed. Check your connection and try again.');
+      setToastMessage('Delete failed. Try again.');
       window.setTimeout(() => setToastMessage(null), 4000);
     });
   }, [isAdmin, queryClient]);
 
-  // Rename a thumbnail title (admin only). The cached pages update
-  // optimistically; the metadata upsert inside persists it server-side.
+  // Rename an upload title (admin only). The cached pages update
+  // optimistically; the local store persists it.
   const handleEditTitle = useCallback((item: ThumbnailItem, title: string) => {
     const next = title.trim();
     if (!next) return;
@@ -334,19 +209,9 @@ export default function HomePage() {
         })),
       };
     });
-    if (item.kind === 'poster') {
-      const currentPosters = getStoredPosters().map((t) => (matches(t) ? updated : t));
-      persistPosterList(currentPosters);
-    } else {
-      updateStoredThumbnail(updated);
-    }
+    updateStoredThumbnail(updated).then(() => invalidateGallery());
     setSelectedItem(prev => (prev && matches(prev) ? updated : prev));
-  }, [queryClient]);
-
-  // The wall renders the accumulated pages. Infinite scroll appends the next
-  // server page; a filter change swaps the query key, which starts over at
-  // page 0 by construction -- no manual page counter to reset.
-  const visibleThumbnails = filteredThumbnails;
+  }, [queryClient, invalidateGallery]);
 
   // Infinite scroll sentinel. One shared observer for the whole grid.
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
@@ -363,18 +228,13 @@ export default function HomePage() {
           fetchNextPage();
         }
       },
-      // Prefetch well ahead so scrolling never visibly stalls. Kept under the
-      // browser's own lazy-image threshold so tiles are mounted just before
-      // they are needed rather than a full screen early.
       { rootMargin: '600px 0px' }
     );
     io.observe(el);
     return () => io.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Stable identities so React.memo on ThumbnailCard actually holds. Passing
-  // inline arrows here used to hand every card a new prop object on each
-  // parent render, re-rendering the entire grid every time.
+  // Stable identities so React.memo on ThumbnailCard actually holds.
   const handleInspect = useCallback((item: ThumbnailItem) => {
     setSelectedItem(item);
   }, []);
@@ -408,11 +268,9 @@ export default function HomePage() {
     }));
   }, []);
 
-  // Colour strip data for the filter panel comes from the facets query above.
-
-  // Dynamic grid column class based on zoom slider (3 columns = Maximum Zoom with 3 thumbnails per row)
+  // Dynamic grid column class based on zoom slider (3 columns = Maximum Zoom)
   const getGridColsClass = () => {
-    switch (activeColumns) {
+    switch (columns) {
       case 3:
         return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3';
       case 4:
@@ -425,21 +283,6 @@ export default function HomePage() {
     }
   };
 
-  // Fixed 4:5 grid for posters. Every card has identical 4:5 aspect ratio and clean grid alignment.
-  const getPosterColsClass = () => {
-    switch (posterColumns) {
-      case 3:
-        return 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3';
-      case 4:
-        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4';
-      case 6:
-        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
-      case 5:
-      default:
-        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
-    }
-  };
-
   return (
     <div className="flex min-h-[100dvh] flex-col bg-canvas pb-12 text-ink transition-colors duration-200 pt-16">
 
@@ -448,48 +291,24 @@ export default function HomePage() {
         query={filters.searchQuery}
         onQueryChange={(q) => setFilters(prev => ({ ...prev, searchQuery: q }))}
         resultCount={galleryTotal}
-        columns={activeColumns}
-        onColumnsChange={handleActiveColumnsChange}
+        columns={columns}
+        onColumnsChange={handleColumnsChange}
         onShuffle={handleShuffle}
         onToggleFilter={() => setIsFilterBarOpen(prev => !prev)}
         isFilterOpen={isFilterBarOpen}
         activeFilterCount={activeFilterCount}
         onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
-        section={section}
-        isDetailView={showCardInfo}
-        // Only the thumbnail grid has a metadata footer to toggle. Posters and
-        // uploads have no title/creator block, so the control would be inert.
-        onToggleDetailView={section === 'thumbnails' ? handleToggleCardInfo : undefined}
       />
-
-      {/* Library switcher: docked at the bottom, out of the reading column. */}
-      <BottomSectionPill section={section} onChange={handleSectionChange} />
 
       <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 pb-28 pt-3 sm:px-6 lg:px-8">
         {galleryTotal === 0 && !gallery.isLoading ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface">
-              {section === 'posters' ? (
-                <IconFilm className="h-4 w-4 text-ink-faint" />
-              ) : section === 'uploads' ? (
-                <IconUpload className="h-4 w-4 text-ink-faint" />
-              ) : (
-                <IconImage className="h-4 w-4 text-ink-faint" />
-              )}
+              <IconUpload className="h-4 w-4 text-ink-faint" />
             </div>
-            <p className="mt-4 text-sm font-medium text-ink">
-              {section === 'thumbnails'
-                ? 'No thumbnails in vault'
-                : section === 'uploads'
-                  ? 'No uploads yet'
-                  : 'No posters found'}
-            </p>
+            <p className="mt-4 text-sm font-medium text-ink">No uploads yet</p>
             <p className="mt-1 max-w-[34ch] text-sm text-ink-muted">
-              {section === 'thumbnails'
-                ? 'All previous thumbnails have been cleared. Upload or extract YouTube links to add new thumbnails.'
-                : section === 'uploads'
-                  ? 'Images you add from the Add button land here, kept apart from the imported feed.'
-                  : 'No posters match your current search or filters. Upload or import new posters.'}
+              Images you add from the Add button land here.
             </p>
             <button
               onClick={resetFilters}
@@ -500,40 +319,21 @@ export default function HomePage() {
           </div>
         ) : (
           <>
-            {section === 'posters' ? (
-              <div className={`grid ${getPosterColsClass()} gap-3 sm:gap-4`}>
-                {visibleThumbnails.map((item, index) => (
-                  <div key={item.id} className="w-full">
-                    <ThumbnailCard
-                      item={item}
-                      index={index}
-                      poster={true}
-                      showCardInfo={false}
-                      onInspect={handleInspect}
-                      onDelete={isAdmin ? handleRequestDelete : undefined}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className={`grid ${getGridColsClass()} gap-3 sm:gap-4`}>
-                {visibleThumbnails.map((item, index) => (
-                  <ThumbnailCard
-                    key={item.id}
-                    item={item}
-                    index={index}
-                    poster={false}
-                    // Uploads are a personal image shelf, so they render
-                    // image-only by default. The Details/Compact toggle is
-                    // scoped to the thumbnails wall, so this stays fixed
-                    // rather than following that wall's saved preference.
-                    showCardInfo={section === 'uploads' ? false : showCardInfo}
-                    onInspect={handleInspect}
-                    onDelete={isAdmin ? handleRequestDelete : undefined}
-                  />
-                ))}
-              </div>
-            )}
+            <div className={`grid ${getGridColsClass()} gap-3 sm:gap-4`}>
+              {visibleThumbnails.map((item, index) => (
+                <ThumbnailCard
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  poster={false}
+                  // Uploads are a personal image shelf, so they render
+                  // image-only: there is no title/creator block to show.
+                  showCardInfo={false}
+                  onInspect={handleInspect}
+                  onDelete={isAdmin ? handleRequestDelete : undefined}
+                />
+              ))}
+            </div>
 
             {/* Paging footer: infinite scroll with an explicit control. */}
             {gallery.hasNextPage && (
@@ -549,7 +349,7 @@ export default function HomePage() {
                 </button>
               </div>
             )}
-            {gallery.isLoading && filteredThumbnails.length === 0 && (
+            {gallery.isLoading && visibleThumbnails.length === 0 && (
               <div className="flex justify-center py-24 text-xs text-ink-faint">Loading…</div>
             )}
           </>
@@ -565,29 +365,9 @@ export default function HomePage() {
         onResetFilters={resetFilters}
         onClose={() => setIsFilterBarOpen(false)}
         categoryCounts={categoryCounts}
-        // Posters carry no category or colour taxonomy, so they hide both sections.
-        // Thumbnails and uploads both have real values to filter on.
-        colorLibrary={section === 'posters' ? [] : colorLibrary}
+        colorLibrary={colorLibrary}
         resultCount={galleryTotal}
-        // Facet counts walk the whole wall before they arrive, so the panel
-        // can open with nothing in it. Say so rather than rendering an empty bar.
         isLoadingFacets={facetsQuery.isLoading}
-        showCategories={section !== 'posters'}
-        canDeleteCategories={isAdmin}
-        onCategoryDeleted={(_category, result) => {
-          // Facet counts come from a ten-minute cache, so a deleted category
-          // would keep showing its old total until it expires.
-          facetsQuery.refetch();
-          // The tiles themselves come from the gallery query. Without this the
-          // pill vanished but every thumbnail it covered stayed on screen, so a
-          // successful delete looked like it had done nothing at all.
-          invalidateGallery();
-          const message = (result as { message?: string } | null)?.message;
-          if (message) {
-            setToastMessage(message);
-            window.setTimeout(() => setToastMessage(null), 6000);
-          }
-        }}
       />
 
       {/* Add Modal with Automatic Color Palette & Tag Extraction (Only accessible by owner) */}
@@ -597,9 +377,6 @@ export default function HomePage() {
           onClose={() => setIsAddOpen(false)}
           onAddThumbnail={handleAddThumbnail}
           onAddMultipleThumbnails={handleAddMultipleThumbnails}
-          initialMediaKind={
-            section === 'posters' ? 'poster' : section === 'uploads' ? 'custom' : 'thumbnail'
-          }
         />
       )}
 

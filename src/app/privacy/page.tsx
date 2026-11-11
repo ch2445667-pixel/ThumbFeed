@@ -31,35 +31,33 @@ export default function PrivacyPage() {
         <p>
           If you sign in with Google, we receive your basic profile information:
           your name, email address and profile photo. If you save thumbnails or
-          build collections, that content is stored so it appears on your devices.
-          Display preferences such as theme, grid density and view mode are kept
-          in your browser only.
+          build collections, that content stays in your browser storage on this
+          device. Display preferences such as theme, grid density and view mode
+          are also kept in your browser only.
         </p>
       </Section>
 
       <Section title="How we use it">
         <p>
           Your data runs the service and nothing else: keeping you signed in,
-          syncing your saved thumbnails, and remembering your preferences. We do
-          not sell personal data, we do not show third-party ads, and we do not
-          build advertising profiles.
+          keeping your saved thumbnails on this device, and remembering your
+          preferences. We do not sell personal data, we do not show third-party
+          ads, and we do not build advertising profiles.
         </p>
       </Section>
 
       <Section title="Where it lives">
         <p>
-          Authentication runs through Google and Firebase. Saved thumbnails and
-          account data are stored with Supabase. Preferences that never need to
-          leave your device stay in your browser local storage.
+          Authentication runs through Google and Firebase. Your uploads and
+          their images stay on this device, inside your browser storage. No
+          account data is sent to a third-party database.
         </p>
       </Section>
 
       <Section title="Your control">
         <p>
-          Signing out stops syncing immediately. You can request deletion of your
-          stored data at any time, and clearing your browser storage removes all
-          local preferences. Thumbnails shown in the public gallery are
-          references to third-party artwork and carry no personal data.
+          Signing out ends your session immediately. Clearing your browser storage
+          removes everything this app saved locally, uploads included.
         </p>
       </Section>
     </main>

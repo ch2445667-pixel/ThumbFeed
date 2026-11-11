@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, UploadCloud, Youtube, Link as LinkIcon, Check, Plus, Trash2, Eye, Palette, Tag } from 'lucide-react';
 import { ThumbnailItem, NicheCategory } from '../../lib/types';
-import { getStoredThumbnails, saveStoredThumbnail } from '../../lib/storage';
+import { deleteStoredThumbnailPermanently, saveStoredThumbnail } from '../../lib/storage';
+import { listUploads } from '../../lib/localUploads';
 import { useAuth, ADMIN_EMAIL } from '../../lib/authContext';
 
 const NICHES: NicheCategory[] = [
@@ -55,7 +56,7 @@ export default function AdminPage() {
   const [emotion, setEmotion] = useState<any>('Shocked');
 
   useEffect(() => {
-    setThumbnails(getStoredThumbnails());
+    listUploads().then(setThumbnails);
   }, []);
 
   // Helper to extract YouTube Thumbnail URL from watch URL
@@ -116,7 +117,7 @@ export default function AdminPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSaveThumbnail = (e: React.FormEvent) => {
+  const handleSaveThumbnail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!previewImage) return;
 
@@ -149,7 +150,7 @@ export default function AdminPage() {
       likesCount: Math.floor(Math.random() * 500) + 100
     };
 
-    const updated = saveStoredThumbnail(newItem);
+    const updated = await saveStoredThumbnail(newItem);
     setThumbnails(updated);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
@@ -165,12 +166,11 @@ export default function AdminPage() {
     setOcrText('');
   };
 
-  const handleDeleteThumbnail = (id: string) => {
+  const handleDeleteThumbnail = async (id: string) => {
     if (!isAdmin) return;
     if (!confirm('Are you sure you want to remove this thumbnail?')) return;
-    const updated = thumbnails.filter(t => t.id !== id);
-    setThumbnails(updated);
-    localStorage.setItem('thumbvault_thumbnails', JSON.stringify(updated));
+    await deleteStoredThumbnailPermanently({ id });
+    setThumbnails(await listUploads());
   };
 
   if (!loading && !isAdmin) {
@@ -444,7 +444,7 @@ export default function AdminPage() {
         <div className="bg-[#D8DBE0] dark:bg-[#0d0e10] p-6 rounded-2xl border border-[#0d0e10]/15 dark:border-[#D8DBE0]/20 shadow-md space-y-4 mt-8">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-[#0d0e10] dark:text-[#D8DBE0]">Current Vault Inventory ({thumbnails.length} Thumbnails)</h3>
-            <span className="text-xs text-[#0d0e10]/70 dark:text-[#D8DBE0]/70">Stored in Local Database</span>
+            <span className="text-xs text-[#0d0e10]/70 dark:text-[#D8DBE0]/70">Stored on this device</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

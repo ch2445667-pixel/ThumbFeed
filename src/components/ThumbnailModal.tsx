@@ -171,7 +171,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                     id="thumbnail-delete-btn"
                     type="button"
                     onClick={() => setIsConfirmingDelete(true)}
-                    title="Delete permanently from database"
+                    title="Delete permanently from this device"
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold text-ink bg-surface-raised border border-line shadow-xs hover:border-line-strong active:scale-[0.96] transition-all duration-150 cursor-pointer"
                   >
                     <IconTrash className="w-4 h-4" />
@@ -202,10 +202,10 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   </div>
                   <div>
                     <p className="text-xs font-bold text-[#0d0e10] dark:text-ink">
-                      Permanently delete from database?
+                      Permanently delete this upload?
                     </p>
                     <p className="text-[11px] text-[#0d0e10]/80 dark:text-ink-2">
-                      This thumbnail will be erased forever from PostgreSQL database and storage.
+                      This thumbnail will be erased forever from storage on this device.
                     </p>
                   </div>
                 </div>

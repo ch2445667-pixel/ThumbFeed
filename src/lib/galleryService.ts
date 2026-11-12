@@ -56,7 +56,7 @@ function writeStoredFile(items: ThumbnailItem[]): boolean {
 
 let cachedItems: ThumbnailItem[] | null = null;
 let lastCacheTime = 0;
-const CACHE_TTL_MS = 4 * 1000; // 4 seconds cache
+const CACHE_TTL_MS = 3 * 1000; // 3 seconds cache
 
 export function invalidateGalleryCache() {
   cachedItems = null;
@@ -64,24 +64,126 @@ export function invalidateGalleryCache() {
 }
 
 /**
+ * Robust fingerprint generator to catch duplicate items across YouTube IDs,
+ * upload attempts, and raw file names.
+ */
+export function extractItemFingerprint(item: Partial<ThumbnailItem>): string {
+  // 1. Check for 11-char YouTube ID in ID, sourceUrl, imageUrl, or breakdownNotes
+  const allText = `${item.id || ''} ${item.sourceUrl || ''} ${item.imageUrl || ''} ${item.breakdownNotes || ''}`;
+  const ytMatch = allText.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/|thumb-yt-)([a-zA-Z0-9_-]{11})/i) ||
+                  allText.match(/([a-zA-Z0-9_-]{11})_[a-z0-9]{4,6}\.(jpg|webp|png)/i);
+  if (ytMatch && ytMatch[1] && ytMatch[1].length === 11) {
+    return `yt:${ytMatch[1]}`;
+  }
+
+  // 2. Base filename without small/ prefix and without random 5-char upload suffix
+  const imgUrl = (item.imageUrl || '').split('?')[0];
+  const filename = decodeURIComponent(imgUrl.split('/').pop() || '');
+  if (filename) {
+    const cleanBase = filename
+      .toLowerCase()
+      .replace(/^small_/, '')
+      .replace(/\.(jpg|jpeg|png|webp|gif)$/, '')
+      .replace(/_[a-z0-9]{4,6}$/, '') // strip upload random suffix e.g. _6xwjz
+      .replace(/^thumb_\d+_/, '')
+      .replace(/^poster_\d+_/, '')
+      .trim();
+    if (cleanBase.length > 5) {
+      return `base:${cleanBase}`;
+    }
+  }
+
+  // 3. Normalized Title
+  if (item.title && item.title.trim().length > 3) {
+    const slug = item.title
+      .toLowerCase()
+      .replace(/^(small|r2)\s+/i, '')
+      .replace(/_[a-z0-9]{4,6}$/i, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+    if (slug.length > 5) {
+      return `title:${slug}`;
+    }
+  }
+
+  return `id:${item.id || imgUrl}`;
+}
+
+/**
+ * Filter out ghost preview records and collapse duplicate uploads of the same
+ * video or image into a single authoritative item.
+ */
+export function deduplicateThumbnailItems(items: ThumbnailItem[]): ThumbnailItem[] {
+  // 1. Remove preview image files that were accidentally indexed
+  const nonPreviews = items.filter(it => {
+    if (!it || !it.imageUrl) return false;
+    const lowerUrl = it.imageUrl.toLowerCase();
+    const lowerId = (it.id || '').toLowerCase();
+    if (lowerUrl.includes('/media/small/') || lowerUrl.startsWith('small/') || lowerId.includes('small_')) {
+      return false;
+    }
+    return true;
+  });
+
+  // 2. Group by fingerprint
+  const groups = new Map<string, ThumbnailItem[]>();
+  for (const item of nonPreviews) {
+    const fp = extractItemFingerprint(item);
+    const existing = groups.get(fp) || [];
+    existing.push(item);
+    groups.set(fp, existing);
+  }
+
+  // 3. For each group, pick the highest-fidelity / richest record
+  const deduped: ThumbnailItem[] = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      deduped.push(group[0]);
+      continue;
+    }
+
+    group.sort((a, b) => {
+      const aIsSynthetic = a.creator === 'Cloudflare R2' || a.id.startsWith('r2-');
+      const bIsSynthetic = b.creator === 'Cloudflare R2' || b.id.startsWith('r2-');
+      if (!aIsSynthetic && bIsSynthetic) return -1;
+      if (aIsSynthetic && !bIsSynthetic) return 1;
+
+      const aScore =
+        (a.viewsEstimate ? 3 : 0) +
+        (a.creator && a.creator !== 'Cloudflare R2' ? 2 : 0) +
+        (a.styles?.length || 0) +
+        (a.colors?.length || 0) +
+        (a.title.length > 15 ? 1 : 0);
+
+      const bScore =
+        (b.viewsEstimate ? 3 : 0) +
+        (b.creator && b.creator !== 'Cloudflare R2' ? 2 : 0) +
+        (b.styles?.length || 0) +
+        (b.colors?.length || 0) +
+        (b.title.length > 15 ? 1 : 0);
+
+      return bScore - aScore;
+    });
+
+    deduped.push(group[0]);
+  }
+
+  return deduped;
+}
+
+/**
  * Persist gallery items both locally and to Cloudflare R2 bucket.
  */
 export async function saveGalleryItems(itemsToSave: ThumbnailItem[]): Promise<boolean> {
   const current = readStoredFile();
-  const currentMap = new Map<string, ThumbnailItem>(current.map(it => [it.id, it]));
-
-  for (const item of itemsToSave) {
-    currentMap.set(item.id, item);
-  }
-
-  const updated = Array.from(currentMap.values());
-  const localOk = writeStoredFile(updated);
+  const combined = deduplicateThumbnailItems([...itemsToSave, ...current]);
+  const localOk = writeStoredFile(combined);
   invalidateGalleryCache();
 
   // Primary Cloud Sync: Write to Cloudflare R2 bucket as _app_data/thumbnails.json
   if (isR2Configured()) {
     try {
-      await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, updated);
+      await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, combined);
     } catch (err) {
       console.warn('Failed to sync thumbnails to Cloudflare R2:', err);
     }
@@ -137,7 +239,8 @@ export async function syncGalleryWithR2(): Promise<{ totalCount: number; newFrom
 }
 
 /**
- * Retrieve all thumbnails, automatically pulling from Cloudflare R2 if configured.
+ * Retrieve all thumbnails, automatically pulling from Cloudflare R2 if configured
+ * and ensuring zero duplicate thumbnails.
  */
 export async function getAllGalleryItems(forceRefresh = false): Promise<ThumbnailItem[]> {
   const now = Date.now();
@@ -145,32 +248,28 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
     return cachedItems;
   }
 
-  const itemsMap = new Map<string, ThumbnailItem>();
+  const itemsList: ThumbnailItem[] = [];
 
   // 1. Initial curated thumbnails (if any)
   for (const item of INITIAL_THUMBNAILS) {
-    itemsMap.set(item.id, item);
+    itemsList.push(item);
   }
 
   // 2. Local file thumbnails
   const localItems = readStoredFile();
   for (const item of localItems) {
-    itemsMap.set(item.id, item);
+    itemsList.push(item);
   }
 
   // 3. Centralized Cloudflare R2 Storage (authoritative across any app instance)
-  let r2HasCatalog = false;
-  let addedFromBucket = 0;
-
   if (isR2Configured()) {
     try {
       // Pull the centralized thumbnails catalog from Cloudflare R2
       const r2Items = await downloadJsonFromR2<ThumbnailItem[]>(R2_APP_DATA.THUMBNAILS);
       if (Array.isArray(r2Items) && r2Items.length > 0) {
-        r2HasCatalog = true;
         for (const item of r2Items) {
           if (item && item.id && item.imageUrl) {
-            itemsMap.set(item.id, item);
+            itemsList.push(item);
           }
         }
       }
@@ -178,51 +277,62 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
       // Auto-reconcile: Scan bucket for existing images uploaded directly or in previous sessions
       const bucketImages = await listR2ImageFiles();
       if (bucketImages.length > 0) {
-        for (const img of bucketImages) {
-          // If this image key is already referenced in an item, skip
-          const alreadyExists = Array.from(itemsMap.values()).some(it => {
-            const key1 = extractR2KeyFromUrl(it.imageUrl);
-            const key2 = it.thumbSmallUrl ? extractR2KeyFromUrl(it.thumbSmallUrl) : null;
-            return key1 === img.key || key2 === img.key;
-          });
-
-          if (!alreadyExists && !img.key.includes('/small/')) {
-            // Synthesize an item from the existing R2 object so it immediately shows in the gallery
-            const rawFilename = img.key.split('/').pop() || img.key;
-            const cleanTitle = rawFilename
-              .replace(/\.[^/.]+$/, '')
-              .replace(/^thumb_\d+_/i, '')
-              .replace(/^poster_\d+_/i, '')
-              .replace(/[-_]/g, ' ')
-              .trim() || 'Imported R2 Thumbnail';
-
-            const publicUrl = getR2PublicUrl(img.key);
-            const syntheticId = `r2-${img.key.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-
-            itemsMap.set(syntheticId, {
-              id: syntheticId,
-              title: cleanTitle,
-              creator: 'Cloudflare R2',
-              imageUrl: publicUrl,
-              sourceUrl: publicUrl,
-              niche: 'Entertainment',
-              styles: ['Minimalist & Clean'],
-              tags: ['Cloudflare', 'R2'],
-              source: 'r2-storage',
-              createdAt: img.lastModified ? img.lastModified.toISOString() : new Date().toISOString(),
-              likesCount: 0,
-            });
-            addedFromBucket++;
+        // Collect fingerprints of all items currently known
+        const knownFingerprints = new Set<string>();
+        const knownKeys = new Set<string>();
+        for (const it of itemsList) {
+          knownFingerprints.add(extractItemFingerprint(it));
+          const k1 = extractR2KeyFromUrl(it.imageUrl);
+          if (k1) knownKeys.add(k1);
+          if (it.thumbSmallUrl) {
+            const k2 = extractR2KeyFromUrl(it.thumbSmallUrl);
+            if (k2) knownKeys.add(k2);
           }
         }
-      }
 
-      // If R2 was updated or empty, save unified list back to both R2 and local cache
-      const unifiedList = Array.from(itemsMap.values());
-      writeStoredFile(unifiedList);
+        for (const img of bucketImages) {
+          // Skip if key already matched
+          if (knownKeys.has(img.key)) continue;
 
-      if (!r2HasCatalog || addedFromBucket > 0 || (localItems.length > 0 && !r2HasCatalog)) {
-        await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, unifiedList).catch(() => {});
+          // Skip if this image shares a fingerprint with an already known item
+          const syntheticItem: Partial<ThumbnailItem> = {
+            id: `r2-${img.key}`,
+            imageUrl: getR2PublicUrl(img.key),
+            title: img.key,
+          };
+          const fp = extractItemFingerprint(syntheticItem);
+          if (knownFingerprints.has(fp)) continue;
+
+          // Synthesize an item from the untracked R2 image
+          const rawFilename = img.key.split('/').pop() || img.key;
+          const cleanTitle = rawFilename
+            .replace(/\.[^/.]+$/, '')
+            .replace(/^thumb_\d+_/i, '')
+            .replace(/^poster_\d+_/i, '')
+            .replace(/[-_]/g, ' ')
+            .trim() || 'Imported R2 Thumbnail';
+
+          const publicUrl = getR2PublicUrl(img.key);
+          const syntheticId = `r2-${img.key.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+
+          const newItem: ThumbnailItem = {
+            id: syntheticId,
+            title: cleanTitle,
+            creator: 'Cloudflare R2',
+            imageUrl: publicUrl,
+            sourceUrl: publicUrl,
+            niche: 'Entertainment',
+            styles: ['Minimalist & Clean'],
+            tags: ['Cloudflare', 'R2'],
+            source: 'r2-storage',
+            createdAt: img.lastModified ? img.lastModified.toISOString() : new Date().toISOString(),
+            likesCount: 0,
+          };
+
+          itemsList.push(newItem);
+          knownFingerprints.add(fp);
+          knownKeys.add(img.key);
+        }
       }
     } catch (err) {
       console.warn('Error syncing with Cloudflare R2 catalog:', err);
@@ -239,7 +349,7 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
         if (data && data.imageUrl) {
           const dims = parseDimensions(data.breakdownNotes || data.breakdown_notes || '');
           const id = data.id || docSnap.id;
-          itemsMap.set(id, {
+          itemsList.push({
             id,
             kind: data.kind || (data.niche === 'Cinema' ? 'poster' : 'thumbnail'),
             title: data.title || 'YouTube Thumbnail',
@@ -267,10 +377,19 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
       });
     }
   } catch (err) {
-    // Firestore sync note - R2 storage is primary
+    // Firestore sync note
   }
 
-  cachedItems = Array.from(itemsMap.values());
+  // Deduplicate everything so each thumbnail appears strictly once
+  const unifiedDeduped = deduplicateThumbnailItems(itemsList);
+  writeStoredFile(unifiedDeduped);
+
+  // Sync cleaned catalog back to Cloudflare R2 so R2 stays deduplicated
+  if (isR2Configured()) {
+    uploadJsonToR2(R2_APP_DATA.THUMBNAILS, unifiedDeduped).catch(() => {});
+  }
+
+  cachedItems = unifiedDeduped;
   lastCacheTime = now;
-  return cachedItems;
+  return unifiedDeduped;
 }

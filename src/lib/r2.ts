@@ -353,8 +353,9 @@ export async function listR2ImageFiles(): Promise<{ key: string; size: number; l
         for (const obj of res.Contents) {
           if (!obj.Key) continue;
           const lower = obj.Key.toLowerCase();
-          // Exclude internal _app_data metadata files
+          // Exclude internal _app_data metadata files and small preview image variants
           if (lower.startsWith('_app_data/')) continue;
+          if (lower.startsWith('small/') || lower.includes('/small/')) continue;
           if (
             lower.endsWith('.jpg') ||
             lower.endsWith('.jpeg') ||

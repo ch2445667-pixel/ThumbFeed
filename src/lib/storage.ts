@@ -167,14 +167,22 @@ export function normalizeItemNiche(item: ThumbnailItem): ThumbnailItem {
   };
 }
 
-export function extractDedupeKeys(item: { id?: string; imageUrl?: string }): string[] {
+export function extractDedupeKeys(item: { id?: string; imageUrl?: string; sourceUrl?: string; title?: string }): string[] {
   const keys: string[] = [];
   if (item.id) keys.push(item.id);
   if (item.imageUrl) {
     keys.push(item.imageUrl);
     const filename = decodeURIComponent(item.imageUrl.split('/').pop()?.split('?')[0] || '');
-    if (filename) keys.push(filename);
-    const ytMatch = item.imageUrl.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
+    if (filename) {
+      keys.push(filename);
+      const cleanBase = filename.toLowerCase().replace(/^small_/, '').replace(/\.(jpg|jpeg|png|webp)$/, '').replace(/_[a-z0-9]{4,6}$/, '');
+      if (cleanBase.length > 5) keys.push(cleanBase);
+    }
+    const ytMatch = item.imageUrl.match(/([a-zA-Z0-9_-]{11})/);
+    if (ytMatch && ytMatch[1] && ytMatch[1].length === 11) keys.push(ytMatch[1]);
+  }
+  if (item.sourceUrl) {
+    const ytMatch = item.sourceUrl.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/)([a-zA-Z0-9_-]{11})/);
     if (ytMatch && ytMatch[1]) keys.push(ytMatch[1]);
   }
   return keys;

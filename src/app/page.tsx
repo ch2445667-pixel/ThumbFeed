@@ -79,7 +79,12 @@ export default function HomePage() {
     sortBy: 'random'
   });
 
-  // Restore stored preferences from localStorage
+  const invalidateRef = useRef(invalidateGallery);
+  useEffect(() => {
+    invalidateRef.current = invalidateGallery;
+  }, [invalidateGallery]);
+
+  // Restore stored preferences and sync on mount
   useEffect(() => {
     try {
       const storedCols = localStorage.getItem('thumbfeed_columns');
@@ -99,7 +104,7 @@ export default function HomePage() {
       setCategories(getAllCategories());
     } catch {}
 
-    // Synchronize boards and categories from Cloudflare R2 / server
+    // Synchronize boards and categories from Cloudflare R2 / server once on boot
     syncBoardsFromServer().then((b) => {
       if (b && b.length > 0) setCollections(b);
     }).catch(() => {});
@@ -115,14 +120,14 @@ export default function HomePage() {
       syncCategoriesFromServer().then((c) => {
         if (c && c.length > 0) setCategories(c);
       }).catch(() => {});
-      invalidateGallery();
+      invalidateRef.current();
     };
 
     window.addEventListener('thumbfeed_r2_synced', handleR2Synced);
     return () => {
       window.removeEventListener('thumbfeed_r2_synced', handleR2Synced);
     };
-  }, [invalidateGallery]);
+  }, []);
 
   // Subscribe to category updates
   useEffect(() => {
@@ -193,10 +198,34 @@ export default function HomePage() {
   const facetsQuery = useGalleryFacets('thumbnails');
   const queryClient = useQueryClient();
 
-  const galleryItems = useMemo(
-    () => (gallery.data?.pages || []).flatMap((page) => page.items),
-    [gallery.data]
-  );
+  const galleryItems = useMemo(() => {
+    const raw = (gallery.data?.pages || []).flatMap((page) => page.items);
+    const seenIds = new Set<string>();
+    const seenFingerprints = new Set<string>();
+    const deduped: ThumbnailItem[] = [];
+
+    for (const item of raw) {
+      if (!item || !item.id) continue;
+      const allText = `${item.id} ${item.sourceUrl || ''} ${item.imageUrl || ''} ${item.breakdownNotes || ''}`;
+      const ytMatch = allText.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/|thumb-yt-)([a-zA-Z0-9_-]{11})/i) ||
+                      allText.match(/([a-zA-Z0-9_-]{11})_[a-z0-9]{4,6}\.(jpg|webp|png)/i);
+      const ytKey = ytMatch && ytMatch[1] ? `yt:${ytMatch[1]}` : null;
+
+      const imgFilename = (item.imageUrl || '').split('/').pop()?.split('?')[0] || '';
+      const baseKey = imgFilename
+        ? `base:${decodeURIComponent(imgFilename).toLowerCase().replace(/^small_/, '').replace(/\.(jpg|jpeg|png|webp)$/, '').replace(/_[a-z0-9]{4,6}$/, '')}`
+        : null;
+
+      const fp = ytKey || baseKey || item.id;
+
+      if (!seenIds.has(item.id) && !seenFingerprints.has(fp)) {
+        seenIds.add(item.id);
+        seenFingerprints.add(fp);
+        deduped.push(item);
+      }
+    }
+    return deduped;
+  }, [gallery.data]);
   const galleryTotal = gallery.data?.pages[0]?.total ?? 0;
 
   const categoryCounts = useMemo(

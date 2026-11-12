@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ThumbnailItem } from './types';
 import type { ColorLibraryEntry } from '../components/FilterPillBar';
@@ -122,12 +123,11 @@ export function useGalleryFacets(section: 'thumbnails' | 'posters') {
     retry: 1,
   });
 }
-
 /** Drop every cached gallery page, e.g. right after an upload lands. */
 export function useInvalidateGallery() {
   const queryClient = useQueryClient();
-  return () => {
+  return useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['gallery'] });
     queryClient.invalidateQueries({ queryKey: ['gallery-facets'] });
-  };
+  }, [queryClient]);
 }

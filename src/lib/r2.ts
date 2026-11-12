@@ -161,18 +161,29 @@ export async function uploadToR2(params: {
 }
 
 export async function deleteFromR2(key: string): Promise<boolean> {
-  const config = getR2Config();
-  const client = getR2Client();
-  const sanitizedKey = key.replace(/^\/+/, '');
+  if (!key) return false;
+  try {
+    const config = getR2Config();
+    if (!config.isConfigured) return false;
+    const client = getR2Client();
+    const sanitizedKey = key.replace(/^\/+/, '');
 
-  await client.send(
-    new DeleteObjectCommand({
-      Bucket: config.bucketName,
-      Key: sanitizedKey,
-    })
-  );
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: config.bucketName,
+        Key: sanitizedKey,
+      })
+    );
 
-  return true;
+    return true;
+  } catch (err: any) {
+    const code = err?.name || err?.Code || '';
+    if (code === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
+      return true; // Already gone
+    }
+    console.warn(`[R2] Failed to delete object "${key}":`, err?.message || err);
+    return false;
+  }
 }
 
 /**

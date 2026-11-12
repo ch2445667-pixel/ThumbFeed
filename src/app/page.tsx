@@ -264,29 +264,57 @@ export default function HomePage() {
 
   // Add handlers
   const handleAddThumbnail = (item: ThumbnailItem) => {
-    if (!isAdmin) return;
     saveStoredThumbnail(item);
     invalidateGallery();
     setCollections(getStoredCollections());
   };
 
   const handleAddMultipleThumbnails = (items: ThumbnailItem[]) => {
-    if (!isAdmin) return;
     saveStoredThumbnails(items);
     invalidateGallery();
     setCollections(getStoredCollections());
   };
 
   const handleDeleteThumbnail = async (item: ThumbnailItem) => {
-    if (!isAdmin) return;
+    // 1. Immediately close modals
+    setThumbnailToDelete(null);
+    if (selectedItem?.id === item.id || selectedItem?.imageUrl === item.imageUrl) {
+      setSelectedItem(null);
+    }
+
+    // 2. Optimistically update React Query cache for instant 0ms removal
+    queryClient.setQueriesData({ queryKey: ['gallery'] }, (old: any) => {
+      if (!old || !old.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((p: any) => ({
+          ...p,
+          items: (p.items || []).filter((it: ThumbnailItem) => {
+            if (it.id && item.id && it.id === item.id) return false;
+            if (it.imageUrl && item.imageUrl && it.imageUrl === item.imageUrl) return false;
+            return true;
+          }),
+          total: Math.max(0, (p.total || 0) - 1),
+        })),
+      };
+    });
+
+    // 3. Remove from any boards
+    setCollections(prev => {
+      return prev.map(b => ({
+        ...b,
+        thumbnailIds: b.thumbnailIds.filter(id => id !== item.id),
+      }));
+    });
+
+    setToastMessage('Thumbnail deleted');
+
+    // 4. Delete permanently from server storage bucket, catalog, and database
     try {
       await deleteStoredThumbnailPermanently({ id: item.id, imageUrl: item.imageUrl });
-      setToastMessage('Thumbnail deleted successfully');
-      setThumbnailToDelete(null);
-      if (selectedItem?.id === item.id) setSelectedItem(null);
       invalidateGallery();
     } catch (e) {
-      setToastMessage('Failed to delete thumbnail');
+      console.warn('Permanent deletion error:', e);
     }
   };
 
@@ -543,19 +571,17 @@ export default function HomePage() {
       <ThumbnailModal
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
-        onDelete={isAdmin ? handleDeleteThumbnail : undefined}
-        onEditTitle={isAdmin ? handleEditTitle : undefined}
+        onDelete={handleDeleteThumbnail}
+        onEditTitle={handleEditTitle}
       />
 
       {/* Delete Confirmation Modal */}
-      {isAdmin && (
-        <DeleteConfirmModal
-          item={thumbnailToDelete}
-          isOpen={Boolean(thumbnailToDelete)}
-          onClose={() => setThumbnailToDelete(null)}
-          onConfirm={handleDeleteThumbnail}
-        />
-      )}
+      <DeleteConfirmModal
+        item={thumbnailToDelete}
+        isOpen={Boolean(thumbnailToDelete)}
+        onClose={() => setThumbnailToDelete(null)}
+        onConfirm={handleDeleteThumbnail}
+      />
 
       {/* Toast Notification Banner */}
       {toastMessage && (

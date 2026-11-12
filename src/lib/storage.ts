@@ -325,6 +325,21 @@ export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: st
     localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(updatedImports));
   } catch {}
 
+  // Also clean up from any boards in localStorage
+  try {
+    const rawCols = localStorage.getItem(COLLECTIONS_KEY);
+    if (rawCols) {
+      const parsed = JSON.parse(rawCols);
+      if (Array.isArray(parsed)) {
+        const cleanedCols = parsed.map((col: any) => ({
+          ...col,
+          thumbnailIds: (col.thumbnailIds || []).filter((id: string) => id !== target.id && id !== target.imageUrl)
+        }));
+        localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(cleanedCols));
+      }
+    }
+  } catch {}
+
   let storageRemovalFailed = false;
   try {
     const res = await fetch('/api/thumbnails/delete', {

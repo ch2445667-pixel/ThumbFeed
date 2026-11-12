@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { collection, getDocs, query, limit, doc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { INITIAL_THUMBNAILS } from './mockData';
 import { ThumbnailItem } from './types';
@@ -193,37 +193,129 @@ export async function saveGalleryItems(itemsToSave: ThumbnailItem[]): Promise<bo
 }
 
 /**
- * Delete a thumbnail item from both local storage and Cloudflare R2.
+ * Delete a thumbnail item from both local storage and Cloudflare R2 bucket.
  */
-export async function deleteGalleryItem(idOrUrl: string): Promise<boolean> {
+export async function deleteGalleryItem(
+  idOrUrl?: string,
+  targetImageUrl?: string,
+  targetR2Key?: string
+): Promise<{ success: boolean; storageDeleted: boolean; deletedCount: number }> {
   const current = readStoredFile();
-  const toDelete = current.find(it => it.id === idOrUrl || it.imageUrl === idOrUrl);
-  const updated = current.filter(it => it.id !== idOrUrl && it.imageUrl !== idOrUrl);
-  const ok = writeStoredFile(updated);
-  invalidateGalleryCache();
+  const idToMatch = idOrUrl?.trim();
+  const urlToMatch = (targetImageUrl || idOrUrl)?.trim();
 
-  // Sync deletion to Cloudflare R2
-  if (isR2Configured()) {
-    try {
-      await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, updated);
-      if (toDelete) {
-        const key = extractR2KeyFromUrl(toDelete.imageUrl);
-        if (key) {
-          await deleteFromR2(key).catch(() => {});
-        }
-        if (toDelete.thumbSmallUrl) {
-          const smallKey = extractR2KeyFromUrl(toDelete.thumbSmallUrl);
-          if (smallKey) {
-            await deleteFromR2(smallKey).catch(() => {});
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Failed to delete item from Cloudflare R2:', err);
+  // Generate target fingerprint if possible
+  const targetFp = (idToMatch || urlToMatch)
+    ? extractItemFingerprint({ id: idToMatch, imageUrl: urlToMatch, sourceUrl: urlToMatch })
+    : '';
+
+  // Identify all records that correspond to this thumbnail
+  const matchedItems: ThumbnailItem[] = [];
+  const remainingItems: ThumbnailItem[] = [];
+
+  for (const it of current) {
+    const isIdMatch = idToMatch && (it.id === idToMatch || it.id.includes(idToMatch));
+    const isUrlMatch = urlToMatch && (it.imageUrl === urlToMatch || it.sourceUrl === urlToMatch);
+    const isFpMatch = targetFp && extractItemFingerprint(it) === targetFp;
+    const isKeyMatch = targetR2Key && (
+      extractR2KeyFromUrl(it.imageUrl) === targetR2Key ||
+      (it.thumbSmallUrl && extractR2KeyFromUrl(it.thumbSmallUrl) === targetR2Key)
+    );
+
+    if (isIdMatch || isUrlMatch || isFpMatch || isKeyMatch) {
+      matchedItems.push(it);
+    } else {
+      remainingItems.push(it);
     }
   }
 
-  return ok;
+  // Persist updated list locally
+  const ok = writeStoredFile(remainingItems);
+  invalidateGalleryCache();
+
+  // Collect all R2 keys that need to be permanently deleted from the storage bucket
+  const keysToDelete = new Set<string>();
+
+  if (targetR2Key) {
+    keysToDelete.add(targetR2Key);
+  }
+  if (urlToMatch) {
+    const k = extractR2KeyFromUrl(urlToMatch);
+    if (k) keysToDelete.add(k);
+  }
+
+  for (const m of matchedItems) {
+    const k1 = extractR2KeyFromUrl(m.imageUrl);
+    if (k1) keysToDelete.add(k1);
+
+    if (m.thumbSmallUrl) {
+      const k2 = extractR2KeyFromUrl(m.thumbSmallUrl);
+      if (k2) keysToDelete.add(k2);
+    }
+
+    if (m.sourceUrl) {
+      const k3 = extractR2KeyFromUrl(m.sourceUrl);
+      if (k3) keysToDelete.add(k3);
+    }
+  }
+
+  // Also include standard small variant pattern if not already present
+  const derivedKeys = Array.from(keysToDelete);
+  for (const k of derivedKeys) {
+    if (!k.startsWith('small/')) {
+      const baseName = k.split('/').pop()?.replace(/\.[^/.]+$/, '');
+      if (baseName) {
+        keysToDelete.add(`small/${baseName}.webp`);
+        keysToDelete.add(`small/${k}`);
+      }
+    }
+  }
+
+  // Permanently delete image files from Cloudflare R2 bucket
+  let storageDeleted = false;
+  if (isR2Configured() && keysToDelete.size > 0) {
+    try {
+      for (const key of keysToDelete) {
+        const deleted = await deleteFromR2(key);
+        if (deleted) storageDeleted = true;
+      }
+    } catch (err) {
+      console.warn('Failed to delete storage objects from Cloudflare R2:', err);
+    }
+  }
+
+  // Persist the updated authoritative catalog to Cloudflare R2 bucket
+  if (isR2Configured()) {
+    try {
+      await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, remainingItems);
+    } catch (err) {
+      console.warn('Failed to sync updated catalog to Cloudflare R2:', err);
+    }
+  }
+
+  // Delete from Firestore if db connection is alive
+  if (db) {
+    for (const m of matchedItems) {
+      if (m.id) {
+        try {
+          await deleteDoc(doc(db, 'thumbnails', m.id));
+        } catch {
+          // Ignore if Firestore doc not found
+        }
+      }
+    }
+    if (idToMatch) {
+      try {
+        await deleteDoc(doc(db, 'thumbnails', idToMatch));
+      } catch {}
+    }
+  }
+
+  return {
+    success: ok,
+    storageDeleted,
+    deletedCount: matchedItems.length,
+  };
 }
 
 /**

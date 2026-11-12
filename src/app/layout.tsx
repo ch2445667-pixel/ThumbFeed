@@ -28,10 +28,15 @@ const brandFont = localFont({
 export const metadata: Metadata = {
   title: "ThumbFeed",
   description: "High-CTR YouTube and Pinterest thumbnail inspiration gallery with multi-image clipboard paste, bulk extraction, cloud auto-sync, and smart tagging.",
-  // Icons are declared by the file convention (src/app/icon.png, icon.svg,
-  // apple-icon.png, favicon.ico). Do not also list them here, and do not keep
-  // copies in public/ -- either one re-introduces the route that collides with
-  // the convention route and every icon request 500s.
+  icons: {
+    icon: [
+      { url: "/logo-transparent.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/logo-transparent.svg",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     title: "ThumbFeed",
     description: "High-CTR YouTube and Pinterest thumbnail inspiration gallery with multi-image clipboard paste, bulk extraction, cloud auto-sync, and smart tagging.",
@@ -57,8 +62,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/logo-transparent.svg" type="image/svg+xml" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="shortcut icon" href="/logo-transparent.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

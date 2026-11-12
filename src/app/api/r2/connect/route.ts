@@ -53,14 +53,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Immediately pull down all thumbnails, boards, categories, and user profile from R2!
+    let syncStats = {
+      thumbnailsCount: 0,
+      boardsCount: 0,
+      categoriesCount: 0,
+      profileSynced: false,
+    };
+    try {
+      const { performFullR2Sync } = await import('@/lib/r2Sync');
+      const syncResult = await performFullR2Sync();
+      syncStats = {
+        thumbnailsCount: syncResult.thumbnailsCount,
+        boardsCount: syncResult.boardsCount,
+        categoriesCount: syncResult.categoriesCount,
+        profileSynced: !!syncResult.profileSynced,
+      };
+    } catch (syncErr) {
+      console.warn('Initial sync warning after connect:', syncErr);
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Successfully connected to Cloudflare R2 bucket "${bucketName.trim()}".`,
+      message: `Successfully connected to Cloudflare R2! Synced ${syncStats.thumbnailsCount} thumbnails, ${syncStats.boardsCount} boards, and profile from bucket "${bucketName.trim()}".`,
       config: {
         accountId: accountId.trim(),
         bucketName: bucketName.trim(),
         isConfigured: true,
       },
+      synced: syncStats,
     });
   } catch (err: any) {
     console.error('R2 connect route error:', err);

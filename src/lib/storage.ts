@@ -466,6 +466,39 @@ export function persistPosterList(list: ThumbnailItem[]): void {
   }
 }
 
+export async function syncBoardsToServer(boards: CollectionBoard[]): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    await fetch('/api/boards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(boards),
+    });
+  } catch (err) {
+    console.warn('Failed to sync boards to server:', err);
+  }
+}
+
+export async function syncBoardsFromServer(): Promise<CollectionBoard[]> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const res = await fetch('/api/boards');
+    if (res.ok) {
+      const serverBoards = await res.json();
+      if (Array.isArray(serverBoards)) {
+        const filtered = serverBoards.filter(
+          c => c.id !== 'col-1' && c.id !== 'col-2' && c.name !== '🔥 High CTR Hooks' && c.name !== '🖤 Dark & Minimalist Tech'
+        );
+        localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(filtered));
+        return filtered;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to sync boards from server:', err);
+  }
+  return getStoredCollections();
+}
+
 export function getStoredCollections(): CollectionBoard[] {
   if (typeof window === 'undefined') return DEFAULT_COLLECTIONS;
   try {
@@ -495,6 +528,7 @@ export function deleteCollection(collectionId: string): CollectionBoard[] {
   } catch (e) {
     console.warn('Failed to delete collection from localStorage:', e);
   }
+  syncBoardsToServer(list);
   return list;
 }
 
@@ -511,6 +545,7 @@ export function addThumbnailToBoard(collectionId: string, thumbId: string): Coll
   try {
     localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
   } catch {}
+  syncBoardsToServer(updated);
   return updated;
 }
 
@@ -526,6 +561,7 @@ export function saveCollection(collection: CollectionBoard): CollectionBoard[] {
     updated = [collection, ...list];
   }
   localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
+  syncBoardsToServer(updated);
 
   // Sync to Firestore
   try {
@@ -555,6 +591,7 @@ export function toggleThumbnailInCollection(collectionId: string, thumbId: strin
     return c;
   });
   localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
+  syncBoardsToServer(updated);
 
   const target = updated.find(c => c.id === collectionId);
   if (target) {

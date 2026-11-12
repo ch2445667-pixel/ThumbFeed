@@ -97,39 +97,47 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
   React.useEffect(() => {
     setMounted(true);
-    // Fetch persisted profile from server
-    fetch('/api/profile')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data && (data.name || data.photoURL)) {
-          if (data.name) setCustomName(data.name);
-          if (data.photoURL) setCustomPhoto(data.photoURL);
-          try {
-            localStorage.setItem(
-              'thumbfeed_custom_profile',
-              JSON.stringify({ name: data.name || '', photoURL: data.photoURL || '' })
-            );
-          } catch {}
-        } else {
-          // If server is empty but client has a saved profile, persist it to server immediately
-          try {
-            const saved = localStorage.getItem('thumbfeed_custom_profile');
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (parsed.name || parsed.photoURL) {
-                if (parsed.name) setCustomName(parsed.name);
-                if (parsed.photoURL) setCustomPhoto(parsed.photoURL);
-                fetch('/api/profile', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ name: parsed.name || '', photoURL: parsed.photoURL || '' }),
-                }).catch(() => {});
+    const loadProfile = () => {
+      fetch('/api/profile')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && (data.name || data.photoURL)) {
+            if (data.name) setCustomName(data.name);
+            if (data.photoURL) setCustomPhoto(data.photoURL);
+            try {
+              localStorage.setItem(
+                'thumbfeed_custom_profile',
+                JSON.stringify({ name: data.name || '', photoURL: data.photoURL || '' })
+              );
+            } catch {}
+          } else {
+            // If server is empty but client has a saved profile, persist it to server immediately
+            try {
+              const saved = localStorage.getItem('thumbfeed_custom_profile');
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.name || parsed.photoURL) {
+                  if (parsed.name) setCustomName(parsed.name);
+                  if (parsed.photoURL) setCustomPhoto(parsed.photoURL);
+                  fetch('/api/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: parsed.name || '', photoURL: parsed.photoURL || '' }),
+                  }).catch(() => {});
+                }
               }
-            }
-          } catch {}
-        }
-      })
-      .catch(() => {});
+            } catch {}
+          }
+        })
+        .catch(() => {});
+    };
+
+    loadProfile();
+
+    window.addEventListener('thumbfeed_r2_synced', loadProfile);
+    return () => {
+      window.removeEventListener('thumbfeed_r2_synced', loadProfile);
+    };
   }, []);
 
   const handleOpenEditProfile = () => {

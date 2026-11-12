@@ -46,6 +46,37 @@ export function getAllCategories(): string[] {
   }
 }
 
+export async function syncCategoriesToServer(categories: string[]): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(categories),
+    });
+  } catch (err) {
+    console.warn('Failed to sync categories to server:', err);
+  }
+}
+
+export async function syncCategoriesFromServer(): Promise<string[]> {
+  if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
+  try {
+    const res = await fetch('/api/categories');
+    if (res.ok) {
+      const serverCats = await res.json();
+      if (Array.isArray(serverCats) && serverCats.length > 0) {
+        localStorage.setItem(ACTIVE_CATEGORIES_KEY, JSON.stringify(serverCats));
+        window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: serverCats }));
+        return serverCats;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to sync categories from server:', err);
+  }
+  return getAllCategories();
+}
+
 export function addCategory(newCategory: string): string[] {
   if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
   const clean = newCategory.trim();
@@ -64,6 +95,7 @@ export function addCategory(newCategory: string): string[] {
   } catch (e) {
     console.error('Failed to add category:', e);
   }
+  syncCategoriesToServer(updated);
   return updated;
 }
 
@@ -78,6 +110,7 @@ export function removeCategory(categoryToRemove: string): string[] {
   } catch (e) {
     console.error('Failed to remove category:', e);
   }
+  syncCategoriesToServer(updated);
   return updated;
 }
 

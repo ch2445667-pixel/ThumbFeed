@@ -77,19 +77,27 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
         throw new Error(data.error || 'Connection to Cloudflare R2 failed');
       }
 
-      setSuccessMessage(data.message || 'Successfully connected to Cloudflare R2 storage!');
+      const syncInfo = data.synced;
+      const detailStr = syncInfo
+        ? ` Synced ${syncInfo.thumbnailsCount ?? 0} thumbnails, ${syncInfo.boardsCount ?? 0} boards, categories & profile.`
+        : '';
+      setSuccessMessage(data.message || `Successfully connected to Cloudflare R2!${detailStr}`);
       setCurrentStatus({
         configured: true,
         bucket: bucketName,
         connection: { ok: true },
       });
 
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('thumbfeed_r2_synced', { detail: data.synced }));
+      }
+
       if (onConnected) onConnected();
 
       // Automatically close after brief success display
       setTimeout(() => {
         onClose();
-      }, 1400);
+      }, 1600);
     } catch (err: any) {
       setError(err.message || 'Failed to connect. Please verify your Cloudflare credentials.');
     } finally {

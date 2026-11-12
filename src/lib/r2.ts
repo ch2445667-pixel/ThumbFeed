@@ -1,9 +1,16 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadBucketCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadBucketCommand, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const R2_CONFIG_FILE = path.join(DATA_DIR, 'r2-config.json');
+
+export const R2_APP_DATA = {
+  THUMBNAILS: '_app_data/thumbnails.json',
+  BOARDS: '_app_data/boards.json',
+  CATEGORIES: '_app_data/categories.json',
+  PROFILE: '_app_data/user-profile.json',
+};
 
 export interface R2Config {
   accountId: string;
@@ -264,3 +271,112 @@ export async function testR2Connection(customConfig?: {
     return { ok: false, message: msg };
   }
 }
+
+/**
+ * Download and parse a JSON document directly from the Cloudflare R2 bucket.
+ */
+export async function downloadJsonFromR2<T = any>(key: string): Promise<T | null> {
+  const config = getR2Config();
+  if (!config.isConfigured) return null;
+
+  try {
+    const client = getR2Client();
+    const sanitizedKey = key.replace(/^\/+/, '');
+    const res = await client.send(
+      new GetObjectCommand({
+        Bucket: config.bucketName,
+        Key: sanitizedKey,
+      })
+    );
+    if (!res.Body) return null;
+    const bodyStr = await res.Body.transformToString();
+    return JSON.parse(bodyStr) as T;
+  } catch (err: any) {
+    const code = err?.name || err?.Code || '';
+    if (code === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
+      return null;
+    }
+    console.warn(`Could not read ${key} from Cloudflare R2:`, err?.message || err);
+    return null;
+  }
+}
+
+/**
+ * Upload a JSON document directly into the Cloudflare R2 bucket.
+ */
+export async function uploadJsonToR2(key: string, data: any): Promise<boolean> {
+  const config = getR2Config();
+  if (!config.isConfigured) return false;
+
+  try {
+    const client = getR2Client();
+    const sanitizedKey = key.replace(/^\/+/, '');
+    const jsonStr = JSON.stringify(data, null, 2);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: config.bucketName,
+        Key: sanitizedKey,
+        Body: Buffer.from(jsonStr, 'utf-8'),
+        ContentType: 'application/json',
+        CacheControl: 'no-cache, no-store, must-revalidate',
+      })
+    );
+    return true;
+  } catch (err) {
+    console.error(`Failed to upload ${key} to Cloudflare R2:`, err);
+    return false;
+  }
+}
+
+/**
+ * List all image files stored in the Cloudflare R2 bucket.
+ */
+export async function listR2ImageFiles(): Promise<{ key: string; size: number; lastModified?: Date }[]> {
+  const config = getR2Config();
+  if (!config.isConfigured) return [];
+
+  try {
+    const client = getR2Client();
+    const results: { key: string; size: number; lastModified?: Date }[] = [];
+    let continuationToken: string | undefined;
+
+    do {
+      const res = await client.send(
+        new ListObjectsV2Command({
+          Bucket: config.bucketName,
+          ContinuationToken: continuationToken,
+          MaxKeys: 1000,
+        })
+      );
+
+      if (res.Contents) {
+        for (const obj of res.Contents) {
+          if (!obj.Key) continue;
+          const lower = obj.Key.toLowerCase();
+          // Exclude internal _app_data metadata files
+          if (lower.startsWith('_app_data/')) continue;
+          if (
+            lower.endsWith('.jpg') ||
+            lower.endsWith('.jpeg') ||
+            lower.endsWith('.png') ||
+            lower.endsWith('.webp') ||
+            lower.endsWith('.gif')
+          ) {
+            results.push({
+              key: obj.Key,
+              size: obj.Size || 0,
+              lastModified: obj.LastModified,
+            });
+          }
+        }
+      }
+      continuationToken = res.NextContinuationToken;
+    } while (continuationToken);
+
+    return results;
+  } catch (err) {
+    console.warn('Failed to list objects in Cloudflare R2:', err);
+    return [];
+  }
+}
+

@@ -19,12 +19,14 @@ import {
   saveCollection,
   deleteCollection,
   toggleThumbnailInCollection,
+  syncBoardsFromServer,
 } from '../lib/storage';
 import {
   getAllCategories,
   addCategory,
   removeCategory,
-  subscribeCategories
+  subscribeCategories,
+  syncCategoriesFromServer,
 } from '../lib/categories';
 import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE } from '../lib/useGallery';
 import { useQueryClient } from '@tanstack/react-query';
@@ -43,6 +45,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 
 export default function HomePage() {
   const { isAdmin } = useAuth();
+  const invalidateGallery = useInvalidateGallery();
 
   // Navigation & View State
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -95,7 +98,31 @@ export default function HomePage() {
       setCollections(getStoredCollections());
       setCategories(getAllCategories());
     } catch {}
-  }, []);
+
+    // Synchronize boards and categories from Cloudflare R2 / server
+    syncBoardsFromServer().then((b) => {
+      if (b && b.length > 0) setCollections(b);
+    }).catch(() => {});
+
+    syncCategoriesFromServer().then((c) => {
+      if (c && c.length > 0) setCategories(c);
+    }).catch(() => {});
+
+    const handleR2Synced = () => {
+      syncBoardsFromServer().then((b) => {
+        if (b && b.length > 0) setCollections(b);
+      }).catch(() => {});
+      syncCategoriesFromServer().then((c) => {
+        if (c && c.length > 0) setCategories(c);
+      }).catch(() => {});
+      invalidateGallery();
+    };
+
+    window.addEventListener('thumbfeed_r2_synced', handleR2Synced);
+    return () => {
+      window.removeEventListener('thumbfeed_r2_synced', handleR2Synced);
+    };
+  }, [invalidateGallery]);
 
   // Subscribe to category updates
   useEffect(() => {
@@ -164,7 +191,6 @@ export default function HomePage() {
 
   const gallery = useGallery(galleryKey);
   const facetsQuery = useGalleryFacets('thumbnails');
-  const invalidateGallery = useInvalidateGallery();
   const queryClient = useQueryClient();
 
   const galleryItems = useMemo(

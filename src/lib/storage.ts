@@ -1,31 +1,30 @@
 import { ThumbnailItem, CollectionBoard } from './types';
 import { INITIAL_THUMBNAILS } from './mockData';
 import { INITIAL_POSTERS } from './posters';
-import { supabase, isSupabaseConfigured } from './supabase';
 import { parseDimensions } from './dimensions';
 
-const USER_IMPORTED_KEY = 'thumbvault_user_imported_v1000_wiped';
-const THUMBNAILS_KEY = 'thumbvault_thumbnails_v1000_wiped';
-const COLLECTIONS_KEY = 'thumbvault_collections_v1000_clean';
+const USER_IMPORTED_KEY = 'thumbvault_user_imported_v2000';
+const THUMBNAILS_KEY = 'thumbvault_thumbnails_v2000';
+const COLLECTIONS_KEY = 'thumbvault_collections_v2000';
 const DELETED_KEYS_KEY = 'thumbvault_permanently_deleted_keys_v2';
 const POSTERS_KEY = 'thumbfeed_posters_v2';
 
 /**
  * Raw `data:` URLs are megabytes of base64. Writing even a few of them to
- * localStorage blows the ~5MB quota, the write throws, NOTHING persists,
- * and the next sync/refresh wipes the items from view. Only cloud-hosted
- * (http/https) URLs may be persisted — data URLs live in memory only until
- * the upload route returns a bucket URL for them.
+ * localStorage blows the ~5MB quota. Only cloud-hosted (http/https) URLs may be
+ * persisted — data URLs live in memory only until the upload route returns a bucket URL.
  */
 function isCloudPersistable(item: ThumbnailItem): boolean {
   const url = item?.imageUrl || '';
   return url.startsWith('http://') || url.startsWith('https://');
 }
 
-// Purge any legacy cached thumbnails from previous sessions immediately
+// Purge legacy keys
 if (typeof window !== 'undefined') {
   try {
     const legacyKeys = [
+      'thumbvault_thumbnails_v1000_wiped',
+      'thumbvault_user_imported_v1000_wiped',
       'thumbvault_thumbnails_v900_clean',
       'thumbvault_user_imported_v4_clean',
       'thumbfeed_thumbnails_v1',
@@ -64,12 +63,11 @@ export function markThumbnailPermanentlyDeleted(keys: string[]): void {
 
 export const DEFAULT_COLLECTIONS: CollectionBoard[] = [];
 
-// Map lookup by ID, imageUrl, and filename for instantaneous enriched metadata
+// Map lookup by ID, imageUrl, and filename for enriched metadata
 const initialMap = new Map<string, ThumbnailItem>();
 INITIAL_THUMBNAILS.forEach(item => {
   initialMap.set(item.id, item);
   initialMap.set(item.imageUrl, item);
-  // Extract filename from URL
   const filename = decodeURIComponent(item.imageUrl.split('/').pop() || '');
   if (filename) {
     initialMap.set(filename, item);
@@ -78,9 +76,9 @@ INITIAL_THUMBNAILS.forEach(item => {
 
 function formatTitleFromFilename(filename: string): string {
   return filename
-    .replace(/\.[^/.]+$/, '') // remove extension
-    .replace(/^\d+[\.\-_]\s*/, '') // remove leading numbers like '583. ' or '01_'
-    .replace(/[_-]+/g, ' ') // replace underscores and hyphens with spaces
+    .replace(/\.[^/.]+$/, '')
+    .replace(/^\d+[\.\-_]\s*/, '')
+    .replace(/[_-]+/g, ' ')
     .trim();
 }
 
@@ -98,204 +96,112 @@ export function classifyNicheFromFilename(filename: string): { niche: ThumbnailI
   
   if (
     lower.includes('documentary') || lower.includes('geopolitical') || lower.includes('history') ||
-    lower.includes('mystery') || lower.includes('truth') || lower.includes('investigation') ||
-    lower.includes('dark reality') || lower.includes('untold story') || lower.includes('crime') ||
-    lower.includes('downfall') || lower.includes('conspiracy') || lower.includes('scam')
+    lower.includes('investigation') || lower.includes('cold war') || lower.includes('cia') ||
+    lower.includes('kgb') || lower.includes('north korea') || lower.includes('scam') ||
+    lower.includes('cult') || lower.includes('conspiracy')
   ) {
-    return { niche: 'Documentary', tags: ['Documentary', 'Deep Dive', 'True Story', 'Investigation', 'Curiosity'] };
+    return { niche: 'Documentary', tags: ['Documentary', 'Storytelling', 'Deep Dive', 'Cinematic'] };
   }
   
   if (
-    lower.includes('vlog') || lower.includes('lifestyle') || lower.includes('daily') ||
-    lower.includes('routine') || lower.includes('day in') || lower.includes('living in') ||
-    lower.includes('fashion') || lower.includes('travel') || lower.includes('room') ||
-    lower.includes('irl') || lower.includes('outfit')
+    lower.includes('game') || lower.includes('gaming') || lower.includes('gta') ||
+    lower.includes('minecraft') || lower.includes('fortnite') || lower.includes('roblox') ||
+    lower.includes('playstation') || lower.includes('xbox') || lower.includes('nintendo') ||
+    lower.includes('elden ring') || lower.includes('zelda') || lower.includes('pokemon')
   ) {
-    return { niche: 'IRL', tags: ['IRL', 'Lifestyle', 'Daily Vlog', 'Personal Experience', 'Authentic'] };
+    return { niche: 'Gaming', tags: ['Gaming', 'Gameplay', 'High Energy', 'Render'] };
   }
   
   if (
-    lower.includes('gym') || lower.includes('fitness') || lower.includes('workout') ||
-    lower.includes('muscle') || lower.includes('bodybuilding') || lower.includes('physique') ||
-    lower.includes('football') || lower.includes('soccer') || lower.includes('racing') ||
-    lower.includes('f1') || lower.includes('sports') || lower.includes('athlete') ||
-    lower.includes('transformation')
+    lower.includes('tech') || lower.includes('apple') || lower.includes('iphone') ||
+    lower.includes('macbook') || lower.includes('ai') || lower.includes('chatgpt') ||
+    lower.includes('code') || lower.includes('software') || lower.includes('hardware') ||
+    lower.includes('gpu') || lower.includes('nvidia') || lower.includes('review')
   ) {
-    return { niche: 'Sports', tags: ['Sports', 'Workout', 'Bodybuilding', 'Athletics', 'Transformation'] };
+    return { niche: 'Tech', tags: ['Tech', 'Gadgets', 'Minimalist', 'Hardware'] };
   }
   
   if (
-    lower.includes('game') || lower.includes('gaming') || lower.includes('minecraft') ||
-    lower.includes('roblox') || lower.includes('gta') || lower.includes('stream') ||
-    lower.includes('fortnite') || lower.includes('valorant') || lower.includes('pokemon') ||
-    lower.includes('playstation') || lower.includes('xbox') || lower.includes('twitch')
+    lower.includes('business') || lower.includes('money') || lower.includes('crypto') ||
+    lower.includes('bitcoin') || lower.includes('finance') || lower.includes('millionaire') ||
+    lower.includes('startup') || lower.includes('rich') || lower.includes('wealth') ||
+    lower.includes('invest') || lower.includes('stocks') || lower.includes('passive income')
   ) {
-    return { niche: 'Gaming', tags: ['Gaming', 'YouTube Gaming', 'High Stakes', 'Gameplay'] };
+    return { niche: 'Business', tags: ['Business', 'Finance', 'Wealth', 'High CTR'] };
   }
-  
+
   if (
-    lower.includes('money') || lower.includes('million') || lower.includes('business') ||
-    lower.includes('invest') || lower.includes('finance') || lower.includes('sales') ||
-    lower.includes('rich') || lower.includes('dollar') || lower.includes('crypto') ||
-    lower.includes('stock') || lower.includes('real estate') || lower.includes('startup') ||
-    lower.includes('economy') || lower.includes('wealth') || lower.includes('passive income')
+    lower.includes('podcast') || lower.includes('interview') || lower.includes('episode') ||
+    lower.includes('talk') || lower.includes('show') || lower.includes('joe rogan') ||
+    lower.includes('huberman') || lower.includes('fridman')
   ) {
-    return { niche: 'Business', tags: ['Business', 'Investing', 'Finance', 'Wealth', 'Entrepreneur'] };
+    return { niche: 'Podcast', tags: ['Podcast', 'Conversation', 'Longform', 'Studio'] };
   }
-  
+
   if (
-    lower.includes('tutorial') || lower.includes('course') || lower.includes('photoshop') ||
-    lower.includes('after effects') || lower.includes('guide') || lower.includes('learn') ||
-    lower.includes('how to') || lower.includes('editing') || lower.includes('masterclass') ||
-    lower.includes('design') || lower.includes('lesson') || lower.includes('explained')
+    lower.includes('study') || lower.includes('learn') || lower.includes('how to') ||
+    lower.includes('tutorial') || lower.includes('guide') || lower.includes('science') ||
+    lower.includes('physics') || lower.includes('math') || lower.includes('explained')
   ) {
-    return { niche: 'Educational', tags: ['Educational', 'Tutorial', 'Masterclass', 'Step-by-Step', 'Pro Guide'] };
+    return { niche: 'Educational', tags: ['Educational', 'Explanation', 'Visual Breakdown'] };
   }
-  
+
   if (
-    lower.includes('mrbeast') || lower.includes('challenge') || lower.includes('viral') ||
-    lower.includes('comedy') || lower.includes('prank') || lower.includes('survive') ||
-    lower.includes('trapped') || lower.includes('100 days') || lower.includes('$1')
+    lower.includes('football') || lower.includes('soccer') || lower.includes('nba') ||
+    lower.includes('nfl') || lower.includes('sport') || lower.includes('workout') ||
+    lower.includes('fitness') || lower.includes('gym')
   ) {
-    return { niche: 'Entertainment', tags: ['Entertainment', 'Viral Challenge', 'High Energy', 'MrBeast Style'] };
+    return { niche: 'Sports', tags: ['Sports', 'Athletic', 'High Energy'] };
   }
-  
-  return { niche: 'Tech', tags: ['Tech', 'AI Tools', 'Hardware', 'Software', 'Gadgets'] };
+
+  return { niche: 'Entertainment', tags: ['Entertainment', 'Trending', 'Viral', 'Curated'] };
 }
 
 export function normalizeItemNiche(item: ThumbnailItem): ThumbnailItem {
-  if (item.tags && Array.isArray(item.tags)) {
-    return {
-      ...item,
-      niche: item.niche || ((item.tags[0] || '') as ThumbnailItem['niche'])
-    };
-  }
-
-  const currentNiche = item.niche as string;
-  if (!currentNiche) {
-    return {
-      ...item,
-      tags: []
-    };
-  }
-
-  const validNiches: ThumbnailItem['niche'][] = [
-    'IRL', 'Business', 'Tech', 'Entertainment', 'Gaming', 'Sports', 'Documentary', 'Educational'
-  ];
-
-  if (validNiches.includes(item.niche)) {
-    return {
-      ...item,
-      tags: [item.niche]
-    };
-  }
-
-  // Map legacy category names
-  let remappedNiche: ThumbnailItem['niche'] = item.niche;
-  if (currentNiche === 'Tech & AI') remappedNiche = 'Tech';
-  else if (currentNiche === 'Finance & Business') remappedNiche = 'Business';
-  else if (currentNiche === 'Vlogs & Lifestyle') remappedNiche = 'IRL';
-  else if (currentNiche === 'Fitness & Health') remappedNiche = 'Sports';
-  else if (currentNiche === 'Tutorials & Design') remappedNiche = 'Educational';
-  else if (currentNiche === 'Documentary') remappedNiche = 'Documentary';
-  else if (currentNiche === 'Gaming') remappedNiche = 'Gaming';
-  else if (currentNiche === 'Entertainment') remappedNiche = 'Entertainment';
-
+  if (item.niche && item.niche.trim() !== '') return item;
+  const inferred = classifyNicheFromFilename(item.imageUrl || item.title);
   return {
     ...item,
-    niche: remappedNiche,
-    tags: item.tags || (remappedNiche ? [remappedNiche] : [])
+    niche: inferred.niche,
+    tags: Array.from(new Set([...(item.tags || []), ...inferred.tags]))
   };
 }
 
-/**
- * Pure Fisher-Yates shuffle algorithm (only used when explicitly triggered)
- */
-export function shuffleThumbnails(items: ThumbnailItem[]): ThumbnailItem[] {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = temp;
-  }
-  return arr;
-}
-
-/**
- * Extracts multiple deduplication keys for a thumbnail item to prevent duplicates
- * across YouTube video IDs, canonical URLs, image sources, and IDs.
- */
-export function extractDedupeKeys(item: { id?: string; imageUrl?: string; sourceUrl?: string; videoId?: string; title?: string }): string[] {
+export function extractDedupeKeys(item: { id?: string; imageUrl?: string }): string[] {
   const keys: string[] = [];
-  if (item.id) keys.push(`id:${item.id}`);
-
-  // 1. Direct YouTube 11-char video ID if present
-  const directYtId = item.videoId;
-  if (directYtId && directYtId.length === 11) {
-    keys.push(`yt:${directYtId}`);
-  }
-
-  // 2. Scan id, sourceUrl, and imageUrl for any 11-char YouTube video ID
-  const scan = `${item.id || ''} ${item.sourceUrl || ''} ${item.imageUrl || ''}`;
-  const ytRegex = /(?:watch\?(?:.*&)?v=|youtu\.be\/|\/shorts\/|\/vi\/|thumb-yt-|thumb-storage-|ch-yt-|yt-vid-|yt-ch-|yt-|_)([a-zA-Z0-9_-]{11})(?:[_\.\?&\/:]|$)/gi;
-  let ytMatch;
-  while ((ytMatch = ytRegex.exec(scan)) !== null) {
-    const idFound = ytMatch[1];
-    if (idFound && idFound.length === 11) {
-      keys.push(`yt:${idFound}`);
-    }
-  }
-
-  // 3. Normalized image URL
+  if (item.id) keys.push(item.id);
   if (item.imageUrl) {
-    keys.push(`img:${item.imageUrl.toLowerCase()}`);
-    const fname = item.imageUrl.split('/').pop()?.split('?')[0]?.toLowerCase();
-    if (fname && fname.length > 5 && !fname.includes('maxresdefault') && !fname.includes('hqdefault')) {
-      keys.push(`fname:${fname}`);
-    }
+    keys.push(item.imageUrl);
+    const filename = decodeURIComponent(item.imageUrl.split('/').pop()?.split('?')[0] || '');
+    if (filename) keys.push(filename);
+    const ytMatch = item.imageUrl.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
+    if (ytMatch && ytMatch[1]) keys.push(ytMatch[1]);
   }
-
-  // 4. Normalized source URL
-  if (item.sourceUrl && item.sourceUrl.trim()) {
-    keys.push(`src:${item.sourceUrl.trim().toLowerCase()}`);
-  }
-
   return keys;
 }
 
-/**
- * Deterministically merge new items without duplicates and without randomizing the feed
- */
-export function blendAndDistributeThumbnails(baseList: ThumbnailItem[], newItems: ThumbnailItem[]): ThumbnailItem[] {
-  if (!newItems || newItems.length === 0) return baseList;
+export function blendAndDistributeThumbnails(baseList: ThumbnailItem[], userImports: ThumbnailItem[]): ThumbnailItem[] {
+  if (!userImports || userImports.length === 0) return baseList;
+  if (!baseList || baseList.length === 0) return userImports;
 
-  // 1. Deduplicate new items among themselves
   const seenKeys = new Set<string>();
-  const uniqueNewItems: ThumbnailItem[] = [];
-
-  for (const item of newItems) {
+  const uniqueImports: ThumbnailItem[] = [];
+  userImports.forEach(item => {
     const keys = extractDedupeKeys(item);
-    const isDup = keys.some(k => seenKeys.has(k));
-    if (!isDup) {
+    if (!keys.some(k => seenKeys.has(k))) {
       keys.forEach(k => seenKeys.add(k));
-      uniqueNewItems.push(item);
+      uniqueImports.push(item);
     }
-  }
+  });
 
-  // 2. Filter base list to remove any item matching seenKeys
-  const filteredBase = baseList.filter(item => {
+  const uniqueBase = baseList.filter(item => {
     const keys = extractDedupeKeys(item);
     return !keys.some(k => seenKeys.has(k));
   });
 
-  // Deterministically place new additions at the front of the feed
-  return [...uniqueNewItems, ...filteredBase];
+  return [...uniqueImports, ...uniqueBase];
 }
 
-/**
- * Get all user imported thumbnails that must NEVER be lost on refresh
- */
 export function getUserImportedThumbnails(): ThumbnailItem[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -308,106 +214,40 @@ export function getUserImportedThumbnails(): ThumbnailItem[] {
   }
 }
 
-/**
- * Save user imported thumbnails into the dedicated persistent store with strict deduplication
- */
 export function saveUserImportedThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[] {
   if (typeof window === 'undefined') return newItems;
   try {
     const current = getUserImportedThumbnails();
-    const seenKeys = new Set<string>();
-    const uniqueNew: ThumbnailItem[] = [];
-
-    for (const item of newItems) {
-      const keys = extractDedupeKeys(item);
-      if (!keys.some(k => seenKeys.has(k))) {
-        keys.forEach(k => seenKeys.add(k));
-        uniqueNew.push(item);
-      }
-    }
-
-    const filteredCurrent = current.filter(item => {
-      const keys = extractDedupeKeys(item);
-      return !keys.some(k => seenKeys.has(k));
-    });
-
-    // Never persist raw data URLs: they exhaust the localStorage quota and
-    // the whole write throws, losing every item including the good ones.
-    const persistable = [...uniqueNew, ...filteredCurrent].filter(isCloudPersistable);
-    localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(persistable));
-    return [...uniqueNew, ...filteredCurrent];
+    const merged = blendAndDistributeThumbnails(current, newItems);
+    localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(merged.filter(isCloudPersistable)));
+    return merged;
   } catch (e) {
     console.warn('Failed to save user imported thumbnails:', e);
     return newItems;
   }
 }
 
-// Fetch live from Supabase Storage Bucket ('Thumbnails') & PostgreSQL database, merging with user imports
-export async function fetchLiveSupabaseThumbnails(): Promise<ThumbnailItem[]> {
+export async function fetchLiveThumbnails(): Promise<ThumbnailItem[]> {
   const userImports = getUserImportedThumbnails();
-  let baseThumbnails: ThumbnailItem[] = [];
+  let baseThumbnails: ThumbnailItem[] = INITIAL_THUMBNAILS;
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('thumbnails')
-        // Explicit column list, not select('*'). This query runs on a timer for
-        // every open visitor, so every unrequested column is multiplied by the
-        // number of polls across every session and shows up directly as egress.
-        .select(
-          'id,title,creator,image_url,source_url,niche,styles,tags,colors,ocr_text,' +
-            'emotion,breakdown_notes,views_estimate,source,created_at,likes_count'
-        )
-        .not('breakdown_notes', 'ilike', '%poster%')
-        .not('id', 'ilike', 'poster-%')
-        .not('niche', 'eq', 'Cinema')
-        .not('source', 'eq', 'poster')
-        .order('created_at', { ascending: false })
-        .limit(5000);
-
-      if (!error && data && data.length > 0) {
-        baseThumbnails = data.map((row: any) => ({
-          id: row.id,
-          title: row.title || 'YouTube Thumbnail',
-          creator: row.creator && !row.creator.toLowerCase().includes('tanzee') ? row.creator : 'Unknown',
-          imageUrl: row.image_url,
-          sourceUrl: row.source_url || row.image_url,
-          niche: row.niche || '',
-          styles: row.styles && row.styles.length > 0 ? row.styles : ['Face Close-up', 'High-Contrast Glow'],
-          tags: Array.isArray(row.tags) ? row.tags : (row.niche ? [row.niche] : []),
-          // No fabricated fallback: an item without real extracted colours
-          // must report none, otherwise the colour filter lies about it.
-          colors: Array.isArray(row.colors) ? row.colors : [],
-          ocrText: row.ocr_text || '',
-          emotion: row.emotion || 'Curious',
-          breakdownNotes: row.breakdown_notes || '',
-          viewsEstimate: row.views_estimate || '',
-          publishedTime: row.published_time || (row.breakdown_notes?.match(/Published:\s*([^|]+)/i)?.[1]?.trim()) || undefined,
-          source: row.source || 'supabase-storage',
-          createdAt: row.created_at || new Date().toISOString(),
-          likesCount: row.likes_count || 0
-        }));
-      } else {
-        baseThumbnails = [];
+  try {
+    const res = await fetch('/api/gallery?pageSize=100');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.items) && data.items.length > 0) {
+        baseThumbnails = data.items;
       }
-    } catch (err) {
-      console.warn('Supabase fetch error, using stored dataset:', err);
-      baseThumbnails = [];
     }
+  } catch (err) {
+    console.warn('Gallery endpoint note:', err);
   }
 
-  // Combine user imported thumbnails blended/distributed across library thumbnails
   const deletedKeys = getPermanentlyDeletedKeys();
   const validBase = baseThumbnails.filter(b => !deletedKeys.has(b.id) && !deletedKeys.has(b.imageUrl));
   const validUserImports = userImports.filter(u => !deletedKeys.has(u.id) && !deletedKeys.has(u.imageUrl));
 
-  // Extract all dedupe keys from valid user imports to strictly prevent duplicate entries
-  const userKeys = new Set<string>();
-  validUserImports.forEach(u => extractDedupeKeys(u).forEach(k => userKeys.add(k)));
-  const filteredBase = validBase.filter(b => !extractDedupeKeys(b).some(k => userKeys.has(k)));
-  const combined = validUserImports.length > 0
-    ? blendAndDistributeThumbnails(filteredBase, validUserImports)
-    : filteredBase;
+  const combined = blendAndDistributeThumbnails(validBase, validUserImports);
 
   if (typeof window !== 'undefined') {
     try {
@@ -441,86 +281,42 @@ export function getStoredThumbnails(): ThumbnailItem[] {
       return baseList;
     }
 
-    // Blend user imported thumbnails throughout the base library smoothly with strict deduplication
-    const userKeys = new Set<string>();
-    userImports.forEach(u => extractDedupeKeys(u).forEach(k => userKeys.add(k)));
-    const filteredBase = baseList.filter(b => !extractDedupeKeys(b).some(k => userKeys.has(k)));
-    return blendAndDistributeThumbnails(filteredBase, userImports).map(normalizeItemNiche);
+    return blendAndDistributeThumbnails(baseList, userImports);
   } catch {
     return INITIAL_THUMBNAILS;
   }
 }
 
-/**
- * Permanently deletes a thumbnail from all data stores:
- * 1. Supabase PostgreSQL database table ('thumbnails')
- * 2. Supabase Storage bucket ('Thumbnails')
- * 3. Firebase Firestore ('thumbnails' collection)
- * 4. Local persistent storage & caches (and removes from moodboard collections)
- */
-export async function deleteStoredThumbnailPermanently(
-  target: { id: string; imageUrl?: string }
-): Promise<{ items: ThumbnailItem[]; storageRemovalFailed: boolean }> {
-  const keysToMark: string[] = [target.id];
-  if (target.imageUrl) {
-    keysToMark.push(target.imageUrl);
-    const filename = decodeURIComponent(target.imageUrl.split('/').pop()?.split('?')[0] || '');
-    if (filename) keysToMark.push(filename);
+export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: string }): Promise<{ items: ThumbnailItem[]; storageRemovalFailed: boolean }> {
+  if (typeof window === 'undefined') return { items: INITIAL_THUMBNAILS, storageRemovalFailed: false };
+  if (!target.id && !target.imageUrl) return { items: getStoredThumbnails(), storageRemovalFailed: false };
+
+  const currentList = getStoredThumbnails();
+  const deletedKeys = extractDedupeKeys(target);
+  markThumbnailPermanentlyDeleted(deletedKeys);
+
+  const updatedList = currentList.filter(t => {
+    if (target.id && t.id === target.id) return false;
+    if (target.imageUrl && t.imageUrl === target.imageUrl) return false;
+    return true;
+  });
+
+  try {
+    localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updatedList));
+  } catch (e) {
+    console.warn('LocalStorage delete update warning:', e);
   }
 
-  // 1. Mark in permanent deleted set so it is never re-hydrated
-  markThumbnailPermanentlyDeleted(keysToMark);
+  const userImports = getUserImportedThumbnails();
+  const updatedImports = userImports.filter(t => {
+    if (target.id && t.id === target.id) return false;
+    if (target.imageUrl && t.imageUrl === target.imageUrl) return false;
+    return true;
+  });
+  try {
+    localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(updatedImports));
+  } catch {}
 
-  // 2. Remove from user imported store
-  if (typeof window !== 'undefined') {
-    try {
-      const userImports = getUserImportedThumbnails();
-      const filteredImports = userImports.filter(t => t.id !== target.id && (!target.imageUrl || t.imageUrl !== target.imageUrl));
-      localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(filteredImports));
-    } catch (e) {
-      console.warn('Error clearing user imports:', e);
-    }
-  }
-
-  // 3. Remove from cached thumbnails list
-  let updatedList: ThumbnailItem[] = [];
-  if (typeof window !== 'undefined') {
-    try {
-      const current = getStoredThumbnails();
-      updatedList = current.filter(t => t.id !== target.id && (!target.imageUrl || t.imageUrl !== target.imageUrl));
-      localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updatedList));
-    } catch (e) {
-      console.warn('Error clearing cached thumbnails:', e);
-    }
-  }
-
-  // 4. Clean up any moodboard collections referencing this thumbnail
-  if (typeof window !== 'undefined') {
-    try {
-      const collections = getStoredCollections();
-      let collectionsChanged = false;
-      const updatedCollections = collections.map(c => {
-        if (c.thumbnailIds.includes(target.id)) {
-          collectionsChanged = true;
-          return {
-            ...c,
-            thumbnailIds: c.thumbnailIds.filter(id => id !== target.id)
-          };
-        }
-        return c;
-      });
-      if (collectionsChanged) {
-        localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updatedCollections));
-      }
-    } catch (e) {
-      console.warn('Error cleaning collection references:', e);
-    }
-  }
-
-  // 5. Delete from the database and storage bucket via the server route.
-  //    The route is the only place that can remove a stored object: the
-  //    publishable key is rejected by Storage with 403. It reports back whether
-  //    the object was really removed so a genuine failure can be surfaced.
   let storageRemovalFailed = false;
   try {
     const res = await fetch('/api/thumbnails/delete', {
@@ -532,54 +328,31 @@ export async function deleteStoredThumbnailPermanently(
       })
     });
     const data = await res.json().catch(() => null);
-    if (data?.canDeleteStorageObjects === false) {
+    if (data && data.storageDeleted === false && data.storageSkipped !== true) {
       storageRemovalFailed = true;
-      console.warn(
-        'Row deleted but the stored file remains in the bucket. Add ' +
-          'SUPABASE_SERVICE_ROLE_KEY to .env to allow permanent file deletion.'
-      );
-    } else if (data && data.storageDeleted === false && data.storageSkipped !== true) {
-      storageRemovalFailed = true;
-      console.warn('Row deleted but the stored file could not be removed:', data.storageReason);
+      console.warn('File removal note:', data.storageReason);
     }
   } catch (apiErr) {
     console.warn('Server delete endpoint note:', apiErr);
   }
 
-  // 6. Redundant client-side database delete, kept as a belt-and-braces
-  //    measure. Storage is deliberately NOT touched here: the publishable key
-  //    cannot delete objects, and the attempt failed silently for a long time.
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (target.id) {
-        await supabase.from('thumbnails').delete().eq('id', target.id);
-      }
-      if (target.imageUrl) {
-        await supabase.from('thumbnails').delete().eq('image_url', target.imageUrl);
-      }
-    } catch (sbErr) {
-      console.warn('Direct Supabase delete note:', sbErr);
-    }
-  }
-
-  // 7. Delete from Firebase Firestore if doc exists
+  // Delete from Firebase Firestore if doc exists
   try {
     const { doc, deleteDoc } = await import('firebase/firestore');
     const { db } = await import('./firebase');
     if (db && target.id) {
       await deleteDoc(doc(db, 'thumbnails', target.id)).catch(() => {});
     }
-  } catch {
-    // Ignore if not present in firestore
-  }
+  } catch {}
 
   return { items: updatedList, storageRemovalFailed };
 }
 
+export const deleteStoredThumbnailPermanently = deleteStoredThumbnail;
+
 export function updateStoredThumbnail(updatedItem: ThumbnailItem): ThumbnailItem[] {
   if (typeof window === 'undefined') return INITIAL_THUMBNAILS;
   
-  // Update in user imports if present
   const userImports = getUserImportedThumbnails();
   const importIdx = userImports.findIndex(t => t.id === updatedItem.id || t.imageUrl === updatedItem.imageUrl);
   if (importIdx >= 0) {
@@ -591,27 +364,15 @@ export function updateStoredThumbnail(updatedItem: ThumbnailItem): ThumbnailItem
   const updated = list.map(t => (t.id === updatedItem.id || t.imageUrl === updatedItem.imageUrl ? updatedItem : t));
   localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updated));
 
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('thumbnails').upsert({
-      id: updatedItem.id,
-      title: updatedItem.title,
-      creator: updatedItem.creator,
-      image_url: updatedItem.imageUrl,
-      source_url: updatedItem.sourceUrl,
-      niche: updatedItem.niche,
-      styles: updatedItem.styles,
-      tags: updatedItem.tags,
-      colors: updatedItem.colors,
-      ocr_text: updatedItem.ocrText,
-      emotion: updatedItem.emotion,
-      breakdown_notes: updatedItem.breakdownNotes,
-      views_estimate: updatedItem.viewsEstimate,
-      source: updatedItem.source,
-      likes_count: updatedItem.likesCount || 0
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase thumbnail update error:', error.message);
+  // Sync to Firestore
+  try {
+    import('firebase/firestore').then(async ({ doc, setDoc }) => {
+      const { db } = await import('./firebase');
+      if (db && updatedItem.id) {
+        await setDoc(doc(db, 'thumbnails', updatedItem.id), updatedItem, { merge: true });
+      }
     });
-  }
+  } catch {}
 
   return updated;
 }
@@ -620,46 +381,30 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
   if (typeof window === 'undefined') return newItems;
   if (!newItems || newItems.length === 0) return getStoredThumbnails();
 
-  // Save to persistent user imported list
   saveUserImportedThumbnails(newItems);
 
   const list = getStoredThumbnails();
   const updated = blendAndDistributeThumbnails(list, newItems);
 
   try {
-    // Cache cloud URLs only — a single data URL can exceed the entire
-    // localStorage quota and void the whole cache write.
     localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updated.filter(isCloudPersistable)));
   } catch (e) {
     console.warn('LocalStorage save quota warning:', e);
   }
 
-  // Sync to Supabase in batch if available.
-  // The server upload route is authoritative for colours — it extracts them
-  // from the image bytes. Re-writing them here would clobber that with the
-  // client's (possibly empty) array, so `colors` is left untouched here.
-  if (isSupabaseConfigured && supabase && newItems.length > 0) {
-    const records = newItems.map(item => ({
-      id: item.id,
-      title: item.title,
-      creator: item.creator,
-      image_url: item.imageUrl,
-      source_url: item.sourceUrl,
-      niche: item.niche,
-      styles: item.styles,
-      tags: item.tags,
-      ocr_text: item.ocrText,
-      emotion: item.emotion,
-      breakdown_notes: item.publishedTime ? `Published: ${item.publishedTime}${item.breakdownNotes ? ` | ${item.breakdownNotes}` : ''}` : (item.breakdownNotes || ''),
-      views_estimate: item.viewsEstimate,
-      source: item.source,
-      likes_count: item.likesCount || 0
-    }));
-
-    supabase.from('thumbnails').upsert(records).then(({ error }) => {
-      if (error) console.warn('Supabase bulk thumbnail sync error:', error.message);
+  // Sync to Firestore
+  try {
+    import('firebase/firestore').then(async ({ doc, setDoc }) => {
+      const { db } = await import('./firebase');
+      if (db) {
+        for (const item of newItems) {
+          if (item.id) {
+            await setDoc(doc(db, 'thumbnails', item.id), item, { merge: true }).catch(() => {});
+          }
+        }
+      }
     });
-  }
+  } catch {}
 
   return updated;
 }
@@ -681,91 +426,20 @@ export function getStoredPosters(): ThumbnailItem[] {
   }
 }
 
-/**
- * Fetch posters live from Supabase.
- *
- * The `thumbnails` table is the single source of truth. Two resurrection
- * sources were removed:
- *  - scanning the storage bucket, because the publishable key cannot delete
- *    objects, so a deleted poster left an orphan file and the scan rebuilt it.
- *    The scan also misfiled ordinary thumbnails such as
- *    "1050. YouTube_thumbnail_poster_Design.jpg" as movie posters.
- *  - merging the local collection back in, which re-added every poster the
- *    instant its row was deleted.
- *
- * Permanently-deleted keys are still honoured, so a delete survives a stale
- * row. On an empty database the seeded posters are shown, which is the only
- * case where anything is invented.
- */
-export async function fetchLiveSupabasePosters(): Promise<ThumbnailItem[]> {
-  const fallback = () => INITIAL_POSTERS;
-
-  const client = supabase;
-  if (!isSupabaseConfigured || !client) return fallback();
-
-  const deletedKeys = getPermanentlyDeletedKeys();
-  const dbPosters: ThumbnailItem[] = [];
-  const seenUrls = new Set<string>();
-
+export async function fetchLivePosters(): Promise<ThumbnailItem[]> {
   try {
-    // Wildcards must be `*`, not `%`: PostgREST 500s on a `%` inside an
-    // ilike pattern, which silently emptied this branch before.
-    const { data: dbData, error: dbErr } = await client
-        .from('thumbnails')
-        // Explicit columns only: this sync also runs repeatedly per session.
-        .select(
-          'id,title,creator,image_url,source_url,niche,styles,tags,colors,ocr_text,' +
-            'emotion,breakdown_notes,views_estimate,source,created_at,likes_count'
-        )
-        // Wildcards must be `*`, not `%`: PostgREST 500s on a `%` inside an
-        // ilike pattern, which silently emptied this branch before.
-        .or('id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*')
-        .order('created_at', { ascending: false })
-        .limit(1000);
-
-      if (dbErr) {
-        console.warn('Supabase poster fetch error:', dbErr.message);
-        return fallback();
+    const res = await fetch('/api/posters/sync');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.posters)) {
+        persistPosterList(data.posters);
+        return data.posters;
       }
-
-      (dbData || []).forEach((row: any) => {
-        if (!row.image_url || seenUrls.has(row.image_url)) return;
-        const id = row.id.startsWith('poster-') ? row.id : `poster-${row.id}`;
-        if (deletedKeys.has(row.id) || deletedKeys.has(id) || deletedKeys.has(row.image_url)) return;
-        seenUrls.add(row.image_url);
-        dbPosters.push({
-          id,
-          kind: 'poster',
-          title: row.title || 'Movie Poster',
-          creator: row.creator && row.creator !== 'YouTube Creator' ? row.creator : 'Cinema',
-          imageUrl: row.image_url,
-          sourceUrl: row.source_url || row.image_url,
-          niche: row.niche || 'Cinema',
-          styles: row.styles || [],
-          tags: Array.isArray(row.tags) && row.tags.length > 0 ? row.tags : ['Movie Poster', 'Cinema'],
-          colors: Array.isArray(row.colors) ? row.colors : [],
-          width: parseDimensions(row.breakdown_notes)?.width,
-          height: parseDimensions(row.breakdown_notes)?.height,
-          ocrText: row.ocr_text || '',
-          emotion: row.emotion || 'Curious',
-          breakdownNotes: row.breakdown_notes || 'Uploaded movie poster.',
-          source: 'supabase-storage',
-          createdAt: row.created_at || new Date().toISOString(),
-          likesCount: row.likes_count || 120
-        });
-      });
-    } catch (err) {
-      console.warn('Error fetching live Supabase posters:', err);
-      return fallback();
     }
-
-  // The database is the single source of truth. Local posters are NOT merged
-  // back in: that merge re-added every poster the moment its row was deleted,
-  // which is exactly the resurrection this was meant to prevent. A poster that
-  // is not in the database does not exist.
-  const combined = dbPosters;
-  persistPosterList(combined);
-  return combined;
+  } catch (err) {
+    console.warn('Live posters fetch note:', err);
+  }
+  return getStoredPosters();
 }
 
 export function saveStoredPosters(newItems: ThumbnailItem[]): ThumbnailItem[] {
@@ -780,83 +454,12 @@ export function saveStoredPosters(newItems: ThumbnailItem[]): ThumbnailItem[] {
   const fresh = withKind.filter((t) => !seen.has(t.id));
   const merged = [...fresh, ...current];
   persistPosterList(merged);
-
-  // Automatically ensure poster images are uploaded to Supabase Storage and records upserted to DB
-  const client = supabase;
-  if (isSupabaseConfigured && client && fresh.length > 0) {
-    fresh.forEach(async (item) => {
-      let finalUrl = item.imageUrl;
-
-      // If poster imageUrl is a base64 dataUrl, immediately upload to Supabase Storage in posters/
-      if (item.imageUrl.startsWith('data:')) {
-        try {
-          const byteString = atob(item.imageUrl.split(',')[1]);
-          const mimeMatch = item.imageUrl.split(',')[0].match(/:(.*?);/);
-          const mimeString = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-          const ab = new ArrayBuffer(byteString.length);
-          const ia = new Uint8Array(ab);
-          for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-          }
-          const blob = new Blob([ab], { type: mimeString });
-          const rand = Math.random().toString(36).slice(2, 7);
-          const clean = (item.title || 'poster').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 30);
-          const storagePath = `posters/poster_${Date.now()}_${clean}_${rand}.jpg`;
-
-          const { error: upErr } = await client.storage
-            .from('Thumbnails')
-            .upload(storagePath, blob, { contentType: 'image/jpeg', upsert: true });
-
-          if (!upErr) {
-            const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(storagePath);
-            if (pubData?.publicUrl) {
-              finalUrl = pubData.publicUrl;
-              item.imageUrl = finalUrl;
-              item.sourceUrl = finalUrl;
-              const currentPosters = getStoredPosters();
-              const updatedList = currentPosters.map(p => p.id === item.id ? { ...p, imageUrl: finalUrl, sourceUrl: finalUrl } : p);
-              persistPosterList(updatedList);
-            }
-          }
-        } catch (e) {
-          console.warn('Background poster storage upload error:', e);
-        }
-      }
-
-      // Upsert into Supabase database table 'thumbnails'
-      try {
-        const assignedId = item.id.startsWith('poster-') ? item.id : `poster-${item.id}`;
-        await client.from('thumbnails').upsert({
-          id: assignedId,
-          title: item.title || 'Movie Poster',
-          creator: item.creator || 'Cinema',
-          image_url: finalUrl,
-          source_url: finalUrl,
-          niche: item.niche || 'Cinema',
-          styles: item.styles || [],
-          tags: item.tags && item.tags.length > 0 ? item.tags : ['Movie Poster', 'Cinema'],
-          colors: item.colors || [],
-          ocr_text: item.ocrText || '',
-          emotion: item.emotion || 'Curious',
-          breakdown_notes: item.breakdownNotes || 'Uploaded movie poster.',
-          source: 'poster',
-          likes_count: item.likesCount || 120,
-          created_at: item.createdAt || new Date().toISOString()
-        });
-      } catch (upsertErr) {
-        console.warn('Supabase DB poster upsert warning:', upsertErr);
-      }
-    });
-  }
-
   return merged;
 }
 
 export function persistPosterList(list: ThumbnailItem[]): void {
   if (typeof window === 'undefined') return;
   try {
-    // Same quota guard as thumbnails: raw data URLs are memory-only until
-    // the bucket upload returns a public URL.
     localStorage.setItem(POSTERS_KEY, JSON.stringify(list.filter(isCloudPersistable)));
   } catch (e) {
     console.warn('LocalStorage poster save warning:', e);
@@ -872,7 +475,6 @@ export function getStoredCollections(): CollectionBoard[] {
       return [];
     }
     const parsed: CollectionBoard[] = JSON.parse(raw);
-    // Filter out legacy default dummy boards so user starts fresh with their own boards
     const filtered = (Array.isArray(parsed) ? parsed : []).filter(
       c => c.id !== 'col-1' && c.id !== 'col-2' && c.name !== '🔥 High CTR Hooks' && c.name !== '🖤 Dark & Minimalist Tech'
     );
@@ -925,17 +527,15 @@ export function saveCollection(collection: CollectionBoard): CollectionBoard[] {
   }
   localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
 
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('collections').upsert({
-      id: collection.id,
-      name: collection.name,
-      description: collection.description,
-      thumbnail_ids: collection.thumbnailIds,
-      color_theme: collection.colorTheme
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase collection sync error:', error.message);
+  // Sync to Firestore
+  try {
+    import('firebase/firestore').then(async ({ doc, setDoc }) => {
+      const { db } = await import('./firebase');
+      if (db) {
+        await setDoc(doc(db, 'collections', collection.id), collection, { merge: true }).catch(() => {});
+      }
     });
-  }
+  } catch {}
 
   return updated;
 }
@@ -957,16 +557,15 @@ export function toggleThumbnailInCollection(collectionId: string, thumbId: strin
   localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
 
   const target = updated.find(c => c.id === collectionId);
-  if (target && isSupabaseConfigured && supabase) {
-    supabase.from('collections').upsert({
-      id: target.id,
-      name: target.name,
-      description: target.description,
-      thumbnail_ids: target.thumbnailIds,
-      color_theme: target.colorTheme
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase toggle sync error:', error.message);
-    });
+  if (target) {
+    try {
+      import('firebase/firestore').then(async ({ doc, setDoc }) => {
+        const { db } = await import('./firebase');
+        if (db) {
+          await setDoc(doc(db, 'collections', target.id), target, { merge: true }).catch(() => {});
+        }
+      });
+    } catch {}
   }
 
   return updated;

@@ -4,11 +4,11 @@ import React, { useRef, useEffect } from 'react';
 import {
   Search,
   X,
-  Plus,
-  Minus,
+  ZoomIn,
+  ZoomOut,
+  Shuffle,
   Menu
 } from 'lucide-react';
-import { AppLogo } from './icons/AppLogo';
 
 interface AppHeaderProps {
   query: string;
@@ -19,6 +19,7 @@ interface AppHeaderProps {
   onColumnsChange: (cols: number) => void;
   showCardInfo: boolean;
   onToggleCardInfo: (val?: boolean) => void;
+  onShuffle?: () => void;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
 }
@@ -32,6 +33,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onColumnsChange,
   showCardInfo,
   onToggleCardInfo,
+  onShuffle,
   isSidebarCollapsed = false,
   onToggleSidebar,
 }) => {
@@ -60,7 +62,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 h-14 bg-[#090a0d]/85 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between px-4 sm:px-6 transition-colors select-none">
       
-      {/* Left: Logo (when collapsed or mobile) */}
+      {/* Left: Mobile menu button only */}
       <div className="flex items-center gap-2">
         {onToggleSidebar && (
           <button
@@ -70,18 +72,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors md:hidden"
           >
             <Menu className="w-4 h-4" />
-          </button>
-        )}
-
-        {/* When sidebar is collapsed on desktop, clicking logo here expands sidebar */}
-        {isSidebarCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="hidden md:flex items-center p-1 -ml-1 rounded-lg hover:bg-white/[0.06] transition-colors group"
-            title="Expand sidebar"
-          >
-            <AppLogo className="w-6 h-6 group-hover:scale-105 transition-transform" />
           </button>
         )}
       </div>
@@ -121,30 +111,55 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       {/* Right: Actions (+ / - Zoom Stepper, Expanding Detail/Gallery Toggle) */}
       <div className="flex items-center gap-2 sm:gap-3">
         
-        {/* Sleek Plus/Minus Zoom Stepper with 14px radius */}
-        <div className="flex items-center rounded-[14px] border border-white/[0.08] bg-white/[0.03] p-1">
-          <button
-            type="button"
-            onClick={handleZoomIn}
-            disabled={columns <= 2}
-            className="w-6 h-6 flex items-center justify-center rounded-[10px] text-white/60 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
-            title="Zoom in (larger cards, fewer columns)"
-          >
-            <Minus className="w-3 h-3" />
-          </button>
-          <span className="text-[11px] font-mono text-white/70 px-1.5 min-w-[40px] text-center select-none">
-            {columns} col
-          </span>
+        {/* Sleek Zoom In / Zoom Out Slider with 14px radius */}
+        <div className="flex items-center gap-1.5 sm:gap-2 rounded-[14px] border border-white/[0.08] bg-white/[0.03] px-2.5 h-9 select-none">
           <button
             type="button"
             onClick={handleZoomOut}
             disabled={columns >= 6}
-            className="w-6 h-6 flex items-center justify-center rounded-[10px] text-white/60 hover:text-white hover:bg-white/[0.06] disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+            className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white disabled:opacity-20 transition-colors cursor-pointer"
             title="Zoom out (more columns)"
+            aria-label="Zoom out"
           >
-            <Plus className="w-3 h-3" />
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+
+          <input
+            type="range"
+            min="2"
+            max="6"
+            step="1"
+            value={8 - columns}
+            onChange={(e) => onColumnsChange(8 - Number(e.target.value))}
+            className="zoom-range-slider w-16 sm:w-20 h-1 bg-white/10 accent-white rounded-lg cursor-pointer outline-none"
+            title={`${columns} columns`}
+            aria-label="Adjust zoom slider"
+          />
+
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            disabled={columns <= 2}
+            className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white disabled:opacity-20 transition-colors cursor-pointer"
+            title="Zoom in (fewer columns)"
+            aria-label="Zoom in"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {/* Shuffle Feed Order Button */}
+        {onShuffle && (
+          <button
+            type="button"
+            onClick={onShuffle}
+            className="h-9 w-9 rounded-[14px] border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            title="Shuffle Feed Order"
+            aria-label="Shuffle feed"
+          >
+            <Shuffle className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         {/* Expanding Toggle (from expanding-toggle.html) */}
         <div className="expanding-toggle">

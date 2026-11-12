@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, UploadCloud, Youtube, Link as LinkIcon, Check, Plus, Trash2, Eye, Palette, Tag } from 'lucide-react';
+import { ArrowLeft, Sparkles, UploadCloud, Youtube, Link as LinkIcon, Check, Plus, Trash2, Eye, Palette, Tag, Cloud, RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react';
 import { ThumbnailItem, NicheCategory, VisualStyle } from '../../lib/types';
 import { getStoredThumbnails, saveStoredThumbnail } from '../../lib/storage';
 import { useAuth, ADMIN_EMAIL } from '../../lib/authContext';
@@ -51,6 +51,7 @@ export default function AdminPage() {
   const [videoTitleInput, setVideoTitleInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSavingToR2, setIsSavingToR2] = useState(false);
 
   // Form State for new thumbnail
   const [previewImage, setPreviewImage] = useState('');
@@ -65,8 +66,33 @@ export default function AdminPage() {
   const [viewsEstimate, setViewsEstimate] = useState('1.5M');
   const [emotion, setEmotion] = useState<any>('Shocked');
 
+  // Cloudflare R2 Connection State
+  const [r2Status, setR2Status] = useState<{
+    configured?: boolean;
+    bucket?: string;
+    publicUrl?: string;
+    message?: string;
+    missing?: string[];
+    connection?: { ok: boolean; message?: string };
+  } | null>(null);
+  const [checkingR2, setCheckingR2] = useState(false);
+
+  const checkR2Status = async () => {
+    setCheckingR2(true);
+    try {
+      const res = await fetch('/api/r2/status');
+      const data = await res.json();
+      setR2Status(data);
+    } catch (e: any) {
+      setR2Status({ configured: false, message: e?.message || 'Failed to query R2 status' });
+    } finally {
+      setCheckingR2(false);
+    }
+  };
+
   useEffect(() => {
     setThumbnails(getStoredThumbnails());
+    checkR2Status();
   }, []);
 
   // Helper to extract YouTube Thumbnail URL from watch URL
@@ -129,9 +155,11 @@ export default function AdminPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSaveThumbnail = (e: React.FormEvent) => {
+  const handleSaveThumbnail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!previewImage) return;
+
+    setIsSavingToR2(true);
 
     const parsedColors = colorsInput
       .split(',')
@@ -143,20 +171,61 @@ export default function AdminPage() {
       .map(t => t.trim().replace(/^#/, ''))
       .filter(t => t.length > 0);
 
+    let finalImageUrl = previewImage;
+    let thumbSmallUrl: string | undefined = undefined;
+    let finalSource: any = 'r2-storage';
+    let extractedColors = parsedColors;
+
+    try {
+      const res = await fetch('/api/r2/upload-thumbnail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{
+            imageUrl: previewImage,
+            title: title || 'Curated Thumbnail Inspiration',
+            creator: creator || 'YouTube Creator',
+            niche,
+            styles: selectedStyles,
+            tags: parsedTags.length > 0 ? parsedTags : ['YouTube', 'CTR'],
+            viewsEstimate,
+          }]
+        })
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        const uploaded = json.items?.[0];
+        if (uploaded?.imageUrl) {
+          finalImageUrl = uploaded.imageUrl;
+          thumbSmallUrl = uploaded.thumbSmallUrl;
+          finalSource = uploaded.source || 'r2-storage';
+          if (Array.isArray(uploaded.colors) && uploaded.colors.length > 0) {
+            extractedColors = uploaded.colors;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('R2 upload failed, saving fallback:', err);
+    } finally {
+      setIsSavingToR2(false);
+    }
+
     const newItem: ThumbnailItem = {
       id: `thumb-${Date.now()}`,
       title: title || 'Curated Thumbnail Inspiration',
       creator: creator || 'YouTube Creator',
-      imageUrl: previewImage,
+      imageUrl: finalImageUrl,
+      thumbSmallUrl,
       niche,
       styles: selectedStyles,
       tags: parsedTags.length > 0 ? parsedTags : ['YouTube', 'CTR'],
-      colors: parsedColors.length > 0 ? parsedColors : ['#401D1A', '#E4E0D3', '#FFFFFF'],
+      colors: extractedColors.length > 0 ? extractedColors : ['#401D1A', '#E4E0D3', '#FFFFFF'],
       ocrText,
       emotion,
       breakdownNotes,
       viewsEstimate,
-      source: 'upload',
+      source: finalSource,
       createdAt: new Date().toISOString(),
       likesCount: Math.floor(Math.random() * 500) + 100
     };
@@ -252,6 +321,66 @@ export default function AdminPage() {
           <p className="text-sm text-[#401D1A]/70 dark:text-[#E4E0D3]/70 mt-1">
             Input a YouTube video URL, image link, or upload an image file. The AI analyzes visual hooks, colors, styles, and text automatically.
           </p>
+        </div>
+
+        {/* Cloudflare R2 Storage Status Panel */}
+        <div className="bg-[#FFFFFF] dark:bg-[#401D1A] p-5 rounded-2xl border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className={`p-2.5 rounded-xl ${r2Status?.configured ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}`}>
+                <Cloud className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-[#401D1A] dark:text-[#FFFFFF]">
+                    Cloudflare R2 Object Storage
+                  </h3>
+                  {r2Status?.configured ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                      <CheckCircle2 className="w-3 h-3" /> Active & Connected
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      <AlertCircle className="w-3 h-3" /> Setup Required
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70 mt-1 leading-relaxed">
+                  {r2Status?.configured ? (
+                    <>
+                      Thumbnails and WebP previews are saved directly to your R2 bucket <span className="font-mono font-bold text-[#401D1A] dark:text-[#FFFFFF] bg-[#E4E0D3]/40 dark:bg-white/10 px-1.5 py-0.5 rounded">&quot;{r2Status.bucket}&quot;</span>. Serving via <span className="font-mono text-[11px]">{r2Status.publicUrl}</span>.
+                    </>
+                  ) : (
+                    <>
+                      Add <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_ACCOUNT_ID</code>, <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_ACCESS_KEY_ID</code>, <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_SECRET_ACCESS_KEY</code>, and <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_BUCKET_NAME</code> to `.env` to store all thumbnails in Cloudflare R2.
+                    </>
+                  )}
+                </p>
+                {r2Status?.missing && r2Status.missing.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    <span className="text-[11px] font-medium text-[#401D1A]/60 dark:text-[#E4E0D3]/60 mr-1">Missing keys:</span>
+                    {r2Status.missing.map(m => (
+                      <span key={m} className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={checkR2Status}
+                disabled={checkingR2}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#E4E0D3]/40 hover:bg-[#E4E0D3]/80 dark:bg-[#FFFFFF]/10 dark:hover:bg-[#FFFFFF]/20 text-[#401D1A] dark:text-[#FFFFFF] border border-[#401D1A]/15 dark:border-white/15 flex items-center gap-1.5 transition-all disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${checkingR2 ? 'animate-spin' : ''}`} />
+                <span>{checkingR2 ? 'Checking...' : 'Test Connection'}</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Ingestion & AI Engine Panel */}
@@ -466,11 +595,11 @@ export default function AdminPage() {
               <div className="pt-3 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15 flex justify-end">
                 <button
                   type="submit"
-                  disabled={!previewImage}
+                  disabled={!previewImage || isSavingToR2}
                   className="px-6 py-2.5 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 disabled:opacity-40 transition-all shadow-md flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Publish to Inspiration Vault</span>
+                  <span>{isSavingToR2 ? 'Storing to Cloudflare R2...' : 'Publish to Inspiration Vault'}</span>
                 </button>
               </div>
 

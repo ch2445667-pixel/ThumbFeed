@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { auth, signInWithGoogle, logout, onAuthStateChanged, User } from './firebase';
 
-export const ADMIN_EMAIL = 'shivashiva66407@gmail.com';
+export const ADMIN_EMAILS = ['canonwater2025@gmail.com', 'shivashiva66407@gmail.com'];
+export const ADMIN_EMAIL = 'canonwater2025@gmail.com';
 
 /**
  * Local development unlock.
@@ -118,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isDevAdmin = mounted && isLocalDevAdmin();
   const isAdmin = Boolean(
-    user?.email && user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
+    user?.email && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email?.trim().toLowerCase())
   ) || isDevAdmin;
 
   return (

@@ -48,8 +48,8 @@ export default function PrivacyPage() {
 
       <Section title="Where it lives">
         <p>
-          Authentication runs through Google and Firebase. Saved thumbnails and
-          account data are stored with Supabase. Preferences that never need to
+          Authentication runs through Google and Firebase. Thumbnails and media assets
+          are stored securely with Cloudflare R2. Preferences that never need to
           leave your device stay in your browser local storage.
         </p>
       </Section>

@@ -1,9 +1,7 @@
 'use client';
 
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { supabase } from './supabase';
-import type { FilterState, ThumbnailItem } from './types';
+import type { ThumbnailItem } from './types';
 import type { ColorLibraryEntry } from '../components/FilterPillBar';
 import { getStoredThumbnails } from './storage';
 
@@ -71,7 +69,7 @@ async function fetchGalleryPage(key: GalleryKey, page: number): Promise<GalleryP
       }
     }
     return data;
-  } catch (e) {
+  } catch {
     if (typeof window !== 'undefined') {
       const local = getStoredThumbnails();
       return {
@@ -94,17 +92,10 @@ async function fetchFacets(section: 'thumbnails' | 'posters'): Promise<GalleryFa
 /**
  * The gallery's server state.
  *
- * Pages of 36 arrive via .range() and accumulate as the user scrolls. A page
- * is metadata for 36 tiles -- tens of kilobytes, not the megabytes the old
- * full-table syncs moved. staleTime keeps a visited filter set from
- * re-downloading for five minutes; refetchOnWindowFocus stays off because a
- * focus event is not new data. Live updates still arrive through the realtime
- * channel below, which invalidates rather than polls.
+ * Pages of 36 arrive via pagination and accumulate as the user scrolls.
  */
 export function useGallery(key: GalleryKey) {
-  const queryClient = useQueryClient();
-
-  const query = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: ['gallery', key],
     queryFn: ({ pageParam = 0 }) => fetchGalleryPage(key, pageParam),
     initialPageParam: 0,
@@ -118,24 +109,6 @@ export function useGallery(key: GalleryKey) {
     refetchOnReconnect: false,
     retry: 2,
   });
-
-  // Realtime stays: an insert/update/delete anywhere invalidates the feed, so
-  // extension uploads and other sessions appear without any polling loop.
-  useEffect(() => {
-    if (!supabase) return;
-    const channel = supabase
-      .channel('realtime:gallery_feed')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'thumbnails' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['gallery'] });
-        queryClient.invalidateQueries({ queryKey: ['gallery-facets'] });
-      })
-      .subscribe();
-    return () => {
-      if (supabase) supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  return query;
 }
 
 export function useGalleryFacets(section: 'thumbnails' | 'posters') {

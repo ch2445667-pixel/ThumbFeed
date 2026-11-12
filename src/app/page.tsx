@@ -311,7 +311,7 @@ export default function HomePage() {
         selectedBoardId={selectedBoardId}
         onSelectBoard={(boardId) => setSelectedBoardId(boardId)}
         onOpenMoodboard={() => setIsMoodboardOpen(true)}
-        onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
+        onOpenAdd={() => setIsAddOpen(true)}
         onShuffle={handleShuffle}
         categories={categories}
         onAddCategory={handleAddCategory}
@@ -337,6 +337,7 @@ export default function HomePage() {
           onColumnsChange={handleColumnsChange}
           showCardInfo={showCardInfo}
           onToggleCardInfo={handleToggleCardInfo}
+          onShuffle={handleShuffle}
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => {
             if (window.innerWidth < 768) {
@@ -404,16 +405,16 @@ export default function HomePage() {
                   >
                     Clear Filters
                   </button>
-                ) : isAdmin ? (
+                ) : (
                   <button
                     type="button"
                     onClick={() => setIsAddOpen(true)}
-                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition-colors shadow-sm"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Upload Thumbnails</span>
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Add Thumbnails</span>
                   </button>
-                ) : null}
+                )}
               </div>
             </div>
           ) : (
@@ -427,7 +428,9 @@ export default function HomePage() {
                     index={index}
                     showCardInfo={showCardInfo}
                     onInspect={setSelectedItem}
-                    onDelete={isAdmin ? setThumbnailToDelete : undefined}
+                    onDelete={setThumbnailToDelete}
+                    collections={collections}
+                    onCollectionsChange={setCollections}
                   />
                 ))}
               </div>
@@ -472,16 +475,14 @@ export default function HomePage() {
         onInspectItem={setSelectedItem}
       />
 
-      {/* Add Modal (owner/admin only) */}
-      {isAdmin && (
-        <AddModal
-          isOpen={isAddOpen}
-          onClose={() => setIsAddOpen(false)}
-          onAddThumbnail={handleAddThumbnail}
-          onAddMultipleThumbnails={handleAddMultipleThumbnails}
-          collections={collections}
-        />
-      )}
+      {/* Add Modal */}
+      <AddModal
+        isOpen={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        onAddThumbnail={handleAddThumbnail}
+        onAddMultipleThumbnails={handleAddMultipleThumbnails}
+        collections={collections}
+      />
 
       {/* Thumbnail Inspection Modal */}
       <ThumbnailModal

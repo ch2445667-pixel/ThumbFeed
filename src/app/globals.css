@@ -495,3 +495,33 @@ input[type='range'].custom-slider::-webkit-slider-thumb:hover {
     animation: none !important;
   }
 }
+
+/* Zoom range slider styling */
+input[type="range"].zoom-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="range"].zoom-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease;
+}
+input[type="range"].zoom-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+input[type="range"].zoom-range-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+

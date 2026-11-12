@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { testR2Connection, saveR2Config, getR2Config } from '../../../../lib/r2';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl } = body;
+
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing required fields: accountId, accessKeyId, secretAccessKey, and bucketName are all required.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Test connection with Cloudflare R2
+    const testResult = await testR2Connection({
+      accountId: accountId.trim(),
+      accessKeyId: accessKeyId.trim(),
+      secretAccessKey: secretAccessKey.trim(),
+      bucketName: bucketName.trim(),
+    });
+
+    if (!testResult.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: testResult.message || 'Could not connect to Cloudflare R2 with the provided credentials.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Save configuration
+    const saved = saveR2Config({
+      accountId,
+      accessKeyId,
+      secretAccessKey,
+      bucketName,
+      publicUrlBase: publicUrl,
+    });
+
+    if (!saved) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to write configuration file on server.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully connected to Cloudflare R2 bucket "${bucketName.trim()}".`,
+      config: {
+        accountId: accountId.trim(),
+        bucketName: bucketName.trim(),
+        isConfigured: true,
+      },
+    });
+  } catch (err: any) {
+    console.error('R2 connect route error:', err);
+    return NextResponse.json(
+      { success: false, error: err.message || 'Internal server error while connecting to Cloudflare R2' },
+      { status: 500 }
+    );
+  }
+}

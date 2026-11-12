@@ -15,7 +15,8 @@ import {
   Check,
   Settings,
   Upload,
-  Camera
+  Camera,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '../lib/authContext';
 import { CollectionBoard } from '../lib/types';
@@ -62,26 +63,73 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 }) => {
   const { user, isAdmin, signIn, signOut } = useAuth();
   const [mounted, setMounted] = useState(false);
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [modalCategoryInput, setModalCategoryInput] = useState('');
   
-  // Custom user profile state (editable pfp & name stored in localStorage)
+  // Custom user profile state (editable pfp & name stored persistently in server + localStorage)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customPhoto, setCustomPhoto] = useState('');
+  const [customName, setCustomName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('thumbfeed_custom_profile');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed.name || '';
+        }
+      } catch {}
+    }
+    return '';
+  });
+  const [customPhoto, setCustomPhoto] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('thumbfeed_custom_profile');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed.photoURL || '';
+        }
+      } catch {}
+    }
+    return '';
+  });
   const [editNameInput, setEditNameInput] = useState('');
   const [editPhotoInput, setEditPhotoInput] = useState('');
 
   React.useEffect(() => {
     setMounted(true);
-    try {
-      const saved = localStorage.getItem('thumbfeed_custom_profile');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.name) setCustomName(parsed.name);
-        if (parsed.photoURL) setCustomPhoto(parsed.photoURL);
-      }
-    } catch {}
+    // Fetch persisted profile from server
+    fetch('/api/profile')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && (data.name || data.photoURL)) {
+          if (data.name) setCustomName(data.name);
+          if (data.photoURL) setCustomPhoto(data.photoURL);
+          try {
+            localStorage.setItem(
+              'thumbfeed_custom_profile',
+              JSON.stringify({ name: data.name || '', photoURL: data.photoURL || '' })
+            );
+          } catch {}
+        } else {
+          // If server is empty but client has a saved profile, persist it to server immediately
+          try {
+            const saved = localStorage.getItem('thumbfeed_custom_profile');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed.name || parsed.photoURL) {
+                if (parsed.name) setCustomName(parsed.name);
+                if (parsed.photoURL) setCustomPhoto(parsed.photoURL);
+                fetch('/api/profile', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name: parsed.name || '', photoURL: parsed.photoURL || '' }),
+                }).catch(() => {});
+              }
+            }
+          } catch {}
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleOpenEditProfile = () => {
@@ -90,7 +138,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
     setIsEditProfileOpen(true);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalName = editNameInput.trim() || 'User';
     const finalPhoto = editPhotoInput.trim();
@@ -102,6 +150,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         JSON.stringify({ name: finalName, photoURL: finalPhoto })
       );
     } catch {}
+    try {
+      await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: finalName, photoURL: finalPhoto }),
+      });
+    } catch (err) {
+      console.warn('Failed to save profile to server:', err);
+    }
     setIsEditProfileOpen(false);
   };
 
@@ -117,14 +174,13 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleCreateCategory = (e: React.FormEvent) => {
+  const handleCreateCategoryInModal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCategoryName.trim()) return;
+    if (!modalCategoryInput.trim()) return;
     if (onAddCategory) {
-      onAddCategory(newCategoryName.trim());
+      onAddCategory(modalCategoryInput.trim());
     }
-    setNewCategoryName('');
-    setIsAddingCategory(false);
+    setModalCategoryInput('');
   };
 
   return (
@@ -185,26 +241,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         {/* Main Content Area */}
         <div className="flex-1 min-h-0 flex flex-col px-2.5 py-3 gap-3 overflow-hidden">
           
-          {/* Top Intact Sections (Add, Explore, Moodboards, Boards) */}
+          {/* Top Intact Sections (Explore, Boards) */}
           <div className="shrink-0 space-y-3">
-            {/* Action Button: "+ Add / Import" */}
-            {mounted && onOpenAdd && (
-              <div>
-                <button
-                  type="button"
-                  onClick={onOpenAdd}
-                  className={`w-full flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 text-white font-medium text-xs py-2 transition-all active:scale-[0.98] shadow-sm ${
-                    isCollapsed ? 'justify-center px-0' : 'px-3'
-                  }`}
-                  title="Add or Import Thumbnails"
-                >
-                  <Plus className="w-4 h-4 text-white/80 shrink-0" />
-                  {!isCollapsed && <span>Add / Import</span>}
-                </button>
-              </div>
-            )}
-
-            {/* Primary Navigation: Explore with Small Shuffle Icon */}
+            {/* Primary Navigation: Explore with Small Plus Icon to Add Thumbnails */}
             <nav className="space-y-1">
               <div className="flex items-center gap-1">
                 <button
@@ -229,35 +268,31 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   )}
                 </button>
 
-                {/* Small Shuffle Icon next to Explore */}
-                {!isCollapsed && onShuffle && (
+                {/* Plus Icon to Add Thumbnails next to Explore */}
+                {!isCollapsed && onOpenAdd && (
                   <button
                     type="button"
-                    onClick={onShuffle}
-                    className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
-                    title="Shuffle Feed Order"
+                    onClick={onOpenAdd}
+                    className="p-1.5 rounded-lg text-white/45 hover:text-white hover:bg-white/[0.08] transition-colors"
+                    title="Add Thumbnails"
+                    aria-label="Add Thumbnails"
                   >
-                    <Shuffle className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={onOpenMoodboard}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors ${
-                  isCollapsed ? 'justify-center' : ''
-                }`}
-                title="Moodboards & Collections"
-              >
-                <Bookmark className="w-4 h-4 shrink-0 text-white/80" />
-                {!isCollapsed && <span className="flex-1 text-left">Moodboards</span>}
-                {!isCollapsed && collections.length > 0 && (
-                  <span className="px-1.5 py-0.5 text-[10px] rounded bg-white/10 text-white/70 font-mono">
-                    {collections.length}
-                  </span>
-                )}
-              </button>
+              {isCollapsed && onOpenAdd && (
+                <button
+                  type="button"
+                  onClick={onOpenAdd}
+                  className="w-full flex items-center justify-center p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors mt-0.5"
+                  title="Add Thumbnails"
+                  aria-label="Add Thumbnails"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
             </nav>
 
             {/* Section: BOARDS (User creates and manages) */}
@@ -331,46 +366,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setIsAddingCategory(!isAddingCategory)}
-                  className="p-1 -mr-1 text-white/40 hover:text-white hover:bg-white/[0.05] rounded transition-colors"
-                  title="Add Category"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  className="p-1 -mr-1 text-white/40 hover:text-white hover:bg-white/[0.05] rounded transition-colors cursor-pointer"
+                  title="Manage Categories"
+                  aria-label="Manage Categories"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Settings className="w-3.5 h-3.5" />
                 </button>
               </div>
-
-              {/* Inline input to add category */}
-              {isAddingCategory && (
-                <form onSubmit={handleCreateCategory} className="shrink-0 px-1 mb-2">
-                  <div className="flex items-center gap-1 bg-[#14161f] border border-white/15 rounded-md px-2 py-1">
-                    <input
-                      type="text"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="Category name..."
-                      autoFocus
-                      className="w-full bg-transparent text-xs text-white placeholder-white/40 focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newCategoryName.trim()}
-                      className="text-white/70 hover:text-white disabled:opacity-30 p-0.5"
-                    >
-                      <Check className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddingCategory(false);
-                        setNewCategoryName('');
-                      }}
-                      className="text-white/40 hover:text-white/80 p-0.5"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                </form>
-              )}
 
               {/* Scrollable Categories List */}
               <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-1 categories-scroll">
@@ -614,6 +617,101 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal (Add and Remove any category) */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/80">
+                  <Settings className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Manage Categories</h3>
+                  <p className="text-[11px] text-white/40">Add new categories or delete any category</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-1 text-white/40 hover:text-white rounded transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Add new category form */}
+            <form onSubmit={handleCreateCategoryInModal} className="flex gap-2">
+              <input
+                type="text"
+                value={modalCategoryInput}
+                onChange={(e) => setModalCategoryInput(e.target.value)}
+                placeholder="New category name (e.g. 3D Design, AI, Gaming)..."
+                className="flex-1 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder-white/30 focus:border-white/30 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!modalCategoryInput.trim()}
+                className="px-3.5 py-2 rounded-lg bg-white text-black hover:bg-white/90 disabled:opacity-40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Add</span>
+              </button>
+            </form>
+
+            {/* Categories List with Delete for each */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-medium text-white/40 uppercase tracking-wider px-1">
+                <span>All Categories ({categories.length})</span>
+              </div>
+              <div className="max-h-64 overflow-y-auto space-y-1 pr-1 categories-scroll border border-white/[0.06] rounded-xl p-2 bg-white/[0.02]">
+                {categories.map((category) => {
+                  const count = categoryCounts[category] ?? 0;
+                  return (
+                    <div
+                      key={category}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] transition-colors group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-medium text-white truncate">{category}</span>
+                        {count > 0 && (
+                          <span className="text-[10px] font-mono text-white/40 bg-white/[0.05] px-1.5 py-0.5 rounded">
+                            {count} items
+                          </span>
+                        )}
+                      </div>
+                      {onRemoveCategory && (
+                        <button
+                          type="button"
+                          onClick={() => onRemoveCategory(category)}
+                          className="p-1 rounded text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          title={`Remove "${category}" category`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-white/[0.06]">
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="px-4 py-1.5 rounded-lg bg-white text-black hover:bg-white/90 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}

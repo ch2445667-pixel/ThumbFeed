@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { getR2Client, isR2Configured } from '../../../../lib/r2';
+import { getR2Client, isR2Configured, getR2Config } from '../../../../lib/r2';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: { key: string[] } }
 ) {
   if (!isR2Configured()) {
-    return new NextResponse('Cloudflare R2 is not configured', { status: 503 });
+    return new NextResponse('Cloudflare R2 is not configured. Please set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_BUCKET_NAME.', { status: 503 });
   }
 
   const keySegments = params.key;
@@ -21,11 +21,11 @@ export async function GET(
 
   try {
     const client = getR2Client();
-    const bucket = process.env.R2_BUCKET_NAME || 'thumbfeed';
+    const { bucketName } = getR2Config();
 
     const obj = await client.send(
       new GetObjectCommand({
-        Bucket: bucket,
+        Bucket: bucketName,
         Key: keyPath,
       })
     );
@@ -49,9 +49,9 @@ export async function GET(
     });
   } catch (err: any) {
     if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
-      return new NextResponse('Image not found in R2', { status: 404 });
+      return new NextResponse('Image not found in Cloudflare R2', { status: 404 });
     }
-    console.error('Error fetching object from R2:', err);
-    return new NextResponse('Failed to retrieve image from R2', { status: 500 });
+    console.error('Error fetching object from Cloudflare R2:', err);
+    return new NextResponse('Failed to retrieve image from Cloudflare R2', { status: 500 });
   }
 }

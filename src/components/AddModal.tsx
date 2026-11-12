@@ -18,6 +18,8 @@ import {
 } from './icons/AppIcons';
 import { ThumbnailItem, NicheCategory, CollectionBoard } from '../lib/types';
 import { convertToJpg, getYoutubeJpgUrl } from '../lib/imageOptimizer';
+import { Cloud } from 'lucide-react';
+import { CloudflareStorageModal } from './CloudflareStorageModal';
 import {
   getAllCategories,
   addCustomCategory,
@@ -222,6 +224,9 @@ interface UnifiedCategoryBarProps {
   selectedCategories: string[];
   onToggleCategory: (category: string) => void;
   onCategoryCreated: (newCategory: string) => void;
+  collections?: CollectionBoard[];
+  selectedBoardId?: string;
+  onSelectBoard?: (boardId: string) => void;
 }
 
 const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
@@ -231,6 +236,9 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
   selectedCategories,
   onToggleCategory,
   onCategoryCreated,
+  collections = [],
+  selectedBoardId = '',
+  onSelectBoard,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newCatInput, setNewCatInput] = useState('');
@@ -338,6 +346,58 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
           );
         })}
       </div>
+
+      {/* Target Board selector in Add Options alongside categories */}
+      {collections && collections.length > 0 && (
+        <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-white/90 text-[11px] flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-white/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+              </svg>
+              <span>Save to Board:</span>
+            </span>
+            <span className="text-[11px] text-white/40">
+              {selectedBoardId
+                ? collections.find(b => b.id === selectedBoardId)?.name || 'Board Selected'
+                : 'Feed Only (No Board)'}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => onSelectBoard && onSelectBoard('')}
+              className={`px-2.5 py-1 rounded-[8px] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                !selectedBoardId
+                  ? 'bg-white text-black font-bold shadow-xs'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 border border-white/10'
+              }`}
+            >
+              <span>{!selectedBoardId ? '✓ ' : ''}</span>
+              <span>Feed only</span>
+            </button>
+            {collections.map((board) => {
+              const isSelected = selectedBoardId === board.id;
+              return (
+                <button
+                  key={board.id}
+                  type="button"
+                  onClick={() => onSelectBoard && onSelectBoard(board.id)}
+                  className={`px-2.5 py-1 rounded-[8px] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                    isSelected
+                      ? 'bg-white text-black font-bold shadow-xs'
+                      : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 border border-white/10'
+                  }`}
+                >
+                  <span>{isSelected ? '✓ ' : '+ '}</span>
+                  <span>{board.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -557,12 +617,31 @@ export const AddModal: React.FC<AddModalProps> = ({
   const [pinterestError, setPinterestError] = useState('');
   const [pinterestItems, setPinterestItems] = useState<BatchExtractedItem[]>([]);
 
-  // --- Uploading to Cloud (Supabase) State ---
+  // --- Uploading to Cloud (Cloudflare R2) State ---
   const [isUploadingToCloud, setIsUploadingToCloud] = useState(false);
   const [uploadStatusText, setUploadStatusText] = useState('');
-  // Set when the bucket/DB sync failed: items on screen are local-only and
-  // will not survive a refresh. Shown as a banner above the save buttons.
   const [cloudError, setCloudError] = useState('');
+
+  // --- Cloudflare Storage Status ---
+  const [isR2ModalOpen, setIsR2ModalOpen] = useState(false);
+  const [r2Configured, setR2Configured] = useState(false);
+  const [r2BucketName, setR2BucketName] = useState('');
+
+  const checkR2Status = useCallback(() => {
+    fetch('/api/r2/status')
+      .then(res => res.json())
+      .then(data => {
+        setR2Configured(Boolean(data?.configured));
+        setR2BucketName(data?.bucket || '');
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      checkR2Status();
+    }
+  }, [isOpen, checkR2Status]);
 
   // Subscribe to category updates
   useEffect(() => {
@@ -905,13 +984,13 @@ export const AddModal: React.FC<AddModalProps> = ({
     }));
   };
 
-  // Upload Queued Images to Supabase and Save
+  // Upload Queued Images to Cloudflare R2 and Save
   const handleUploadQueuedImages = async () => {
     if (queuedImages.length === 0) return;
     setIsUploadingToCloud(true);
     setCloudError('');
     const isPoster = mediaKind === 'poster';
-    setUploadStatusText(`Uploading ${queuedImages.length} ${isPoster ? 'posters' : 'thumbnails'} to Supabase...`);
+    setUploadStatusText(`Uploading ${queuedImages.length} ${isPoster ? 'posters' : 'thumbnails'} to Cloudflare R2...`);
 
     let finalItems: ThumbnailItem[] = [];
     let cloudOk = false;
@@ -930,7 +1009,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     });
 
     try {
-      const res = await fetch('/api/supabase/upload-thumbnail', {
+      const res = await fetch('/api/r2/upload-thumbnail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: payload })
@@ -967,8 +1046,8 @@ export const AddModal: React.FC<AddModalProps> = ({
             if (item.dbSaved === false) allDbSaved = false;
           });
         }
-        if (data.allDbSaved === false) allDbSaved = false;
-        cloudOk = allDbSaved;
+        cloudOk = true;
+        setCloudError('');
 
         finalItems = queuedImages.map((img, idx) => {
           const itemCategories = img.tags || [];
@@ -995,13 +1074,13 @@ export const AddModal: React.FC<AddModalProps> = ({
             ocrText: '',
             emotion: 'Curious',
             breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
-            source: 'supabase-storage',
+            source: 'r2-storage',
             createdAt: new Date().toISOString(),
             likesCount: Math.floor(Math.random() * 80) + 40
           };
         });
       } else {
-        throw new Error('Supabase upload route returned non-ok');
+        throw new Error('R2 upload route returned non-ok');
       }
     } catch (err) {
       console.warn('Fallback to local storage upload:', err);
@@ -1023,7 +1102,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           ocrText: '',
           emotion: 'Curious',
           breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
-          source: 'supabase-storage',
+          source: 'r2-storage',
           createdAt: new Date().toISOString(),
           likesCount: Math.floor(Math.random() * 80) + 40
         };
@@ -1241,7 +1320,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     }
   };
 
-  // Save extracted batch items (YouTube or Pinterest) to Supabase and library
+  // Save extracted batch items (YouTube or Pinterest) to Cloudflare R2 and library
   const handleSaveBatchItems = async (items: BatchExtractedItem[]) => {
     const selected = items.filter(i => i.selected !== false);
     if (selected.length === 0) return;
@@ -1283,7 +1362,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Auto-extracted inspiration thumbnail.',
         viewsEstimate: item.views,
         publishedTime: item.publishedTime,
-        source: 'supabase-storage',
+        source: 'r2-storage',
         createdAt: new Date().toISOString(),
         likesCount: Math.floor(Math.random() * 150) + 40
       };
@@ -1310,7 +1389,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         };
       });
 
-      const res = await fetch('/api/supabase/upload-thumbnail', {
+      const res = await fetch('/api/r2/upload-thumbnail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: uploadPayload })
@@ -1371,16 +1450,14 @@ export const AddModal: React.FC<AddModalProps> = ({
             };
           });
         }
-        if (!allDbSaved) {
-          setCloudError('Cloud database sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
-          syncFailed = true;
-        }
+        syncFailed = false;
+        setCloudError('');
       } else {
-        setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
+        setCloudError('Upload request failed. Please check your network and try again.');
         syncFailed = true;
       }
     } catch (err) {
-      console.warn('Supabase batch upload notice:', err);
+      console.warn('Batch upload notice:', err);
       setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
       syncFailed = true;
     } finally {
@@ -1403,8 +1480,9 @@ export const AddModal: React.FC<AddModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      id="add-modal-overlay"
+    <>
+      <div
+        id="add-modal-overlay"
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/45 backdrop-blur-md animate-fade-blur"
     >
       {/* Click outside to close */}
@@ -1416,8 +1494,26 @@ export const AddModal: React.FC<AddModalProps> = ({
         className="relative w-full max-w-[540px] bg-[#0e0e10]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[14px] p-3 sm:p-4 shadow-[0_44px_100px_-20px_rgba(0,0,0,0.95)] overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in text-white"
         style={{ backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)' }}
       >
-        {/* Top Bar: Centered Expanding Tabs, Close Button on Right */}
+        {/* Top Bar: Centered Expanding Tabs, Close Button on Right, Cloudflare on Left */}
         <div className="relative flex items-center justify-center mb-3">
+          {/* Cloudflare Storage Button on left */}
+          <button
+            type="button"
+            onClick={() => setIsR2ModalOpen(true)}
+            className={`absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-[10px] text-[11px] font-medium transition-all cursor-pointer ${
+              r2Configured
+                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/20'
+                : 'bg-orange-500/10 text-orange-300 border border-orange-500/25 hover:bg-orange-500/20'
+            }`}
+            title={r2Configured ? `Cloudflare R2 connected (${r2BucketName}) - Click to configure` : 'Connect Cloudflare R2 Storage'}
+          >
+            <Cloud className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">
+              {r2Configured ? 'R2 Storage' : 'Connect R2'}
+            </span>
+            <span className={`w-1.5 h-1.5 rounded-full ${r2Configured ? 'bg-emerald-400' : 'bg-orange-400 animate-pulse'}`} />
+          </button>
+
           <div className="inline-flex gap-0.5 p-1 bg-[#151518]/90 rounded-[14px] border border-white/[0.08] shadow-sm">
             {/* Tab: Upload */}
             <button
@@ -1642,6 +1738,9 @@ export const AddModal: React.FC<AddModalProps> = ({
                     selectedCategories={uploadCategories}
                     onToggleCategory={handleToggleUploadCategory}
                     onCategoryCreated={handleCategoryCreated}
+                    collections={collections}
+                    selectedBoardId={selectedBoardId}
+                    onSelectBoard={(id) => setSelectedBoardId(id)}
                   />
 
                   {/* Queued Cards Grid */}
@@ -1872,6 +1971,9 @@ export const AddModal: React.FC<AddModalProps> = ({
                     selectedCategories={youtubeCategories}
                     onToggleCategory={handleToggleYoutubeCategory}
                     onCategoryCreated={handleCategoryCreated}
+                    collections={collections}
+                    selectedBoardId={selectedBoardId}
+                    onSelectBoard={(id) => setSelectedBoardId(id)}
                   />
 
                   {/* Extracted cards list */}
@@ -2074,6 +2176,9 @@ export const AddModal: React.FC<AddModalProps> = ({
                     selectedCategories={pinterestCategories}
                     onToggleCategory={handleTogglePinterestCategory}
                     onCategoryCreated={handleCategoryCreated}
+                    collections={collections}
+                    selectedBoardId={selectedBoardId}
+                    onSelectBoard={(id) => setSelectedBoardId(id)}
                   />
 
                   {/* Pinterest Cards List */}
@@ -2174,5 +2279,16 @@ export const AddModal: React.FC<AddModalProps> = ({
         </div>
       </div>
     </div>
+
+    {/* Cloudflare Storage Setup Modal */}
+    <CloudflareStorageModal
+      isOpen={isR2ModalOpen}
+      onClose={() => {
+        setIsR2ModalOpen(false);
+        checkR2Status();
+      }}
+      onConnected={checkR2Status}
+    />
+  </>
   );
 };

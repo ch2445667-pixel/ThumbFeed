@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 -H 0.0.0.0",
-    "build": "next build && cp -r .next/static .next/standalone/.next/ && (test -d public && cp -r public .next/standalone/ || true)",
+    "build": "next build",
     "start": "node server.js",
     "lint": "next lint"
   },
@@ -12,6 +12,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1166.0",
     "@google/genai": "^2.18.0",
     "@supabase/supabase-js": "^2.112.3",
     "@tanstack/react-query": "^5.104.1",

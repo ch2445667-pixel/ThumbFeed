@@ -47,7 +47,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           id="delete-confirm-dialog"
-          className="relative w-full max-w-md bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-[20px] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 z-10"
+          className="relative w-full max-w-md bg-[#FFFFFF] dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-[14px] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 z-10"
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
@@ -76,8 +76,8 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           </div>
 
           {/* Thumbnail preview snippet */}
-          <div className="flex items-center gap-3 p-2.5 rounded-[12px] bg-[#E4E0D3]/40 dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25">
-            <div className="w-20 aspect-video rounded-[8px] overflow-hidden bg-[#401D1A] shrink-0">
+          <div className="flex items-center gap-3 p-2.5 rounded-[14px] bg-[#E4E0D3]/40 dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/25">
+            <div className="w-20 aspect-video rounded-[14px] overflow-hidden bg-[#401D1A] shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.imageUrl}
@@ -108,7 +108,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 rounded-[10px] transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] hover:bg-[#E4E0D3]/40 dark:hover:bg-[#FFFFFF]/10 rounded-[14px] transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -116,7 +116,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               id="confirm-delete-action-btn"
               type="button"
               onClick={handleConfirm}
-              className="px-4 py-2 text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-[0.97] rounded-[10px] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-[#FFFFFF] bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 active:scale-[0.97] rounded-[14px] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <IconTrash className="w-3.5 h-3.5" />
               <span>Delete Permanently</span>

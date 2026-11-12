@@ -55,20 +55,20 @@ const config: Config = {
         brand: "var(--brand)",
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        sans: ["'Google Sans'", "'Product Sans'", "'Plus Jakarta Sans'", "var(--font-geist-sans)", "system-ui", "sans-serif"],
+        logo: ["'Cal Sans'", "sans-serif"],
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
       },
-      // Collapsed to the four-step scale. The codebase previously used
-      // 6/8/10/12/15/16px and "full" simultaneously with no rule.
+      // Uniform 14px corner radius across the entire app
       borderRadius: {
         none: "0",
-        sm: "var(--r-sm)",
-        DEFAULT: "var(--r-md)",
-        md: "var(--r-md)",
-        lg: "var(--r-lg)",
-        xl: "var(--r-lg)",
-        "2xl": "var(--r-lg)",
-        "3xl": "var(--r-xl)",
+        sm: "14px",
+        DEFAULT: "14px",
+        md: "14px",
+        lg: "14px",
+        xl: "14px",
+        "2xl": "14px",
+        "3xl": "14px",
         full: "9999px",
       },
       boxShadow: {

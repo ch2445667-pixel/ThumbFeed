@@ -57,11 +57,13 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -82,13 +84,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: unknown) {
       const authErr = err as { code?: string; message?: string };
       if (authErr?.code === 'auth/popup-closed-by-user') {
-        // User voluntarily dismissed popup
         return null;
       }
       if (authErr?.code === 'auth/popup-blocked') {
         setError('Sign-in pop-up was blocked by your browser. Please allow pop-ups for this site or open in a new tab.');
       } else if (authErr?.code === 'auth/cancelled-popup-request') {
-        // Ignored
         return null;
       } else if (authErr?.code === 'auth/unauthorized-domain') {
         const host = typeof window !== 'undefined' ? window.location.hostname : 'this origin';
@@ -116,16 +116,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const isDevAdmin = mounted && isLocalDevAdmin();
   const isAdmin = Boolean(
     user?.email && user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
-  ) || isLocalDevAdmin();
+  ) || isDevAdmin;
 
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? (isLocalDevAdmin() ? LOCAL_DEV_USER : null),
+        user: user ?? (isDevAdmin ? LOCAL_DEV_USER : null),
         isAdmin,
-        loading,
+        loading: !mounted || loading,
         signingIn,
         error,
         signIn: handleSignIn,

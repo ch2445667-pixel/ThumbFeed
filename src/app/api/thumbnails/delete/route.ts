@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteStorageObjects, getAnonClient, hasServiceRoleKey } from '../../../../lib/supabaseServer';
+import { isR2Configured, deleteFromR2, extractR2KeyFromUrl } from '../../../../lib/r2';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -62,23 +63,40 @@ export async function POST(req: NextRequest) {
       errors.push(`DB error: ${dbErr instanceof Error ? dbErr.message : String(dbErr)}`);
     }
 
-    // 2. Remove the stored object. Requires the service role key; without it
-    //    this is skipped and reported as such instead of faking success.
+    // 2. Remove the stored object from Cloudflare R2 (preferred) or Supabase Storage.
     let storageDeleted = false;
     let storageSkipped = false;
     let storageReason: string | undefined;
 
     if (imageUrl) {
-      const path = storagePathFromUrl(imageUrl);
-      if (!path) {
-        storageSkipped = true;
-        storageReason = 'image is not a Supabase Storage object';
+      const r2Key = extractR2KeyFromUrl(imageUrl);
+      if (r2Key && isR2Configured()) {
+        try {
+          await deleteFromR2(r2Key);
+          storageDeleted = true;
+          // Also try deleting small variant if it exists
+          try {
+            const smallKey = `small/${r2Key.replace(/\.[^/.]+$/, '')}.webp`;
+            await deleteFromR2(smallKey);
+          } catch {
+            // Ignore if small variant wasn't generated or already gone
+          }
+        } catch (r2Err) {
+          storageReason = r2Err instanceof Error ? r2Err.message : String(r2Err);
+          errors.push(`R2 delete error: ${storageReason}`);
+        }
       } else {
-        const result = await deleteStorageObjects(BUCKET, [path]);
-        storageDeleted = result.deleted;
-        storageSkipped = result.skipped;
-        storageReason = result.reason;
-        if (result.reason) errors.push(`Storage: ${result.reason}`);
+        const path = storagePathFromUrl(imageUrl);
+        if (!path) {
+          storageSkipped = true;
+          storageReason = 'image is not a recognizable Cloudflare R2 or Supabase Storage object';
+        } else {
+          const result = await deleteStorageObjects(BUCKET, [path]);
+          storageDeleted = result.deleted;
+          storageSkipped = result.skipped;
+          storageReason = result.reason;
+          if (result.reason) errors.push(`Storage: ${result.reason}`);
+        }
       }
     } else {
       storageSkipped = true;
@@ -94,7 +112,7 @@ export async function POST(req: NextRequest) {
       storageSkipped,
       storageReason,
       permanent: dbDeleted && storageDeleted,
-      canDeleteStorageObjects: hasServiceRoleKey(),
+      canDeleteStorageObjects: isR2Configured() || hasServiceRoleKey(),
       warnings: errors.length > 0 ? errors : undefined,
       message:
         dbDeleted && storageDeleted

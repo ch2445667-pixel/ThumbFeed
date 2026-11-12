@@ -18,76 +18,73 @@ export const DEFAULT_CATEGORIES: string[] = [
   'Entrepreneurship',
   'Geopolitics',
   'Military',
-  'Nfl',
   'Psychology',
   'Soccer',
   'Video Games',
-  'Vlog',
-  'War'
+  'Vlog'
 ];
 
-const STORAGE_KEY = 'thumbfeed_custom_categories';
+const ACTIVE_CATEGORIES_KEY = 'thumbfeed_active_categories_v2';
 const EVENT_NAME = 'thumbfeed_categories_updated';
 
-export function getCustomCategories(): string[] {
-  if (typeof window === 'undefined') return [];
+export function getAllCategories(): string[] {
+  if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    const raw = localStorage.getItem(ACTIVE_CATEGORIES_KEY);
+    if (!raw) {
+      localStorage.setItem(ACTIVE_CATEGORIES_KEY, JSON.stringify(DEFAULT_CATEGORIES));
+      return DEFAULT_CATEGORIES;
+    }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed.filter(item => typeof item === 'string' && item.trim().length > 0);
     }
+    return DEFAULT_CATEGORIES;
   } catch (e) {
-    console.error('Failed to read custom categories:', e);
+    console.error('Failed to read categories:', e);
+    return DEFAULT_CATEGORIES;
   }
-  return [];
 }
 
-export function getAllCategories(): string[] {
-  const custom = getCustomCategories();
-  const set = new Set<string>(DEFAULT_CATEGORIES);
-  custom.forEach(c => set.add(c.trim()));
-  return Array.from(set);
-}
-
-export function addCustomCategory(newCategory: string): string[] {
-  if (typeof window === 'undefined') return [];
+export function addCategory(newCategory: string): string[] {
+  if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
   const clean = newCategory.trim();
-  if (!clean) return getCustomCategories();
+  if (!clean) return getAllCategories();
 
-  // Check if it's already in default or custom
-  const existing = getCustomCategories();
+  const current = getAllCategories();
   const lower = clean.toLowerCase();
-  const alreadyInDefaults = DEFAULT_CATEGORIES.some(c => c.toLowerCase() === lower);
-  const alreadyInCustom = existing.some(c => c.toLowerCase() === lower);
-
-  if (alreadyInDefaults || alreadyInCustom) {
-    return existing;
+  if (current.some(c => c.toLowerCase() === lower)) {
+    return current;
   }
 
-  const updated = [...existing, clean];
+  const updated = [...current, clean];
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    localStorage.setItem(ACTIVE_CATEGORIES_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: updated }));
   } catch (e) {
-    console.error('Failed to save custom category:', e);
+    console.error('Failed to add category:', e);
   }
   return updated;
 }
 
-export function removeCustomCategory(categoryToRemove: string): string[] {
-  if (typeof window === 'undefined') return [];
-  const existing = getCustomCategories();
-  const updated = existing.filter(c => c.toLowerCase() !== categoryToRemove.trim().toLowerCase());
+export function removeCategory(categoryToRemove: string): string[] {
+  if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
+  const current = getAllCategories();
+  const lower = categoryToRemove.trim().toLowerCase();
+  const updated = current.filter(c => c.toLowerCase() !== lower);
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    localStorage.setItem(ACTIVE_CATEGORIES_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: updated }));
   } catch (e) {
-    console.error('Failed to remove custom category:', e);
+    console.error('Failed to remove category:', e);
   }
   return updated;
 }
+
+// Backward-compatible aliases
+export const getCustomCategories = getAllCategories;
+export const addCustomCategory = addCategory;
+export const removeCustomCategory = removeCategory;
 
 export function subscribeCategories(callback: (categories: string[]) => void): () => void {
   if (typeof window === 'undefined') return () => {};

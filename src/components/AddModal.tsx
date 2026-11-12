@@ -16,14 +16,34 @@ import {
   IconImage,
   IconFilm
 } from './icons/AppIcons';
-import { ThumbnailItem, NicheCategory } from '../lib/types';
+import { ThumbnailItem, NicheCategory, CollectionBoard } from '../lib/types';
 import { convertToJpg, getYoutubeJpgUrl } from '../lib/imageOptimizer';
 import {
   getAllCategories,
   addCustomCategory,
   subscribeCategories
 } from '../lib/categories';
-import { extractDedupeKeys } from '../lib/storage';
+import { extractDedupeKeys, addThumbnailToBoard } from '../lib/storage';
+
+// Real official Pinterest logo SVG in clean white/currentColor style
+const RealPinterestIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345-.09.375-.291 1.199-.334 1.372-.053.224-.174.271-.401.165-1.495-.695-2.43-2.878-2.43-4.632 0-3.774 2.743-7.243 7.906-7.243 4.15 0 7.377 2.957 7.377 6.909 0 4.124-2.599 7.442-6.208 7.442-1.212 0-2.351-.63-2.741-1.375l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z" />
+  </svg>
+);
+
+const RealYoutubeIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+);
+
+const RealUploadIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M7 18a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 9.5 4.5 4.5 0 0 1 17.5 18"/>
+    <path d="m9 13 3-3 3 3M12 10v9"/>
+  </svg>
+);
 
 interface AddModalProps {
   isOpen: boolean;
@@ -31,6 +51,7 @@ interface AddModalProps {
   onAddThumbnail: (item: ThumbnailItem) => void;
   onAddMultipleThumbnails?: (items: ThumbnailItem[]) => void;
   initialMediaKind?: 'thumbnail' | 'poster';
+  collections?: CollectionBoard[];
 }
 
 type AddTabMode = 'upload' | 'youtube' | 'pinterest';
@@ -228,22 +249,22 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
   };
 
   return (
-    <div className="p-3 bg-surface-raised border border-line rounded-xl space-y-2">
+    <div className="p-3 bg-[#151518] border border-white/10 rounded-[14px] space-y-2 text-white">
       <div className="flex items-center justify-between text-xs flex-wrap gap-2">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-semibold text-ink text-[11px]">
+          <span className="font-semibold text-white/90 text-[11px]">
             {label} ({itemCount} {itemCount === 1 ? 'item' : 'items'}):
           </span>
           {selectedCategories.map(cat => (
             <span
               key={cat}
-              className="px-2 py-0.5 rounded text-[11px] font-bold text-accent-on bg-accent shadow-xs inline-flex items-center gap-1"
+              className="px-2 py-0.5 rounded-[8px] text-[11px] font-semibold text-black bg-white shadow-xs inline-flex items-center gap-1"
             >
               <span>{cat}</span>
               <button
                 type="button"
                 onClick={() => onToggleCategory(cat)}
-                className="hover:opacity-80 text-accent-on hover:text-accent-on cursor-pointer leading-none text-xs"
+                className="hover:opacity-70 text-black cursor-pointer leading-none text-xs"
                 title={`Remove ${cat} from all`}
               >
                 ×
@@ -251,7 +272,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
             </span>
           ))}
           {selectedCategories.length === 0 && (
-            <span className="text-[11px] text-ink-faint italic">None selected (click a category below to apply)</span>
+            <span className="text-[11px] text-white/40 italic">None selected (click a category below to apply)</span>
           )}
         </div>
 
@@ -259,7 +280,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
           <button
             type="button"
             onClick={() => setIsAdding(true)}
-            className="text-[11px] font-semibold text-ink hover:opacity-80 flex items-center gap-1 cursor-pointer transition-colors"
+            className="text-[11px] font-semibold text-white/70 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
           >
             <IconPlus className="w-3 h-3" />
             <span>+ New Category</span>
@@ -269,27 +290,27 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
 
       {/* Inline Add New Category Box */}
       {isAdding && (
-        <form onSubmit={handleAdd} className="flex items-center gap-2 p-2 bg-surface border border-line rounded-lg">
+        <form onSubmit={handleAdd} className="flex items-center gap-2 p-2 bg-[#0e0e10] border border-white/10 rounded-[10px]">
           <input
             type="text"
             value={newCatInput}
             onChange={(e) => setNewCatInput(e.target.value)}
             placeholder="Category name (e.g. Finance, Anime)..."
-            className="flex-1 bg-transparent text-xs text-ink placeholder:text-ink-faint focus:outline-none"
+            className="flex-1 bg-transparent text-xs text-white placeholder-white/30 focus:outline-none"
             autoFocus
           />
           <button
             type="submit"
             disabled={!newCatInput.trim()}
-            className="px-2.5 py-1 rounded bg-accent hover:opacity-90 disabled:opacity-40 text-accent-on font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+            className="px-2.5 py-1 rounded-[8px] bg-white hover:bg-white/90 disabled:opacity-40 text-black font-semibold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
           >
             <IconCheck className="w-3 h-3" />
-            <span>Add to Filters</span>
+            <span>Add</span>
           </button>
           <button
             type="button"
             onClick={() => { setIsAdding(false); setNewCatInput(''); }}
-            className="p-1 text-ink-faint hover:text-ink cursor-pointer"
+            className="p-1 text-white/40 hover:text-white cursor-pointer"
           >
             <IconClose className="w-3.5 h-3.5" />
           </button>
@@ -305,10 +326,10 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
               key={cat}
               type="button"
               onClick={() => onToggleCategory(cat)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-[8px] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                 isSelected
-                  ? 'bg-accent text-accent-on font-bold shadow-xs'
-                  : 'bg-surface hover:bg-surface-raised text-ink border border-line'
+                  ? 'bg-white text-black font-bold shadow-xs'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 border border-white/10'
               }`}
             >
               <span>{isSelected ? '✓ ' : '+ '}</span>
@@ -503,14 +524,13 @@ export const AddModal: React.FC<AddModalProps> = ({
   onClose,
   onAddThumbnail,
   onAddMultipleThumbnails,
-  initialMediaKind = 'thumbnail'
+  initialMediaKind = 'thumbnail',
+  collections = []
 }) => {
   const [activeTab, setActiveTab] = useState<AddTabMode>('upload');
-  // What is being added. Posters skip the YouTube tab and land in the
-  // posters wall with kind: 'poster' instead of the thumbnails gallery.
-  const [mediaKind, setMediaKind] = useState<AddMediaKind>(initialMediaKind);
-  // Human word for the media being added, used across button and fallback copy.
-  const unitWord = mediaKind === 'poster' ? 'Poster' : 'Thumbnail';
+  const [mediaKind, setMediaKind] = useState<AddMediaKind>('thumbnail');
+  const unitWord = 'Thumbnail';
+  const [selectedBoardId, setSelectedBoardId] = useState<string>('');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // Selected Categories per section (supports multiple categories, defaults to none)
@@ -1018,6 +1038,9 @@ export const AddModal: React.FC<AddModalProps> = ({
     }
 
     if (finalItems.length > 0) {
+      if (selectedBoardId) {
+        finalItems.forEach(item => addThumbnailToBoard(selectedBoardId, item.id));
+      }
       if (onAddMultipleThumbnails) {
         onAddMultipleThumbnails(finalItems);
       } else {
@@ -1365,6 +1388,9 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadStatusText('');
     }
 
+    if (selectedBoardId) {
+      finalThumbnails.forEach(t => addThumbnailToBoard(selectedBoardId, t.id));
+    }
     if (onAddMultipleThumbnails) {
       onAddMultipleThumbnails(finalThumbnails);
     } else {
@@ -1379,245 +1405,201 @@ export const AddModal: React.FC<AddModalProps> = ({
   return (
     <div
       id="add-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-blur"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/45 backdrop-blur-md animate-fade-blur"
     >
       {/* Click outside to close */}
       <div className="fixed inset-0" onClick={onClose} />
 
-      {/* Main Modal Box - Clean Multi-surface */}
+      {/* Main Modal Box - Blurred Obsidian Card */}
       <div
         id="add-modal-content"
-        className="relative w-full max-w-2xl bg-surface-raised text-ink rounded-xl shadow-elevated border border-line overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in"
+        className="relative w-full max-w-[540px] bg-[#0e0e10]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[14px] p-3 sm:p-4 shadow-[0_44px_100px_-20px_rgba(0,0,0,0.95)] overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in text-white"
+        style={{ backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-surface-raised">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-ink">
-              <IconPlus className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-bold text-sm text-ink tracking-tight">Add {mediaKind === 'poster' ? 'Posters' : 'Thumbnails'}</h2>
-              <p className="text-[11px] text-ink-muted">
-                {mediaKind === 'poster'
-                  ? 'Import movie posters from files, clipboard or Pinterest'
-                  : 'Import from files, clipboard paste, YouTube, or Pinterest'}
-              </p>
-            </div>
+        {/* Top Bar: Centered Expanding Tabs, Close Button on Right */}
+        <div className="relative flex items-center justify-center mb-3">
+          <div className="inline-flex gap-0.5 p-1 bg-[#151518]/90 rounded-[14px] border border-white/[0.08] shadow-sm">
+            {/* Tab: Upload */}
+            <button
+              type="button"
+              id="tab-upload-images"
+              onClick={() => setActiveTab('upload')}
+              className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
+                activeTab === 'upload'
+                  ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
+                  : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
+              }`}
+            >
+              <RealUploadIcon className="w-4 h-4 shrink-0" />
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
+                  activeTab === 'upload' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
+                }`}
+              >
+                Upload
+              </span>
+              {queuedImages.length > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-600 text-white">
+                  {queuedImages.length}
+                </span>
+              )}
+            </button>
+
+            {/* Tab: YouTube */}
+            <button
+              type="button"
+              id="tab-youtube-import"
+              onClick={() => setActiveTab('youtube')}
+              className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
+                activeTab === 'youtube'
+                  ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
+                  : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
+              }`}
+            >
+              <RealYoutubeIcon className="w-4 h-4 shrink-0" />
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
+                  activeTab === 'youtube' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
+                }`}
+              >
+                YouTube
+              </span>
+            </button>
+
+            {/* Tab: Pinterest with Real Pinterest Logo */}
+            <button
+              type="button"
+              id="tab-pinterest-import"
+              onClick={() => setActiveTab('pinterest')}
+              className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
+                activeTab === 'pinterest'
+                  ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
+                  : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
+              }`}
+            >
+              <RealPinterestIcon className="w-4 h-4 shrink-0" />
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
+                  activeTab === 'pinterest' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
+                }`}
+              >
+                Pinterest
+              </span>
+            </button>
           </div>
 
+          {/* Close button on right */}
           <button
             type="button"
             id="add-modal-close-btn"
             onClick={onClose}
-            className="p-2 rounded-xl text-ink-faint hover:text-ink dark:hover:text-ink hover:bg-surface-raised active:scale-95 transition-all cursor-pointer"
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[11px] flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
             title="Close"
           >
             <IconClose className="w-4 h-4" />
           </button>
         </div>
 
-        {/* What is being added */}
-        <div className="px-5 pt-3">
-          <div
-            className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface p-1"
-            role="tablist"
-            aria-label="What are you adding?"
-          >
-            {(
-              [
-                { key: 'thumbnail', label: 'Thumbnails', Icon: IconImage },
-                { key: 'poster', label: 'Posters', Icon: IconFilm },
-              ] as const
-            ).map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={mediaKind === key}
-                onClick={() => {
-                  setMediaKind(key);
-                  if (key === 'poster' && activeTab === 'youtube') setActiveTab('upload');
-                }}
-                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
-                  mediaKind === key
-                    ? 'bg-accent text-accent-on shadow-xs'
-                    : 'text-ink-muted hover:text-ink'
-                }`}
+        {/* Optional Target Board Selection */}
+        {collections && collections.length > 0 && (
+          <div className="mb-2.5 px-0.5">
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-[11px] bg-white/[0.03] border border-white/[0.06] text-xs">
+              <span className="text-white/60 text-[11px]">Save directly to Board:</span>
+              <select
+                value={selectedBoardId}
+                onChange={(e) => setSelectedBoardId(e.target.value)}
+                className="bg-[#151518] border border-white/10 rounded-[8px] px-2 py-0.5 text-xs text-white focus:outline-none cursor-pointer"
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{label}</span>
-              </button>
-            ))}
+                <option value="">None (Feed only)</option>
+                {collections.map(board => (
+                  <option key={board.id} value={board.id}>
+                    {board.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-
-        {/* Minimalist Tab Switcher */}
-        <div className="px-5 pt-3 pb-2 border-b border-line bg-surface-raised">
-          <div className="flex items-center p-1 bg-surface rounded-xl border border-line text-xs font-semibold gap-1">
-            <button
-              type="button"
-              id="tab-upload-images"
-              onClick={() => setActiveTab('upload')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
-                activeTab === 'upload'
-                  ? 'bg-accent text-accent-on shadow-xs font-bold'
-                  : 'text-ink-muted hover:text-ink'
-              }`}
-            >
-              <IconUploadCloud className="w-3.5 h-3.5" />
-              <span>Upload / Paste</span>
-              {queuedImages.length > 0 && (
-                <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                  activeTab === 'upload'
-                    ? 'bg-accent-on text-accent'
-                    : 'bg-accent text-accent-on'
-                }`}>
-                  {queuedImages.length}
-                </span>
-              )}
-            </button>
-
-            {/* YouTube has no posters, so this source only applies to thumbnails */}
-            {mediaKind === 'thumbnail' && (
-            <button
-              type="button"
-              id="tab-youtube-import"
-              onClick={() => setActiveTab('youtube')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
-                activeTab === 'youtube'
-                  ? 'bg-accent text-accent-on shadow-xs font-bold'
-                  : 'text-ink-muted hover:text-ink'
-              }`}
-            >
-              <IconYoutube className="w-3.5 h-3.5" />
-              <span>YouTube</span>
-            </button>
-            )}
-
-            <button
-              type="button"
-              id="tab-pinterest-import"
-              onClick={() => setActiveTab('pinterest')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-all cursor-pointer ${
-                activeTab === 'pinterest'
-                  ? 'bg-accent text-accent-on shadow-xs font-bold'
-                  : 'text-ink-muted hover:text-ink'
-              }`}
-            >
-              <IconPinterest className="w-3.5 h-3.5" />
-              <span>Pinterest</span>
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Modal Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-0.5 py-1 space-y-3 custom-scrollbar">
 
           {/* ========================================================= */}
-          {/* TAB 1: UPLOAD / PASTE SECTION (Single, Bulk & Clipboard) */}
+          {/* TAB 1: UPLOAD / PASTE SECTION */}
           {/* ========================================================= */}
           {activeTab === 'upload' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="space-y-3 animate-in fade-in duration-200">
               
-              {/* Action Buttons: 1-Click Paste & Bulk Select */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  id="paste-image-from-clipboard-btn"
-                  onClick={handlePasteButtonClick}
-                  disabled={isProcessingFiles}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface border border-line hover:border-line-strong text-ink font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-surface text-ink-muted group-hover:bg-accent group-hover:text-accent-on flex items-center justify-center transition-colors">
-                    <IconClipboardPaste className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-xs text-ink">Paste Thumbnail Image</div>
-                    <div className="text-[10px] text-ink-faint font-normal">Click to paste or press Ctrl + V</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  id="browse-bulk-images-btn"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessingFiles}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface border border-line hover:border-line-strong text-ink font-semibold text-xs active:scale-[0.98] transition-all cursor-pointer shadow-sm group"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-surface text-ink-muted group-hover:bg-accent group-hover:text-accent-on flex items-center justify-center transition-colors">
-                    <IconUploadCloud className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-xs text-ink">Browse Images (Bulk)</div>
-                    <div className="text-[10px] text-ink-faint font-normal">Select multiple files at once</div>
-                  </div>
-                </button>
-              </div>
-
               {/* Paste Notice Toast if any */}
               {pasteNotice && (
                 <div
-                  className={`p-2.5 rounded-xl text-xs flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150 ${
+                  className={`p-2.5 rounded-[11px] text-xs flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150 ${
                     pasteNotice.isError
-                      ? 'bg-danger-soft border border-danger-line text-danger'
-                      : 'bg-surface border border-line text-ink'
+                      ? 'bg-red-500/10 border border-red-500/20 text-red-300'
+                      : 'bg-white/[0.05] border border-white/10 text-white'
                   }`}
                 >
                   <span>{pasteNotice.text}</span>
                   <button
                     type="button"
                     onClick={() => setPasteNotice(null)}
-                    className="text-ink-faint hover:text-ink dark:hover:text-ink text-sm leading-none"
+                    className="text-white/40 hover:text-white text-sm leading-none"
                   >
                     &times;
                   </button>
                 </div>
               )}
 
-              {/* Dropzone & Drag Area */}
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative flex flex-col items-center justify-center p-6 sm:p-7 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center group select-none ${
-                  dragOver
-                    ? 'border-line-strong bg-surface scale-[0.99]'
-                    : 'border-line bg-surface hover:bg-surface-raised hover:border-line-strong dark:bg-surface dark:hover:bg-surface-raised'
-                }`}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files) handleMultipleFiles(e.target.files);
-                  }}
-                  className="hidden"
-                />
+              {/* Viewfinder Drop Zone when no images queued */}
+              {queuedImages.length === 0 && (
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`viewfinder-dz relative min-h-[300px] flex flex-col items-center justify-center p-6 text-center cursor-pointer select-none group transition-all ${
+                    dragOver ? 'border-white/40 bg-white/[0.08] scale-[0.99]' : ''
+                  }`}
+                >
+                  {/* Viewfinder corner brackets */}
+                  <i className="viewfinder-corner top-4 left-4 border-t-2 border-l-2 rounded-tl-[8px]" />
+                  <i className="viewfinder-corner top-4 right-4 border-t-2 border-r-2 rounded-tr-[8px]" />
+                  <i className="viewfinder-corner bottom-4 left-4 border-b-2 border-l-2 rounded-bl-[8px]" />
+                  <i className="viewfinder-corner bottom-4 right-4 border-b-2 border-r-2 rounded-br-[8px]" />
 
-                <div className="w-10 h-10 rounded-xl bg-surface-raised border border-line text-ink flex items-center justify-center mb-2.5 group-hover:scale-105 transition-all shadow-sm">
-                  {isProcessingFiles ? (
-                    <IconSpinner className="w-5 h-5 animate-spin text-ink" />
-                  ) : (
-                    <IconImage className="w-5 h-5" />
-                  )}
-                </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files) handleMultipleFiles(e.target.files);
+                    }}
+                    className="hidden"
+                  />
 
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-ink">
-                    {isProcessingFiles
-                      ? 'Processing and formatting images...'
-                      : 'Or drop image files here directly'}
-                  </p>
-                  <p className="text-[11px] text-ink-muted">
-                    {mediaKind === 'poster'
-                      ? 'Keeps the original portrait ratio, compressed for fast loading'
-                      : 'Auto-converts PNG / JPG / WebP into standard 16:9 thumbnail format'}
-                  </p>
+                  {/* Center Icon Box */}
+                  <div className="w-[54px] h-[54px] rounded-[16px] bg-[#0e0e10] border border-white/14 shadow-[0_10px_24px_-8px_rgba(0,0,0,0.85)] flex items-center justify-center mb-4 group-hover:-translate-y-1 transition-transform duration-300">
+                    {isProcessingFiles ? (
+                      <IconSpinner className="w-5 h-5 animate-spin text-white" />
+                    ) : (
+                      <RealUploadIcon className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
+                    )}
+                  </div>
+
+                  {/* Sentence form text, same font size, no kbd button, PNG, JPG, WebP in single line with commas */}
+                  <div className="space-y-1">
+                    <p className="text-xs text-white/90 font-medium">
+                      {isProcessingFiles
+                        ? 'Processing and formatting images...'
+                        : 'Drop images here, paste from clipboard (Ctrl+V), or click to browse'}
+                    </p>
+                    <p className="text-xs text-[#8b8b93] font-normal">
+                      PNG, JPG, WebP
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Queued Images List */}
               {queuedImages.length > 0 && (
@@ -1768,64 +1750,77 @@ export const AddModal: React.FC<AddModalProps> = ({
           {/* ========================================================= */}
           {/* TAB 2: YOUTUBE IMPORT (Single / Multiple Links / Channel) */}
           {/* ========================================================= */}
-          {activeTab === 'youtube' && mediaKind === 'thumbnail' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
-                  <IconYoutube className="w-4 h-4" />
-                  <span>Paste YouTube Video Links or Channel Handle</span>
-                </label>
+          {activeTab === 'youtube' && (
+            <div className="space-y-3 animate-in fade-in duration-200">
+              {youtubeItems.length === 0 ? (
+                <div className="viewfinder-dz relative min-h-[300px] flex flex-col items-center justify-center p-6 text-center select-none group transition-all">
+                  {/* Viewfinder corner brackets */}
+                  <i className="viewfinder-corner top-4 left-4 border-t-2 border-l-2 rounded-tl-[8px]" />
+                  <i className="viewfinder-corner top-4 right-4 border-t-2 border-r-2 rounded-tr-[8px]" />
+                  <i className="viewfinder-corner bottom-4 left-4 border-b-2 border-l-2 rounded-bl-[8px]" />
+                  <i className="viewfinder-corner bottom-4 right-4 border-b-2 border-r-2 rounded-br-[8px]" />
 
-                <textarea
-                  rows={3}
-                  value={youtubeInput}
-                  onChange={(e) => {
-                    setYoutubeInput(e.target.value);
-                    setYoutubeError('');
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      handleExtractYoutube();
-                    }
-                  }}
-                  placeholder="Paste one or multiple YouTube URLs (one per line) or channel @handle (e.g. @MrBeast)..."
-                  className="w-full px-3 py-2.5 bg-surface-raised border border-line rounded-xl text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong resize-none"
-                />
+                  {/* Center Icon Box */}
+                  <div className="w-[54px] h-[54px] rounded-[16px] bg-[#0e0e10] border border-white/14 shadow-[0_10px_24px_-8px_rgba(0,0,0,0.85)] flex items-center justify-center mb-3.5 group-hover:-translate-y-1 transition-transform duration-300">
+                    <RealYoutubeIcon className="w-6 h-6 text-white" />
+                  </div>
 
-                {/* Channel Limit Selector if channel entered */}
-                {isChannelInput(youtubeInput) && (
-                  <div className="flex items-center justify-between p-2.5 bg-surface border border-line rounded-xl text-xs">
-                    <span className="text-ink-muted font-medium">Channel extract count:</span>
-                    <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-white/90 font-medium mb-1">
+                    Paste YouTube video links or channel handle (@handle)
+                  </p>
+                  <p className="text-xs text-[#8b8b93] font-normal mb-3">
+                    Supports bulk extraction of thumbnails in maximum resolution
+                  </p>
+
+                  <textarea
+                    rows={2}
+                    value={youtubeInput}
+                    onChange={(e) => {
+                      setYoutubeInput(e.target.value);
+                      setYoutubeError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        handleExtractYoutube();
+                      }
+                    }}
+                    placeholder="https://youtube.com/watch?v=... or @channel"
+                    className="w-full max-w-[420px] px-3.5 py-2.5 bg-[#0e0e10]/90 border border-white/12 rounded-[14px] text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-all resize-none shadow-inner"
+                  />
+
+                  {/* Channel Limit Selector if channel entered */}
+                  {isChannelInput(youtubeInput) && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-white/50 text-[11px]">Extract count:</span>
                       {[30, 50, 100].map(limit => (
                         <button
                           key={limit}
                           type="button"
                           onClick={() => setYoutubeChannelLimit(limit)}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          className={`px-2.5 py-0.5 rounded-[8px] text-[11px] font-medium transition-all ${
                             youtubeChannelLimit === limit
-                              ? 'bg-accent text-accent-on shadow-xs'
-                              : 'bg-surface-raised text-ink-muted hover:text-ink border border-line'
+                              ? 'bg-white text-black font-semibold'
+                              : 'bg-white/[0.06] text-white/60 hover:text-white border border-white/10'
                           }`}
                         >
-                          {limit} videos
+                          {limit}
                         </button>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div className="flex items-center justify-between pt-1">
-                  <p className="text-[11px] text-ink-muted">
-                    Supports bulk extraction of thumbnails in maximum resolution
-                  </p>
+                  {youtubeError && (
+                    <p className="text-xs text-red-400 mt-2 font-medium">
+                      {youtubeError}
+                    </p>
+                  )}
 
                   <button
                     type="button"
                     onClick={handleExtractYoutube}
                     disabled={isYoutubeLoading || !youtubeInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-accent text-accent-on hover:opacity-90 disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="mt-3.5 px-5 py-2 rounded-[11px] bg-white text-black font-semibold text-xs hover:bg-white/90 disabled:opacity-40 transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
                   >
                     {isYoutubeLoading ? (
                       <>
@@ -1840,32 +1835,33 @@ export const AddModal: React.FC<AddModalProps> = ({
                     )}
                   </button>
                 </div>
-
-                {youtubeError && (
-                  <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
-                    {youtubeError}
-                  </div>
-                )}
-              </div>
-
-              {/* YouTube Extracted Result List */}
-              {youtubeItems.length > 0 && (
-                <div className="space-y-3 pt-2 border-t border-line">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-ink">
+              ) : (
+                /* YouTube Extracted Result List */
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between text-xs p-2.5 bg-[#151518] border border-white/10 rounded-[14px]">
+                    <span className="font-semibold text-white">
                       Found {youtubeItems.length} thumbnails
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const allSelected = youtubeItems.every(i => i.selected !== false);
-                        setYoutubeItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
-                      }}
-                      className="px-2.5 py-1 bg-surface-raised hover:bg-surface-raised border border-line rounded-lg text-[11px] font-semibold text-ink cursor-pointer"
-                    >
-                      {youtubeItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allSelected = youtubeItems.every(i => i.selected !== false);
+                          setYoutubeItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
+                        }}
+                        className="px-2.5 py-1 bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 rounded-[8px] text-[11px] font-medium text-white transition-colors cursor-pointer"
+                      >
+                        {youtubeItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setYoutubeItems([])}
+                        className="px-2.5 py-1 text-white/40 hover:text-white text-[11px] transition-colors"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
 
                   {/* Single Unified Category Bar for YouTube */}
@@ -1878,106 +1874,81 @@ export const AddModal: React.FC<AddModalProps> = ({
                     onCategoryCreated={handleCategoryCreated}
                   />
 
-                  {/* YouTube Cards List */}
-                  <div className="max-h-72 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
+                  {/* Extracted cards list */}
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
                     {youtubeItems.map((item, index) => (
                       <div
                         key={item.id}
-                        className={`p-3 rounded-xl border transition-all ${
+                        className={`p-2.5 rounded-[14px] border transition-all flex items-start gap-3 ${
                           item.selected !== false
-                            ? 'bg-surface-raised border-line'
-                            : 'bg-surface border-line opacity-50'
+                            ? 'bg-[#151518] border-white/15'
+                            : 'bg-[#101116] border-white/5 opacity-50'
                         }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, selected: !p.selected } : p));
-                            }}
-                            className={`w-4 h-4 mt-1 rounded flex items-center justify-center shrink-0 border cursor-pointer ${
-                              item.selected !== false
-                                ? 'bg-accent border-accent text-accent-on'
-                                : 'border-line bg-surface-raised'
-                            }`}
-                          >
-                            {item.selected !== false && <IconCheck className="w-3 h-3" />}
-                          </button>
+                        <input
+                          type="checkbox"
+                          checked={item.selected !== false}
+                          onChange={() => {
+                            setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, selected: p.selected === false ? true : false } : p));
+                          }}
+                          className="mt-1 rounded accent-white cursor-pointer"
+                        />
 
-                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-stage shrink-0 relative border border-line">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                          </div>
-
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <input
-                              type="text"
-                              value={item.title}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
-                              }}
-                              placeholder="Thumbnail Title"
-                              className="w-full px-2 py-1 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
-                            />
-
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
-                                  <span
-                                    className="text-[10px] text-ink-faint truncate max-w-[220px]"
-                                    title={`${item.creator}${item.views ? ` • ${item.views}` : ''}${item.publishedTime ? ` • ${item.publishedTime}` : ''}`}
-                                  >
-                                    • {item.creator}{item.views ? ` • ${item.views}` : ''}{item.publishedTime ? ` • ${item.publishedTime}` : ''}
-                                  </span>
-                                </div>
-                              <ItemCategoryMultiSelect
-                                selectedCategories={item.tags || []}
-                                availableCategories={availableCategories}
-                                onChange={(cats) => {
-                                  setYoutubeItems(prev => prev.map((p, i) => i === index ? {
-                                    ...p,
-                                    niche: (cats[0] || '') as NicheCategory,
-                                    tags: cats
-                                  } : p));
-                                }}
-                                onCategoryCreated={handleCategoryCreated}
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setYoutubeItems(prev => prev.filter((_, i) => i !== index))}
-                            className="p-1 text-ink-faint hover:text-ink dark:hover:text-ink transition-colors cursor-pointer"
-                            title="Remove"
-                          >
-                            <IconTrash className="w-3.5 h-3.5" />
-                          </button>
+                        <div className="w-24 sm:w-28 aspect-video rounded-[10px] overflow-hidden bg-black shrink-0 relative border border-white/10">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                         </div>
+
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <input
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
+                            }}
+                            placeholder="Thumbnail Title"
+                            className="w-full px-2 py-1 bg-[#0e0e10] border border-white/10 rounded-[8px] text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/25"
+                          />
+
+                          <div className="flex items-center justify-between text-[11px] text-white/50">
+                            <span className="truncate">{item.creator}</span>
+                            {item.views && <span>{item.views}</span>}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setYoutubeItems(prev => prev.filter((_, i) => i !== index))}
+                          className="p-1 text-white/30 hover:text-white transition-colors cursor-pointer"
+                          title="Remove"
+                        >
+                          <IconTrash className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>
 
                   {cloudError && (
-                    <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
+                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-300 rounded-[11px] text-xs">
                       {cloudError}
                     </div>
                   )}
-                  <div className="pt-2 border-t border-line flex items-center justify-between">
+
+                  <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setYoutubeItems([])}
-                      className="px-3.5 py-2 text-xs text-ink-faint hover:text-ink dark:hover:text-ink"
+                      className="px-3.5 py-1.5 text-xs text-white/50 hover:text-white"
                     >
-                      Clear
+                      Back
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSaveBatchItems(youtubeItems)}
                       disabled={isUploadingToCloud || youtubeItems.filter(i => i.selected !== false).length === 0}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-accent-on bg-accent hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                      className="px-5 py-2 rounded-[11px] text-xs font-semibold text-black bg-white hover:bg-white/90 disabled:opacity-40 transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -2000,43 +1971,58 @@ export const AddModal: React.FC<AddModalProps> = ({
           )}
 
           {/* ========================================================= */}
-          {/* TAB 3: PINTEREST IMPORT (Just link & multiple links at once) */}
+          {/* TAB 3: PINTEREST IMPORT */}
           {/* ========================================================= */}
           {activeTab === 'pinterest' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
-                  <IconPinterest className="w-4 h-4" />
-                  <span>Paste Pinterest Pin Links or Board URL</span>
-                </label>
+            <div className="space-y-3 animate-in fade-in duration-200">
+              {pinterestItems.length === 0 ? (
+                <div className="viewfinder-dz relative min-h-[300px] flex flex-col items-center justify-center p-6 text-center select-none group transition-all">
+                  {/* Viewfinder corner brackets */}
+                  <i className="viewfinder-corner top-4 left-4 border-t-2 border-l-2 rounded-tl-[8px]" />
+                  <i className="viewfinder-corner top-4 right-4 border-t-2 border-r-2 rounded-tr-[8px]" />
+                  <i className="viewfinder-corner bottom-4 left-4 border-b-2 border-l-2 rounded-bl-[8px]" />
+                  <i className="viewfinder-corner bottom-4 right-4 border-b-2 border-r-2 rounded-br-[8px]" />
 
-                <textarea
-                  rows={3}
-                  value={pinterestInput}
-                  onChange={(e) => {
-                    setPinterestInput(e.target.value);
-                    setPinterestError('');
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      handleExtractPinterest();
-                    }
-                  }}
-                  placeholder="Paste Pinterest links (e.g. https://pin.it/4k6G4P6 or https://www.pinterest.com/pin/515873332295753837/)..."
-                  className="w-full px-3 py-2.5 bg-surface-raised border border-line rounded-xl text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong resize-none"
-                />
+                  {/* Center Icon Box */}
+                  <div className="w-[54px] h-[54px] rounded-[16px] bg-[#0e0e10] border border-white/14 shadow-[0_10px_24px_-8px_rgba(0,0,0,0.85)] flex items-center justify-center mb-3.5 group-hover:-translate-y-1 transition-transform duration-300">
+                    <RealPinterestIcon className="w-6 h-6 text-white" />
+                  </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <p className="text-[11px] text-ink-muted">
-                    Paste one or multiple Pinterest links to extract high-definition images
+                  <p className="text-xs text-white/90 font-medium mb-1">
+                    Paste Pinterest pin links or board URL
                   </p>
+                  <p className="text-xs text-[#8b8b93] font-normal mb-3">
+                    Extracts high-definition Pinterest images
+                  </p>
+
+                  <textarea
+                    rows={2}
+                    value={pinterestInput}
+                    onChange={(e) => {
+                      setPinterestInput(e.target.value);
+                      setPinterestError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        handleExtractPinterest();
+                      }
+                    }}
+                    placeholder="https://pinterest.com/pin/... or https://pin.it/..."
+                    className="w-full max-w-[420px] px-3.5 py-2.5 bg-[#0e0e10]/90 border border-white/12 rounded-[14px] text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-all resize-none shadow-inner"
+                  />
+
+                  {pinterestError && (
+                    <p className="text-xs text-red-400 mt-2 font-medium">
+                      {pinterestError}
+                    </p>
+                  )}
 
                   <button
                     type="button"
                     onClick={handleExtractPinterest}
                     disabled={isPinterestLoading || !pinterestInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-accent text-accent-on hover:opacity-90 disabled:opacity-50 font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="mt-3.5 px-5 py-2 rounded-[11px] bg-white text-black font-semibold text-xs hover:bg-white/90 disabled:opacity-40 transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
                   >
                     {isPinterestLoading ? (
                       <>
@@ -2051,32 +2037,33 @@ export const AddModal: React.FC<AddModalProps> = ({
                     )}
                   </button>
                 </div>
-
-                {pinterestError && (
-                  <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
-                    {pinterestError}
-                  </div>
-                )}
-              </div>
-
-              {/* Pinterest Extracted Result List */}
-              {pinterestItems.length > 0 && (
-                <div className="space-y-3 pt-2 border-t border-line">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-ink">
+              ) : (
+                /* Pinterest Extracted Result List */
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between text-xs p-2.5 bg-[#151518] border border-white/10 rounded-[14px]">
+                    <span className="font-semibold text-white">
                       Found {pinterestItems.length} Pinterest pins
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const allSelected = pinterestItems.every(i => i.selected !== false);
-                        setPinterestItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
-                      }}
-                      className="px-2.5 py-1 bg-surface-raised hover:bg-surface-raised border border-line rounded-lg text-[11px] font-semibold text-ink cursor-pointer"
-                    >
-                      {pinterestItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allSelected = pinterestItems.every(i => i.selected !== false);
+                          setPinterestItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
+                        }}
+                        className="px-2.5 py-1 bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 rounded-[8px] text-[11px] font-medium text-white transition-colors cursor-pointer"
+                      >
+                        {pinterestItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPinterestItems([])}
+                        className="px-2.5 py-1 text-white/40 hover:text-white text-[11px] transition-colors"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
 
                   {/* Single Unified Category Bar for Pinterest */}
@@ -2090,102 +2077,79 @@ export const AddModal: React.FC<AddModalProps> = ({
                   />
 
                   {/* Pinterest Cards List */}
-                  <div className="max-h-72 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
                     {pinterestItems.map((item, index) => (
                       <div
                         key={item.id}
-                        className={`p-3 rounded-xl border transition-all ${
+                        className={`p-2.5 rounded-[14px] border transition-all flex items-start gap-3 ${
                           item.selected !== false
-                            ? 'bg-surface-raised border-line'
-                            : 'bg-surface border-line opacity-50'
+                            ? 'bg-[#151518] border-white/15'
+                            : 'bg-[#101116] border-white/5 opacity-50'
                         }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, selected: !p.selected } : p));
-                            }}
-                            className={`w-4 h-4 mt-1 rounded flex items-center justify-center shrink-0 border cursor-pointer ${
-                              item.selected !== false
-                                ? 'bg-accent border-accent text-accent-on'
-                                : 'border-line bg-surface-raised'
-                            }`}
-                          >
-                            {item.selected !== false && <IconCheck className="w-3 h-3" />}
-                          </button>
+                        <input
+                          type="checkbox"
+                          checked={item.selected !== false}
+                          onChange={() => {
+                            setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, selected: !p.selected } : p));
+                          }}
+                          className="mt-1 rounded accent-white cursor-pointer"
+                        />
 
-                          <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-stage shrink-0 relative border border-line">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                          </div>
-
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <input
-                              type="text"
-                              value={item.title}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
-                              }}
-                              placeholder="Pin Title"
-                              className="w-full px-2 py-1 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
-                            />
-
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
-                                <span className="text-[10px] text-ink-faint truncate max-w-[140px]">
-                                  • {item.creator}
-                                </span>
-                              </div>
-                              <ItemCategoryMultiSelect
-                                selectedCategories={item.tags || []}
-                                availableCategories={availableCategories}
-                                onChange={(cats) => {
-                                  setPinterestItems(prev => prev.map((p, i) => i === index ? {
-                                    ...p,
-                                    niche: (cats[0] || '') as NicheCategory,
-                                    tags: cats
-                                  } : p));
-                                }}
-                                onCategoryCreated={handleCategoryCreated}
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setPinterestItems(prev => prev.filter((_, i) => i !== index))}
-                            className="p-1 text-ink-faint hover:text-ink dark:hover:text-ink transition-colors cursor-pointer"
-                            title="Remove"
-                          >
-                            <IconTrash className="w-3.5 h-3.5" />
-                          </button>
+                        <div className="w-24 sm:w-28 aspect-video rounded-[10px] overflow-hidden bg-black shrink-0 relative border border-white/10">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                         </div>
+
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <input
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
+                            }}
+                            placeholder="Pin Title"
+                            className="w-full px-2 py-1 bg-[#0e0e10] border border-white/10 rounded-[8px] text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/25"
+                          />
+
+                          <div className="text-[11px] text-white/50 truncate">
+                            {item.creator || 'Pinterest'}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setPinterestItems(prev => prev.filter((_, i) => i !== index))}
+                          className="p-1 text-white/30 hover:text-white transition-colors cursor-pointer"
+                          title="Remove"
+                        >
+                          <IconTrash className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>
 
                   {cloudError && (
-                    <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
+                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-300 rounded-[11px] text-xs">
                       {cloudError}
                     </div>
                   )}
-                  <div className="pt-2 border-t border-line flex items-center justify-between">
+
+                  <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setPinterestItems([])}
-                      className="px-3.5 py-2 text-xs text-ink-faint hover:text-ink dark:hover:text-ink"
+                      className="px-3.5 py-1.5 text-xs text-white/50 hover:text-white"
                     >
-                      Clear
+                      Back
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSaveBatchItems(pinterestItems)}
                       disabled={isUploadingToCloud || pinterestItems.filter(i => i.selected !== false).length === 0}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-accent-on bg-accent hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                      className="px-5 py-2 rounded-[11px] text-xs font-semibold text-black bg-white hover:bg-white/90 disabled:opacity-40 transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -2196,7 +2160,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <>
                           <IconCheck className="w-4 h-4" />
                           <span>
-                            Import {pinterestItems.filter(i => i.selected !== false).length} {mediaKind === 'poster' ? 'Posters' : 'Pins'}
+                            Import {pinterestItems.filter(i => i.selected !== false).length} Pins
                           </span>
                         </>
                       )}

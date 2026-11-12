@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { supabase } from './supabase';
 import type { FilterState, ThumbnailItem } from './types';
 import type { ColorLibraryEntry } from '../components/FilterPillBar';
+import { getStoredThumbnails } from './storage';
 
 export const GALLERY_PAGE_SIZE = 36;
 
@@ -46,9 +47,42 @@ function buildParams(key: GalleryKey, page: number): string {
 }
 
 async function fetchGalleryPage(key: GalleryKey, page: number): Promise<GalleryPage> {
-  const res = await fetch(`/api/gallery?${buildParams(key, page)}`);
-  if (!res.ok) throw new Error(`Gallery request failed: ${res.status}`);
-  return res.json();
+  try {
+    const res = await fetch(`/api/gallery?${buildParams(key, page)}`);
+    if (!res.ok) throw new Error(`Gallery request failed: ${res.status}`);
+    const data: GalleryPage = await res.json();
+    if ((!data.items || data.items.length === 0) && typeof window !== 'undefined') {
+      const local = getStoredThumbnails();
+      if (local && local.length > 0) {
+        let filtered = local;
+        if (key.niche && key.niche !== 'All') {
+          filtered = filtered.filter(item => item.niche === key.niche || item.tags?.includes(key.niche));
+        }
+        if (key.search) {
+          const s = key.search.toLowerCase();
+          filtered = filtered.filter(item => item.title?.toLowerCase().includes(s) || item.creator?.toLowerCase().includes(s));
+        }
+        return {
+          items: filtered,
+          total: filtered.length,
+          page: 0,
+          pageSize: GALLERY_PAGE_SIZE
+        };
+      }
+    }
+    return data;
+  } catch (e) {
+    if (typeof window !== 'undefined') {
+      const local = getStoredThumbnails();
+      return {
+        items: local,
+        total: local.length,
+        page: 0,
+        pageSize: GALLERY_PAGE_SIZE
+      };
+    }
+    return { items: [], total: 0, page: 0, pageSize: GALLERY_PAGE_SIZE };
+  }
 }
 
 async function fetchFacets(section: 'thumbnails' | 'posters'): Promise<GalleryFacets> {

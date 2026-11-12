@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { extractColorProfile } from '../../../../lib/colorExtract';
 import { withDimensions } from '../../../../lib/dimensions';
+import { isR2Configured, uploadToR2 } from '../../../../lib/r2';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -200,53 +201,78 @@ export async function POST(req: NextRequest) {
             // Dimensions come from the original, before the resize above.
             dimensions = await readDimensions(imageResult.buffer);
 
-            // Upload JPEG to Supabase Storage bucket 'Thumbnails' under posters/ or root
-            const client = getSupabase();
-            const { error: uploadError } = await client.storage
-              .from('Thumbnails')
-              .upload(storagePath, optimizedJpgBuffer, {
-                contentType: 'image/jpeg',
-                // One year. Poster files are immutable once written, so a
-                // returning visitor should never re-download them. Without
-                // this the default is a short max-age and every visit pays
-                // full egress again.
-                cacheControl: '31536000',
-                upsert: true
-              });
-
-            if (!uploadError) {
-              const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(storagePath);
-              const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co';
-              finalPublicUrl = pubData?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${storagePath}`;
-              uploadSuccess = true;
-
-              // Second object: the 400px WebP the wall actually renders.
-              // Derived from the same bytes we already hold, so this costs no
-              // extra fetch. A failure here is not fatal -- the row simply has
-              // no small variant and the card falls back to the full image.
+            // Upload image to Cloudflare R2 (preferred) or Supabase Storage
+            if (isR2Configured()) {
               try {
-                const small = await makeSmallWebp(imageResult.buffer);
-                if (small) {
-                  const smallPath = `small/${storagePath.replace(/\.[^/.]+$/, '')}.webp`;
-                  const { error: smallErr } = await client.storage
-                    .from('Thumbnails')
-                    .upload(smallPath, small, {
+                const r2Result = await uploadToR2({
+                  key: storagePath,
+                  buffer: optimizedJpgBuffer,
+                  contentType: 'image/jpeg',
+                  cacheControl: 'public, max-age=31536000, immutable',
+                });
+                finalPublicUrl = r2Result.publicUrl;
+                uploadSuccess = true;
+
+                // Second object: the 400px WebP preview
+                try {
+                  const small = await makeSmallWebp(imageResult.buffer);
+                  if (small) {
+                    const smallPath = `small/${storagePath.replace(/\.[^/.]+$/, '')}.webp`;
+                    const r2SmallResult = await uploadToR2({
+                      key: smallPath,
+                      buffer: small,
                       contentType: 'image/webp',
-                      cacheControl: '31536000',
-                      upsert: true,
+                      cacheControl: 'public, max-age=31536000, immutable',
                     });
-                  if (smallErr) {
-                    warnings.push(`Small variant for "${item.title || vId}": ${smallErr.message}`);
-                  } else {
-                    const { data: smallPub } = client.storage.from('Thumbnails').getPublicUrl(smallPath);
-                    thumbSmallUrl = smallPub?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${smallPath}`;
+                    thumbSmallUrl = r2SmallResult.publicUrl;
                   }
+                } catch (smallErr) {
+                  warnings.push(`R2 small variant for "${item.title || vId}": ${smallErr instanceof Error ? smallErr.message : String(smallErr)}`);
                 }
-              } catch (smallErr) {
-                warnings.push(`Small variant for "${item.title || vId}": ${smallErr instanceof Error ? smallErr.message : String(smallErr)}`);
+              } catch (r2Err) {
+                warnings.push(`Cloudflare R2 upload for "${item.title || vId}": ${r2Err instanceof Error ? r2Err.message : String(r2Err)}`);
               }
             } else {
-              warnings.push(`Bucket upload for "${item.title || vId}": ${uploadError.message}`);
+              // Fallback to Supabase Storage bucket 'Thumbnails'
+              const client = getSupabase();
+              const { error: uploadError } = await client.storage
+                .from('Thumbnails')
+                .upload(storagePath, optimizedJpgBuffer, {
+                  contentType: 'image/jpeg',
+                  cacheControl: '31536000',
+                  upsert: true
+                });
+
+              if (!uploadError) {
+                const { data: pubData } = client.storage.from('Thumbnails').getPublicUrl(storagePath);
+                const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xahchsuffmskbgvnxcgs.supabase.co';
+                finalPublicUrl = pubData?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${storagePath}`;
+                uploadSuccess = true;
+
+                try {
+                  const small = await makeSmallWebp(imageResult.buffer);
+                  if (small) {
+                    const smallPath = `small/${storagePath.replace(/\.[^/.]+$/, '')}.webp`;
+                    const { error: smallErr } = await client.storage
+                      .from('Thumbnails')
+                      .upload(smallPath, small, {
+                        contentType: 'image/webp',
+                        cacheControl: '31536000',
+                        upsert: true,
+                      });
+                    if (smallErr) {
+                      warnings.push(`Small variant for "${item.title || vId}": ${smallErr.message}`);
+                    } else {
+                      const { data: smallPub } = client.storage.from('Thumbnails').getPublicUrl(smallPath);
+                      thumbSmallUrl = smallPub?.publicUrl || `${supabaseBase}/storage/v1/object/public/Thumbnails/${smallPath}`;
+                    }
+                  }
+                } catch (smallErr) {
+                  warnings.push(`Small variant for "${item.title || vId}": ${smallErr instanceof Error ? smallErr.message : String(smallErr)}`);
+                }
+              } else {
+                warnings.push(`Bucket upload for "${item.title || vId}": ${uploadError.message}`);
+              }
             }
           } else {
             warnings.push(`Could not fetch image bytes for "${item.title || vId}" — keeping source URL.`);
@@ -280,7 +306,7 @@ export async function POST(req: NextRequest) {
             thumb_small_url: thumbSmallUrl,
             views_estimate: viewsValue,
             breakdown_notes: notes,
-            source: isPoster ? 'poster' : 'supabase-storage',
+            source: isPoster ? 'poster' : (isR2Configured() ? 'r2-storage' : 'supabase-storage'),
             created_at: new Date().toISOString()
           };
 
@@ -306,7 +332,7 @@ export async function POST(req: NextRequest) {
           tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : []),
           views: item.views || item.viewsEstimate,
           publishedTime: item.publishedTime,
-          source: isPoster ? 'poster' : 'supabase-storage',
+          source: isPoster ? 'poster' : (isR2Configured() ? 'r2-storage' : 'supabase-storage'),
           uploadedToBucket: uploadSuccess,
           imageUrl: finalPublicUrl,
           thumbSmallUrl,
@@ -324,7 +350,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      bucket: 'Thumbnails',
+      bucket: isR2Configured() ? (process.env.R2_BUCKET_NAME || 'r2') : 'Thumbnails',
+      storageProvider: isR2Configured() ? 'cloudflare-r2' : 'supabase',
       count: uploadedResults.length,
       allDbSaved: uploadedResults.length > 0 && uploadedResults.every((r) => r.dbSaved),
       warnings: warnings.length > 0 ? warnings : undefined,

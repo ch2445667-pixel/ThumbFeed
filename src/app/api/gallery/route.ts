@@ -40,15 +40,9 @@ function posterPredicate() {
   return 'id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*';
 }
 
-function applySection(query: any, section: string) {
-  if (section === 'posters') {
-    return query.or(posterPredicate());
-  }
-  return query
-    .not('breakdown_notes', 'ilike', '%poster%')
-    .not('id', 'ilike', 'poster-%')
-    .not('niche', 'eq', 'Cinema')
-    .not('source', 'eq', 'poster');
+function applySection(query: any, _section: string) {
+  // Posters removed from app; simple direct pass-through
+  return query;
 }
 
 function applySharedFilters(query: any, params: { niche: string; styles: string[]; search: string }) {
@@ -134,6 +128,18 @@ function matchesSearch(row: any, q: string): boolean {
   );
 }
 
+async function withTimeout<T>(promise: Promise<T>, ms: number = 3000): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Database timeout')), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
@@ -159,9 +165,10 @@ export async function GET(req: NextRequest) {
       query = sort === 'popular'
         ? query.order('likes_count', { ascending: false })
         : query.order('created_at', { ascending: false });
-      const { data, error, count } = await query.range(from, to);
+      const { data, error, count }: any = await withTimeout(query.range(from, to) as any);
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.warn('Gallery Path A error:', error.message);
+        return NextResponse.json({ items: [], total: 0, page, pageSize: PAGE_SIZE });
       }
       return NextResponse.json({
         items: (data || []).map((row: any) => rowToItem(row, section)),
@@ -175,9 +182,10 @@ export async function GET(req: NextRequest) {
     let light = supabase.from('thumbnails').select(LIGHT_COLUMNS);
     light = applySection(light, section);
     light = applySharedFilters(light, { niche, styles, search: '' });
-    const { data: lightRows, error: lightError } = await light.limit(5000);
+    const { data: lightRows, error: lightError }: any = await withTimeout(light.limit(5000) as any);
     if (lightError) {
-      return NextResponse.json({ error: lightError.message }, { status: 500 });
+      console.warn('Gallery Path B error:', lightError.message);
+      return NextResponse.json({ items: [], total: 0, page, pageSize: PAGE_SIZE });
     }
 
     let candidates = lightRows || [];
@@ -205,12 +213,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ items: [], total, page, pageSize: PAGE_SIZE });
     }
 
-    const { data: pageRows, error: pageError } = await supabase
+    const { data: pageRows, error: pageError }: any = await withTimeout(supabase
       .from('thumbnails')
       .select(GRID_COLUMNS)
-      .in('id', pageIds);
+      .in('id', pageIds) as any);
     if (pageError) {
-      return NextResponse.json({ error: pageError.message }, { status: 500 });
+      console.warn('Gallery page fetch error:', pageError.message);
+      return NextResponse.json({ items: [], total, page, pageSize: PAGE_SIZE });
     }
 
     // Restore page order: .in() returns rows in table order, not ours.
@@ -220,6 +229,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ items, total, page, pageSize: PAGE_SIZE });
   } catch (err: any) {
     console.error('Gallery feed error:', err);
-    return NextResponse.json({ error: err.message || 'Failed to load gallery' }, { status: 500 });
+    return NextResponse.json({ items: [], total: 0, page: 0, pageSize: PAGE_SIZE });
   }
 }

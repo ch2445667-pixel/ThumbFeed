@@ -14,28 +14,30 @@ export const dynamic = 'force-dynamic';
  * only, cached client-side for ten minutes, so this costs one light query per
  * section per session at most.
  */
+async function withTimeout<T>(promise: Promise<T>, ms: number = 3000): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Database timeout')), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const section = url.searchParams.get('section') === 'posters' ? 'posters' : 'thumbnails';
     const supabase = getAnonClient();
 
-    let query = supabase.from('thumbnails').select('id,niche,tags,colors');
-    if (section === 'posters') {
-      query = query.or(
-        'id.ilike.poster-*,breakdown_notes.ilike.*poster*,niche.eq.Cinema,source.eq.poster,image_url.ilike.*/posters/*'
-      );
-    } else {
-      query = query
-        .not('breakdown_notes', 'ilike', '%poster%')
-        .not('id', 'ilike', 'poster-%')
-        .not('niche', 'eq', 'Cinema')
-        .not('source', 'eq', 'poster');
-    }
+    const query = supabase.from('thumbnails').select('id,niche,tags,colors');
 
-    const { data, error } = await query.limit(5000);
+    const { data, error }: any = await withTimeout(query.limit(5000) as any);
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.warn('Facets query notice:', error.message);
+      return NextResponse.json({ nicheCounts: { All: 0 }, colorLibrary: [] });
     }
 
     const rows = data || [];

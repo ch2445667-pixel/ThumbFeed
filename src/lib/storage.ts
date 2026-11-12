@@ -62,24 +62,7 @@ export function markThumbnailPermanentlyDeleted(keys: string[]): void {
   }
 }
 
-export const DEFAULT_COLLECTIONS: CollectionBoard[] = [
-  {
-    id: 'col-1',
-    name: '🔥 High CTR Hooks',
-    description: 'Thumbnails with bold expressions, curiosity gaps and high engagement',
-    thumbnailIds: [],
-    createdAt: '2026-08-20',
-    colorTheme: '#401D1A'
-  },
-  {
-    id: 'col-2',
-    name: '🖤 Dark & Minimalist Tech',
-    description: 'Clean Apple-style and sleek documentary lighting references',
-    thumbnailIds: [],
-    createdAt: '2026-08-20',
-    colorTheme: '#E4E0D3'
-  }
-];
+export const DEFAULT_COLLECTIONS: CollectionBoard[] = [];
 
 // Map lookup by ID, imageUrl, and filename for instantaneous enriched metadata
 const initialMap = new Map<string, ThumbnailItem>();
@@ -885,13 +868,48 @@ export function getStoredCollections(): CollectionBoard[] {
   try {
     const raw = localStorage.getItem(COLLECTIONS_KEY);
     if (!raw) {
-      localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(DEFAULT_COLLECTIONS));
-      return DEFAULT_COLLECTIONS;
+      localStorage.setItem(COLLECTIONS_KEY, JSON.stringify([]));
+      return [];
     }
-    return JSON.parse(raw);
+    const parsed: CollectionBoard[] = JSON.parse(raw);
+    // Filter out legacy default dummy boards so user starts fresh with their own boards
+    const filtered = (Array.isArray(parsed) ? parsed : []).filter(
+      c => c.id !== 'col-1' && c.id !== 'col-2' && c.name !== '🔥 High CTR Hooks' && c.name !== '🖤 Dark & Minimalist Tech'
+    );
+    if (filtered.length !== parsed.length) {
+      localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(filtered));
+    }
+    return filtered;
   } catch {
-    return DEFAULT_COLLECTIONS;
+    return [];
   }
+}
+
+export function deleteCollection(collectionId: string): CollectionBoard[] {
+  if (typeof window === 'undefined') return [];
+  const list = getStoredCollections().filter(c => c.id !== collectionId);
+  try {
+    localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.warn('Failed to delete collection from localStorage:', e);
+  }
+  return list;
+}
+
+export function addThumbnailToBoard(collectionId: string, thumbId: string): CollectionBoard[] {
+  const collections = getStoredCollections();
+  const updated = collections.map(c => {
+    if (c.id === collectionId) {
+      if (!c.thumbnailIds.includes(thumbId)) {
+        return { ...c, thumbnailIds: [...c.thumbnailIds, thumbId] };
+      }
+    }
+    return c;
+  });
+  try {
+    localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
+  } catch {}
+  return updated;
 }
 
 export function saveCollection(collection: CollectionBoard): CollectionBoard[] {

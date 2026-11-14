@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractColorProfile } from '../../../../lib/colorExtract';
 import { withDimensions } from '../../../../lib/dimensions';
 import { isR2Configured, uploadToR2, getR2Config } from '../../../../lib/r2';
-import { db } from '../../../../lib/firebase';
+import { db } from '../../../../lib/firestore';
 import { doc, setDoc } from 'firebase/firestore';
 import { saveGalleryItems, invalidateGalleryCache } from '../../../../lib/galleryService';
 import { ThumbnailItem } from '../../../../lib/types';
@@ -65,6 +65,7 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
   const cleanVid = videoId?.replace(/[^a-zA-Z0-9_-]/g, '');
   if (cleanVid && cleanVid.length === 11) {
     urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/maxresdefault.jpg`);
+    urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/sddefault.jpg`);
     urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/hqdefault.jpg`);
   }
 
@@ -79,11 +80,12 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
       });
       if (res.ok) {
         if (res.url && !isSafeExternalHttpUrl(res.url)) continue;
+        const contentType = res.headers.get('content-type') || 'image/jpeg';
+        if (contentType.toLowerCase().startsWith('text/')) continue;
         const arrayBuffer = await res.arrayBuffer();
         if (arrayBuffer.byteLength > MAX_UPLOAD_IMAGE_BYTES) continue;
         const buffer = Buffer.from(arrayBuffer);
         if (buffer.length > 2000 || url.includes('hqdefault')) {
-          const contentType = res.headers.get('content-type') || 'image/jpeg';
           return { buffer, contentType };
         }
       }
@@ -257,13 +259,17 @@ export async function POST(req: NextRequest) {
             createdAt: new Date().toISOString()
           };
 
-          itemsToPersist.push(record);
+          const cleanRecord = Object.fromEntries(
+            Object.entries(record).filter(([, value]) => value !== undefined)
+          ) as ThumbnailItem;
+
+          itemsToPersist.push(cleanRecord);
 
           // Also attempt syncing to Firestore in background without blocking
           if (db) {
             try {
               const docRef = doc(db, 'thumbnails', assignedId);
-              setDoc(docRef, record, { merge: true }).catch(() => {});
+              setDoc(docRef, cleanRecord, { merge: true }).catch(() => {});
             } catch {}
           }
 

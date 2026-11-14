@@ -16,7 +16,15 @@ const POSTERS_KEY = 'thumbfeed_posters_v2';
  */
 function isCloudPersistable(item: ThumbnailItem): boolean {
   const url = item?.imageUrl || '';
-  return url.startsWith('http://') || url.startsWith('https://');
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/api/media/');
+}
+
+function stripUndefined<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const clean: Record<string, any> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (val !== undefined) clean[key] = val;
+  }
+  return clean;
 }
 
 // Purge legacy keys
@@ -365,7 +373,7 @@ export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: st
   // Delete from Firebase Firestore if doc exists
   try {
     const { doc, deleteDoc } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
+    const { db } = await import('./firestore');
     if (db && target.id) {
       await deleteDoc(doc(db, 'thumbnails', target.id)).catch(() => {});
     }
@@ -392,12 +400,14 @@ export function updateStoredThumbnail(updatedItem: ThumbnailItem): ThumbnailItem
 
   // Sync to Firestore
   try {
-    import('firebase/firestore').then(async ({ doc, setDoc }) => {
-      const { db } = await import('./firebase');
-      if (db && updatedItem.id) {
-        await setDoc(doc(db, 'thumbnails', updatedItem.id), updatedItem, { merge: true });
-      }
-    });
+    import('firebase/firestore')
+      .then(async ({ doc, setDoc }) => {
+        const { db } = await import('./firestore');
+        if (db && updatedItem.id) {
+          await setDoc(doc(db, 'thumbnails', updatedItem.id), stripUndefined(updatedItem), { merge: true }).catch(() => {});
+        }
+      })
+      .catch(() => {});
   } catch {}
 
   return updated;
@@ -420,16 +430,18 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
 
   // Sync to Firestore
   try {
-    import('firebase/firestore').then(async ({ doc, setDoc }) => {
-      const { db } = await import('./firebase');
-      if (db) {
-        for (const item of newItems) {
-          if (item.id) {
-            await setDoc(doc(db, 'thumbnails', item.id), item, { merge: true }).catch(() => {});
+    import('firebase/firestore')
+      .then(async ({ doc, setDoc }) => {
+        const { db } = await import('./firestore');
+        if (db) {
+          for (const item of newItems) {
+            if (item.id) {
+              await setDoc(doc(db, 'thumbnails', item.id), stripUndefined(item), { merge: true }).catch(() => {});
+            }
           }
         }
-      }
-    });
+      })
+      .catch(() => {});
   } catch {}
 
   return updated;
@@ -591,12 +603,14 @@ export function saveCollection(collection: CollectionBoard): CollectionBoard[] {
 
   // Sync to Firestore
   try {
-    import('firebase/firestore').then(async ({ doc, setDoc }) => {
-      const { db } = await import('./firebase');
-      if (db) {
-        await setDoc(doc(db, 'collections', collection.id), collection, { merge: true }).catch(() => {});
-      }
-    });
+    import('firebase/firestore')
+      .then(async ({ doc, setDoc }) => {
+        const { db } = await import('./firestore');
+        if (db) {
+          await setDoc(doc(db, 'collections', collection.id), stripUndefined(collection), { merge: true }).catch(() => {});
+        }
+      })
+      .catch(() => {});
   } catch {}
 
   return updated;
@@ -622,12 +636,14 @@ export function toggleThumbnailInCollection(collectionId: string, thumbId: strin
   const target = updated.find(c => c.id === collectionId);
   if (target) {
     try {
-      import('firebase/firestore').then(async ({ doc, setDoc }) => {
-        const { db } = await import('./firebase');
-        if (db) {
-          await setDoc(doc(db, 'collections', target.id), target, { merge: true }).catch(() => {});
-        }
-      });
+      import('firebase/firestore')
+        .then(async ({ doc, setDoc }) => {
+          const { db } = await import('./firestore');
+          if (db) {
+            await setDoc(doc(db, 'collections', target.id), stripUndefined(target), { merge: true }).catch(() => {});
+          }
+        })
+        .catch(() => {});
     } catch {}
   }
 

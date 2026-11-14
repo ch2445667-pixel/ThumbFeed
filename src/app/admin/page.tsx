@@ -6,7 +6,7 @@ import { ArrowLeft, Sparkles, UploadCloud, Youtube, Link as LinkIcon, Check, Plu
 import { ThumbnailItem, NicheCategory, VisualStyle } from '../../lib/types';
 import { getStoredThumbnails, saveStoredThumbnail, deleteStoredThumbnailPermanently } from '../../lib/storage';
 import { sanitizeSafeImageSrc } from '../../lib/urlSafety';
-import { useAuth, ADMIN_EMAIL } from '../../lib/authContext';
+import { useAuth, ADMIN_EMAILS } from '../../lib/authContext';
 
 const NICHES: NicheCategory[] = [
   'IRL',
@@ -52,6 +52,7 @@ export default function AdminPage() {
   const [videoTitleInput, setVideoTitleInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [isSavingToR2, setIsSavingToR2] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -147,6 +148,17 @@ export default function AdminPage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select a valid image file (PNG, JPG, WebP).');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Image exceeds the 10MB file size limit.');
+      e.target.value = '';
+      return;
+    }
+    setUploadError('');
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -162,6 +174,7 @@ export default function AdminPage() {
     if (!previewImage) return;
 
     setIsSavingToR2(true);
+    setUploadError('');
 
     const parsedColors = colorsInput
       .split(',')
@@ -195,20 +208,32 @@ export default function AdminPage() {
         })
       });
 
-      if (res.ok) {
-        const json = await res.json();
-        const uploaded = json.items?.[0];
-        if (uploaded?.imageUrl) {
-          finalImageUrl = uploaded.imageUrl;
-          thumbSmallUrl = uploaded.thumbSmallUrl;
-          finalSource = uploaded.source || 'r2-storage';
-          if (Array.isArray(uploaded.colors) && uploaded.colors.length > 0) {
-            extractedColors = uploaded.colors;
-          }
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        setUploadError(json?.error || `Upload failed (HTTP ${res.status}).`);
+        return;
+      }
+
+      const uploaded = json?.items?.[0];
+      if (r2Status?.configured && uploaded?.uploadedToBucket === false) {
+        setUploadError(
+          (Array.isArray(json?.warnings) && json.warnings[0]) ||
+            'Cloudflare R2 upload did not complete. Verify your R2 bucket settings.'
+        );
+        return;
+      }
+
+      if (uploaded?.imageUrl) {
+        finalImageUrl = uploaded.imageUrl;
+        thumbSmallUrl = uploaded.thumbSmallUrl;
+        finalSource = uploaded.source || 'r2-storage';
+        if (Array.isArray(uploaded.colors) && uploaded.colors.length > 0) {
+          extractedColors = uploaded.colors;
         }
       }
-    } catch (err) {
-      console.warn('R2 upload failed, saving fallback:', err);
+    } catch (err: any) {
+      setUploadError(err?.message || 'Failed to upload thumbnail to Cloudflare R2.');
+      return;
     } finally {
       setIsSavingToR2(false);
     }
@@ -268,7 +293,7 @@ export default function AdminPage() {
             Access Restricted
           </h2>
           <p className="text-sm text-[#401D1A]/70 dark:text-zinc-400">
-            Adding and deleting thumbnails is restricted exclusively to the owner account ({ADMIN_EMAIL}).
+            Adding and deleting thumbnails is restricted exclusively to the owner account ({ADMIN_EMAILS.join(' or ')}).
           </p>
           {user ? (
             <p className="text-xs text-[#401D1A]/60 dark:text-zinc-500">
@@ -492,6 +517,13 @@ export default function AdminPage() {
                   </span>
                 )}
               </div>
+
+              {uploadError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">

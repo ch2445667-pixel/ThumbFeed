@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isR2Configured, deleteFromR2, extractR2KeyFromUrl } from '../../../../lib/r2';
-import { db } from '../../../../lib/firebase';
+import { db } from '../../../../lib/firestore';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { deleteGalleryItem, invalidateGalleryCache } from '../../../../lib/galleryService';
 

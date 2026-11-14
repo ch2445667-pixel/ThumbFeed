@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../../../../lib/firebase';
+import { db } from '../../../../lib/firestore';
 import { updateGalleryItemTitle } from '../../../../lib/galleryService';
 
 export const runtime = 'nodejs';

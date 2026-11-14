@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { collection, getDocs, query, limit, doc, deleteDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { db } from './firestore';
 import { INITIAL_THUMBNAILS } from './mockData';
 import { ThumbnailItem } from './types';
 import { parseDimensions } from './dimensions';

@@ -69,36 +69,22 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   
   // Custom user profile state (editable pfp & name stored persistently in server + localStorage)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [customName, setCustomName] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('thumbfeed_custom_profile');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          return parsed.name || '';
-        }
-      } catch {}
-    }
-    return '';
-  });
-  const [customPhoto, setCustomPhoto] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('thumbfeed_custom_profile');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          return parsed.photoURL || '';
-        }
-      } catch {}
-    }
-    return '';
-  });
+  const [customName, setCustomName] = useState('');
+  const [customPhoto, setCustomPhoto] = useState('');
   const [editNameInput, setEditNameInput] = useState('');
   const [editPhotoInput, setEditPhotoInput] = useState('');
   const [avatarLoadError, setAvatarLoadError] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
+    try {
+      const saved = localStorage.getItem('thumbfeed_custom_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.name) setCustomName(parsed.name);
+        if (parsed.photoURL) setCustomPhoto(parsed.photoURL);
+      }
+    } catch {}
     const loadProfile = () => {
       fetch('/api/profile')
         .then((res) => (res.ok ? res.json() : null))

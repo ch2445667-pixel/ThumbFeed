@@ -1036,7 +1036,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         const smallMap = new Map<string, string | undefined>();
         const dimsMap = new Map<string, { width?: number; height?: number }>();
         const colorMap = new Map<string, string[]>();
-        let allDbSaved = true;
+        let allBucketUploaded = true;
         if (data.items && Array.isArray(data.items)) {
           data.items.forEach((item: any) => {
             const key1 = item.originalId;
@@ -1058,17 +1058,26 @@ export const AddModal: React.FC<AddModalProps> = ({
               if (key1) colorMap.set(key1, item.colors);
               if (key2) colorMap.set(key2, item.colors);
             }
-            if (item.dbSaved === false) allDbSaved = false;
+            if (item.uploadedToBucket === false) allBucketUploaded = false;
           });
         }
-        cloudOk = true;
-        setCloudError('');
+
+        if (r2Configured && !allBucketUploaded) {
+          cloudOk = false;
+          setCloudError(
+            (Array.isArray(data.warnings) && data.warnings[0]) ||
+              'Cloudflare R2 upload failed for one or more items. Check your R2 configuration and try again.'
+          );
+        } else {
+          cloudOk = true;
+          setCloudError('');
+        }
 
         finalItems = queuedImages.map((img, idx) => {
           const itemCategories = img.tags || [];
           const payloadItem = payload[idx];
           const assignedId = data.items?.[idx]?.id || payloadItem?.id || img.id;
-          const supaUrl = uploadedMap.get(img.id) || uploadedMap.get(payloadItem?.id) || uploadedMap.get(assignedId) || img.dataUrl;
+          const r2Url = uploadedMap.get(img.id) || uploadedMap.get(payloadItem?.id) || uploadedMap.get(assignedId) || img.dataUrl;
           const smallUrl = smallMap.get(img.id) || smallMap.get(payloadItem?.id) || smallMap.get(assignedId);
           const dims = dimsMap.get(img.id) || dimsMap.get(payloadItem?.id) || dimsMap.get(assignedId);
 
@@ -1077,9 +1086,9 @@ export const AddModal: React.FC<AddModalProps> = ({
             kind: mediaKind,
             title: img.title || `Curated ${unitWord}`,
             creator: img.creator || (isPoster ? 'Cinema' : 'Creator'),
-            imageUrl: supaUrl,
+            imageUrl: r2Url,
             thumbSmallUrl: smallUrl,
-            sourceUrl: supaUrl,
+            sourceUrl: r2Url,
             niche: (itemCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
             styles: ['Face Close-up', 'High-Contrast Glow'],
             tags: itemCategories.length > 0 ? itemCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
@@ -1095,10 +1104,14 @@ export const AddModal: React.FC<AddModalProps> = ({
           };
         });
       } else {
-        throw new Error('R2 upload route returned non-ok');
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || 'Cloudflare R2 upload route returned an error');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Fallback to local storage upload:', err);
+      if (err?.message) {
+        setCloudError(err.message);
+      }
       finalItems = queuedImages.map((img, idx) => {
         const itemCategories = img.tags || [];
         const payloadItem = payload[idx];
@@ -1128,7 +1141,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     }
 
     if (!cloudOk) {
-      setCloudError('Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
+      setCloudError(prev => prev || 'Cloud sync failed — these items are local-only and will disappear on refresh. Check your connection and try again.');
     }
 
     if (finalItems.length > 0) {
@@ -1412,8 +1425,7 @@ export const AddModal: React.FC<AddModalProps> = ({
 
       if (res.ok) {
         const resData = await res.json();
-        let allDbSaved = true;
-        if (resData.allDbSaved === false) allDbSaved = false;
+        let allBucketUploaded = true;
         if (resData.items && Array.isArray(resData.items)) {
           const map = new Map<string, string>();
           const smallMap = new Map<string, string | undefined>();
@@ -1444,18 +1456,18 @@ export const AddModal: React.FC<AddModalProps> = ({
               if (key2) colorMap.set(key2, it.colors);
               if (key3) colorMap.set(key3, it.colors);
             }
-            if (it.dbSaved === false) allDbSaved = false;
+            if (it.uploadedToBucket === false) allBucketUploaded = false;
           });
 
           finalThumbnails = finalThumbnails.map((item, idx) => {
             const vId = uniqueItems[idx]?.videoId;
             const origId = uploadPayload[idx]?.id;
-            const supaUrl = (vId ? map.get(vId) : null) || map.get(origId) || map.get(item.id) || item.imageUrl;
+            const r2Url = (vId ? map.get(vId) : null) || map.get(origId) || map.get(item.id) || item.imageUrl;
             const smallUrl = (vId ? smallMap.get(vId) : null) || smallMap.get(origId) || smallMap.get(item.id);
             const dims = (vId ? dimsMap.get(vId) : null) || dimsMap.get(origId) || dimsMap.get(item.id);
             return {
               ...item,
-              imageUrl: supaUrl,
+              imageUrl: r2Url,
               thumbSmallUrl: smallUrl,
               width: dims?.width ?? item.width,
               height: dims?.height ?? item.height,
@@ -1465,10 +1477,19 @@ export const AddModal: React.FC<AddModalProps> = ({
             };
           });
         }
-        syncFailed = false;
-        setCloudError('');
+        if (r2Configured && !allBucketUploaded) {
+          syncFailed = true;
+          setCloudError(
+            (Array.isArray(resData.warnings) && resData.warnings[0]) ||
+              'One or more thumbnails could not be uploaded to Cloudflare R2.'
+          );
+        } else {
+          syncFailed = false;
+          setCloudError('');
+        }
       } else {
-        setCloudError('Upload request failed. Please check your network and try again.');
+        const errData = await res.json().catch(() => null);
+        setCloudError(errData?.error || 'Upload request failed. Please check your network and try again.');
         syncFailed = true;
       }
     } catch (err) {
@@ -1686,6 +1707,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                     accept="image/*"
                     onChange={(e) => {
                       if (e.target.files) handleMultipleFiles(e.target.files);
+                      e.target.value = '';
                     }}
                     className="hidden"
                   />

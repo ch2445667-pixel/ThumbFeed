@@ -49,9 +49,15 @@ export function getAllCategories(): string[] {
 export async function syncCategoriesToServer(categories: string[]): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
+    const { getFirebaseIdToken } = await import('./firebase');
+    const token = await getFirebaseIdToken();
+    if (!token) return;
     await fetch('/api/categories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(categories),
     });
   } catch (err) {

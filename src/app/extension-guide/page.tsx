@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Chrome, Download, Check, Sparkles, Youtube, ExternalLink, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowLeft, Chrome, Check, Youtube, ShieldCheck, Zap } from 'lucide-react';
 
 export default function ExtensionGuidePage() {
   const [copiedPath, setCopiedPath] = useState(false);
 
-  const extensionFolderPath = `C:\\Users\\ch244\\.gemini\\antigravity\\scratch\\thumbvault\\extension`;
+  const extensionFolderPath = '<your-thumbfeed-repo>/extension';
 
   const copyPath = () => {
     navigator.clipboard.writeText(extensionFolderPath);
@@ -37,13 +37,13 @@ export default function ExtensionGuidePage() {
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#401D1A]/10 dark:bg-[#E4E0D3]/20 text-[#401D1A] dark:text-[#E4E0D3] text-xs font-semibold border border-[#401D1A]/20 dark:border-[#E4E0D3]/30">
             <Chrome className="w-3.5 h-3.5" />
-            <span>ThumbVault Chrome Extension (Manifest V3)</span>
+            <span>ThumbFeed Chrome Extension (Manifest V3)</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#401D1A] dark:text-[#FFFFFF]">
             1-Click YouTube Thumbnail Grabber
           </h1>
           <p className="text-sm text-[#401D1A]/70 dark:text-[#E4E0D3]/70 max-w-2xl leading-relaxed">
-            Browse YouTube as normal. Whenever you spot a thumbnail that converts or inspires you, click the ThumbVault extension button to extract its maximum resolution (HD) asset and send it straight into your inspiration gallery with auto-tags.
+            Browse YouTube as normal. Whenever you spot a thumbnail that converts or inspires you, click the ThumbFeed extension button to extract its maximum resolution (HD) asset and download or queue it locally.
           </p>
         </div>
 
@@ -76,7 +76,7 @@ export default function ExtensionGuidePage() {
             </div>
             <h3 className="font-bold text-sm text-[#401D1A] dark:text-[#FFFFFF]">Load Unpacked</h3>
             <p className="text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70 leading-relaxed">
-              Click the <strong>&quot;Load unpacked&quot;</strong> button and select the <code className="text-[#401D1A] dark:text-[#E4E0D3] bg-[#E4E0D3]/50 dark:bg-[#FFFFFF]/10 px-1 py-0.5 rounded font-mono">extension</code> folder from this project.
+              Click the <strong>&quot;Load unpacked&quot;</strong> button and select the <code className="text-[#401D1A] dark:text-[#E4E0D3] bg-[#E4E0D3]/50 dark:bg-[#FFFFFF]/10 px-1 py-0.5 rounded font-mono">extension</code> folder from your cloned repository.
             </p>
           </div>
 
@@ -86,10 +86,10 @@ export default function ExtensionGuidePage() {
         <div className="bg-[#FFFFFF] dark:bg-[#401D1A] p-6 rounded-2xl border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 shadow-md space-y-3">
           <h3 className="text-sm font-bold text-[#401D1A] dark:text-[#FFFFFF] flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#401D1A] dark:text-[#E4E0D3]" />
-            Your Local Extension Folder Path
+            Extension Folder Location
           </h3>
           <p className="text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70">
-            Copy this folder path and paste it into the folder picker when clicking &quot;Load unpacked&quot; in Chrome:
+            Select the <code className="font-mono">extension</code> directory inside your local ThumbFeed checkout when clicking &quot;Load unpacked&quot; in Chrome:
           </p>
 
           <div className="flex items-center gap-2 p-3 bg-[#E4E0D3]/30 dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 rounded-xl">
@@ -131,16 +131,16 @@ export default function ExtensionGuidePage() {
             <div className="flex items-start gap-3 p-3 bg-[#E4E0D3]/20 dark:bg-[#401D1A] rounded-xl border border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
               <span className="w-5 h-5 rounded-full bg-[#401D1A]/10 dark:bg-[#E4E0D3]/20 text-[#401D1A] dark:text-[#E4E0D3] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">B</span>
               <div>
-                <strong className="text-[#401D1A] dark:text-[#FFFFFF] block">Click the ThumbVault icon in your browser toolbar:</strong>
-                The popup will instantly extract the HD thumbnail, YouTube channel name, and video title.
+                <strong className="text-[#401D1A] dark:text-[#FFFFFF] block">Click the ThumbFeed icon in your browser toolbar:</strong>
+                The popup immediately resolves the HD thumbnail and video title from the active tab.
               </div>
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-[#E4E0D3]/20 dark:bg-[#401D1A] rounded-xl border border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
               <span className="w-5 h-5 rounded-full bg-[#401D1A]/10 dark:bg-[#E4E0D3]/20 text-[#401D1A] dark:text-[#E4E0D3] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">C</span>
               <div>
-                <strong className="text-[#401D1A] dark:text-[#FFFFFF] block">Click &quot;Send to ThumbVault&quot;:</strong>
-                It immediately sends the thumbnail to your local/cloud inspiration vault and auto-tags it with AI!
+                <strong className="text-[#401D1A] dark:text-[#FFFFFF] block">Save or Upload via ThumbFeed:</strong>
+                Queue the capture in your extension storage or paste the YouTube URL directly in ThumbFeed&apos;s Add modal to store it in Cloudflare R2.
               </div>
             </div>
           </div>

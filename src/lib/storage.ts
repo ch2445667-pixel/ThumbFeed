@@ -1,30 +1,41 @@
 import { ThumbnailItem, CollectionBoard } from './types';
-import { INITIAL_THUMBNAILS } from './mockData';
-import { INITIAL_POSTERS } from './posters';
-import { parseDimensions } from './dimensions';
 
 const USER_IMPORTED_KEY = 'thumbvault_user_imported_v2000';
 const THUMBNAILS_KEY = 'thumbvault_thumbnails_v2000';
 const COLLECTIONS_KEY = 'thumbvault_collections_v2000';
 const DELETED_KEYS_KEY = 'thumbvault_permanently_deleted_keys_v2';
-const POSTERS_KEY = 'thumbfeed_posters_v2';
 
 /**
  * Raw `data:` URLs are megabytes of base64. Writing even a few of them to
- * localStorage blows the ~5MB quota. Only cloud-hosted (http/https) URLs may be
- * persisted — data URLs live in memory only until the upload route returns a bucket URL.
+ * localStorage blows the ~5MB quota. Only cloud-hosted (http/https) or `/api/media/`
+ * URLs may be persisted — data URLs live in memory only until uploaded.
  */
 function isCloudPersistable(item: ThumbnailItem): boolean {
   const url = item?.imageUrl || '';
   return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/api/media/');
 }
 
-function stripUndefined<T extends Record<string, any>>(obj: T): Record<string, any> {
-  const clean: Record<string, any> = {};
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  const clean: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(obj)) {
     if (val !== undefined) clean[key] = val;
   }
   return clean;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string> | null> {
+  if (typeof window === 'undefined') return null;
+  try {
+    const { getFirebaseIdToken } = await import('./firebase');
+    const token = await getFirebaseIdToken();
+    if (!token) return null;
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // Purge legacy keys
@@ -38,9 +49,10 @@ if (typeof window !== 'undefined') {
       'thumbfeed_thumbnails_v1',
       'thumbfeed_user_imported_v1',
       'thumbfeed_thumbnails',
-      'thumbvault_thumbnails'
+      'thumbvault_thumbnails',
+      'thumbfeed_posters_v2',
     ];
-    legacyKeys.forEach(k => localStorage.removeItem(k));
+    legacyKeys.forEach((k) => localStorage.removeItem(k));
   } catch {}
 }
 
@@ -60,7 +72,7 @@ export function markThumbnailPermanentlyDeleted(keys: string[]): void {
   if (typeof window === 'undefined') return;
   try {
     const current = getPermanentlyDeletedKeys();
-    keys.forEach(k => {
+    keys.forEach((k) => {
       if (k) current.add(k);
     });
     localStorage.setItem(DELETED_KEYS_KEY, JSON.stringify(Array.from(current)));
@@ -74,7 +86,7 @@ export function unmarkThumbnailPermanentlyDeleted(keys: string[]): void {
   try {
     const current = getPermanentlyDeletedKeys();
     let changed = false;
-    keys.forEach(k => {
+    keys.forEach((k) => {
       if (k && current.delete(k)) changed = true;
     });
     if (changed) {
@@ -85,37 +97,9 @@ export function unmarkThumbnailPermanentlyDeleted(keys: string[]): void {
 
 export const DEFAULT_COLLECTIONS: CollectionBoard[] = [];
 
-// Map lookup by ID, imageUrl, and filename for enriched metadata
-const initialMap = new Map<string, ThumbnailItem>();
-INITIAL_THUMBNAILS.forEach(item => {
-  initialMap.set(item.id, item);
-  initialMap.set(item.imageUrl, item);
-  const filename = decodeURIComponent(item.imageUrl.split('/').pop() || '');
-  if (filename) {
-    initialMap.set(filename, item);
-  }
-});
-
-function formatTitleFromFilename(filename: string): string {
-  return filename
-    .replace(/\.[^/.]+$/, '')
-    .replace(/^\d+[\.\-_]\s*/, '')
-    .replace(/[_-]+/g, ' ')
-    .trim();
-}
-
-function getDeterministicLikes(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return (Math.abs(hash) % 80) + 60;
-}
-
 export function classifyNicheFromFilename(filename: string): { niche: ThumbnailItem['niche']; tags: string[] } {
   const lower = filename.toLowerCase();
-  
+
   if (
     lower.includes('documentary') || lower.includes('geopolitical') || lower.includes('history') ||
     lower.includes('investigation') || lower.includes('cold war') || lower.includes('cia') ||
@@ -124,7 +108,7 @@ export function classifyNicheFromFilename(filename: string): { niche: ThumbnailI
   ) {
     return { niche: 'Documentary', tags: ['Documentary', 'Storytelling', 'Deep Dive', 'Cinematic'] };
   }
-  
+
   if (
     lower.includes('game') || lower.includes('gaming') || lower.includes('gta') ||
     lower.includes('minecraft') || lower.includes('fortnite') || lower.includes('roblox') ||
@@ -133,16 +117,15 @@ export function classifyNicheFromFilename(filename: string): { niche: ThumbnailI
   ) {
     return { niche: 'Gaming', tags: ['Gaming', 'Gameplay', 'High Energy', 'Render'] };
   }
-  
+
   if (
     lower.includes('tech') || lower.includes('apple') || lower.includes('iphone') ||
-    lower.includes('macbook') || lower.includes('ai') || lower.includes('chatgpt') ||
-    lower.includes('code') || lower.includes('software') || lower.includes('hardware') ||
+    lower.includes('macbook') || lower.includes('software') || lower.includes('hardware') ||
     lower.includes('gpu') || lower.includes('nvidia') || lower.includes('review')
   ) {
     return { niche: 'Tech', tags: ['Tech', 'Gadgets', 'Minimalist', 'Hardware'] };
   }
-  
+
   if (
     lower.includes('business') || lower.includes('money') || lower.includes('crypto') ||
     lower.includes('bitcoin') || lower.includes('finance') || lower.includes('millionaire') ||
@@ -257,17 +240,17 @@ export function blendAndDistributeThumbnails(baseList: ThumbnailItem[], userImpo
 
   const seenKeys = new Set<string>();
   const uniqueImports: ThumbnailItem[] = [];
-  userImports.forEach(item => {
+  userImports.forEach((item) => {
     const keys = extractDedupeKeys(item);
-    if (!keys.some(k => seenKeys.has(k))) {
-      keys.forEach(k => seenKeys.add(k));
+    if (!keys.some((k) => seenKeys.has(k))) {
+      keys.forEach((k) => seenKeys.add(k));
       uniqueImports.push(item);
     }
   });
 
-  const uniqueBase = baseList.filter(item => {
+  const uniqueBase = baseList.filter((item) => {
     const keys = extractDedupeKeys(item);
-    return !keys.some(k => seenKeys.has(k));
+    return !keys.some((k) => seenKeys.has(k));
   });
 
   return [...uniqueImports, ...uniqueBase];
@@ -300,7 +283,7 @@ export function saveUserImportedThumbnails(newItems: ThumbnailItem[]): Thumbnail
 
 export async function fetchLiveThumbnails(): Promise<ThumbnailItem[]> {
   const userImports = getUserImportedThumbnails();
-  let baseThumbnails: ThumbnailItem[] = INITIAL_THUMBNAILS;
+  let baseThumbnails: ThumbnailItem[] = [];
 
   try {
     const res = await fetch('/api/gallery?pageSize=100');
@@ -315,8 +298,8 @@ export async function fetchLiveThumbnails(): Promise<ThumbnailItem[]> {
   }
 
   const deletedKeys = getPermanentlyDeletedKeys();
-  const validBase = baseThumbnails.filter(b => !deletedKeys.has(b.id) && !deletedKeys.has(b.imageUrl));
-  const validUserImports = userImports.filter(u => !deletedKeys.has(u.id) && !deletedKeys.has(u.imageUrl));
+  const validBase = baseThumbnails.filter((b) => !deletedKeys.has(b.id) && !deletedKeys.has(b.imageUrl));
+  const validUserImports = userImports.filter((u) => !deletedKeys.has(u.id) && !deletedKeys.has(u.imageUrl));
 
   const combined = blendAndDistributeThumbnails(validBase, validUserImports);
 
@@ -332,13 +315,13 @@ export async function fetchLiveThumbnails(): Promise<ThumbnailItem[]> {
 }
 
 export function getStoredThumbnails(): ThumbnailItem[] {
-  if (typeof window === 'undefined') return INITIAL_THUMBNAILS;
+  if (typeof window === 'undefined') return [];
   try {
     const deletedKeys = getPermanentlyDeletedKeys();
-    const userImports = getUserImportedThumbnails().filter(u => !deletedKeys.has(u.id) && !deletedKeys.has(u.imageUrl));
+    const userImports = getUserImportedThumbnails().filter((u) => !deletedKeys.has(u.id) && !deletedKeys.has(u.imageUrl));
     const raw = localStorage.getItem(THUMBNAILS_KEY);
-    
-    let baseList: ThumbnailItem[] = INITIAL_THUMBNAILS;
+
+    let baseList: ThumbnailItem[] = [];
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -346,7 +329,7 @@ export function getStoredThumbnails(): ThumbnailItem[] {
       }
     }
 
-    baseList = baseList.filter(b => !deletedKeys.has(b.id) && !deletedKeys.has(b.imageUrl));
+    baseList = baseList.filter((b) => !deletedKeys.has(b.id) && !deletedKeys.has(b.imageUrl));
 
     if (userImports.length === 0) {
       return baseList;
@@ -354,19 +337,19 @@ export function getStoredThumbnails(): ThumbnailItem[] {
 
     return blendAndDistributeThumbnails(baseList, userImports);
   } catch {
-    return INITIAL_THUMBNAILS;
+    return [];
   }
 }
 
 export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: string }): Promise<{ items: ThumbnailItem[]; storageRemovalFailed: boolean }> {
-  if (typeof window === 'undefined') return { items: INITIAL_THUMBNAILS, storageRemovalFailed: false };
+  if (typeof window === 'undefined') return { items: [], storageRemovalFailed: false };
   if (!target.id && !target.imageUrl) return { items: getStoredThumbnails(), storageRemovalFailed: false };
 
   const currentList = getStoredThumbnails();
   const deletedKeys = extractDedupeKeys(target);
   markThumbnailPermanentlyDeleted(deletedKeys);
 
-  const updatedList = currentList.filter(t => {
+  const updatedList = currentList.filter((t) => {
     if (target.id && t.id === target.id) return false;
     if (target.imageUrl && t.imageUrl === target.imageUrl) return false;
     return true;
@@ -379,7 +362,7 @@ export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: st
   }
 
   const userImports = getUserImportedThumbnails();
-  const updatedImports = userImports.filter(t => {
+  const updatedImports = userImports.filter((t) => {
     if (target.id && t.id === target.id) return false;
     if (target.imageUrl && t.imageUrl === target.imageUrl) return false;
     return true;
@@ -388,13 +371,12 @@ export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: st
     localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(updatedImports));
   } catch {}
 
-  // Also clean up from any boards in localStorage
   try {
     const rawCols = localStorage.getItem(COLLECTIONS_KEY);
     if (rawCols) {
       const parsed = JSON.parse(rawCols);
       if (Array.isArray(parsed)) {
-        const cleanedCols = parsed.map((col: any) => ({
+        const cleanedCols = parsed.map((col: CollectionBoard) => ({
           ...col,
           thumbnailIds: (col.thumbnailIds || []).filter((id: string) => id !== target.id && id !== target.imageUrl)
         }));
@@ -405,31 +387,31 @@ export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: st
 
   let storageRemovalFailed = false;
   try {
-    const res = await fetch('/api/thumbnails/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: target.id,
-        imageUrl: target.imageUrl
-      })
-    });
-    const data = await res.json().catch(() => null);
-    if (data && data.storageDeleted === false && data.storageSkipped !== true) {
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders) {
       storageRemovalFailed = true;
-      console.warn('File removal note:', data.storageReason);
+    } else {
+      const res = await fetch('/api/thumbnails/delete', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          id: target.id,
+          imageUrl: target.imageUrl
+        })
+      });
+      if (!res.ok) {
+        storageRemovalFailed = true;
+      } else {
+        const data = await res.json().catch(() => null);
+        if (data && data.storageDeleted === false && data.storageSkipped !== true) {
+          storageRemovalFailed = true;
+        }
+      }
     }
   } catch (apiErr) {
     console.warn('Server delete endpoint note:', apiErr);
+    storageRemovalFailed = true;
   }
-
-  // Delete from Firebase Firestore if doc exists
-  try {
-    const { doc, deleteDoc } = await import('firebase/firestore');
-    const { db } = await import('./firestore');
-    if (db && target.id) {
-      await deleteDoc(doc(db, 'thumbnails', target.id)).catch(() => {});
-    }
-  } catch {}
 
   return { items: updatedList, storageRemovalFailed };
 }
@@ -437,30 +419,18 @@ export async function deleteStoredThumbnail(target: { id?: string; imageUrl?: st
 export const deleteStoredThumbnailPermanently = deleteStoredThumbnail;
 
 export function updateStoredThumbnail(updatedItem: ThumbnailItem): ThumbnailItem[] {
-  if (typeof window === 'undefined') return INITIAL_THUMBNAILS;
-  
+  if (typeof window === 'undefined') return [];
+
   const userImports = getUserImportedThumbnails();
-  const importIdx = userImports.findIndex(t => t.id === updatedItem.id || t.imageUrl === updatedItem.imageUrl);
+  const importIdx = userImports.findIndex((t) => t.id === updatedItem.id || t.imageUrl === updatedItem.imageUrl);
   if (importIdx >= 0) {
     userImports[importIdx] = updatedItem;
     localStorage.setItem(USER_IMPORTED_KEY, JSON.stringify(userImports));
   }
 
   const list = getStoredThumbnails();
-  const updated = list.map(t => (t.id === updatedItem.id || t.imageUrl === updatedItem.imageUrl ? updatedItem : t));
+  const updated = list.map((t) => (t.id === updatedItem.id || t.imageUrl === updatedItem.imageUrl ? updatedItem : t));
   localStorage.setItem(THUMBNAILS_KEY, JSON.stringify(updated));
-
-  // Sync to Firestore
-  try {
-    import('firebase/firestore')
-      .then(async ({ doc, setDoc }) => {
-        const { db } = await import('./firestore');
-        if (db && updatedItem.id) {
-          await setDoc(doc(db, 'thumbnails', updatedItem.id), stripUndefined(updatedItem), { merge: true }).catch(() => {});
-        }
-      })
-      .catch(() => {});
-  } catch {}
 
   return updated;
 }
@@ -470,7 +440,7 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
   if (!newItems || newItems.length === 0) return getStoredThumbnails();
 
   const resurrectKeys: string[] = [];
-  newItems.forEach(item => {
+  newItems.forEach((item) => {
     resurrectKeys.push(...extractDedupeKeys(item));
   });
   unmarkThumbnailPermanentlyDeleted(resurrectKeys);
@@ -486,22 +456,6 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
     console.warn('LocalStorage save quota warning:', e);
   }
 
-  // Sync to Firestore
-  try {
-    import('firebase/firestore')
-      .then(async ({ doc, setDoc }) => {
-        const { db } = await import('./firestore');
-        if (db) {
-          for (const item of newItems) {
-            if (item.id) {
-              await setDoc(doc(db, 'thumbnails', item.id), stripUndefined(item), { merge: true }).catch(() => {});
-            }
-          }
-        }
-      })
-      .catch(() => {});
-  } catch {}
-
   return updated;
 }
 
@@ -509,65 +463,14 @@ export function saveStoredThumbnail(item: ThumbnailItem): ThumbnailItem[] {
   return saveStoredThumbnails([item]);
 }
 
-export function getStoredPosters(): ThumbnailItem[] {
-  if (typeof window === 'undefined') return INITIAL_POSTERS;
-  try {
-    const raw = localStorage.getItem(POSTERS_KEY);
-    if (!raw) return INITIAL_POSTERS;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_POSTERS;
-    return parsed.filter((p) => p && p.id && p.imageUrl).map(p => ({ ...p, kind: 'poster' as const }));
-  } catch {
-    return INITIAL_POSTERS;
-  }
-}
-
-export async function fetchLivePosters(): Promise<ThumbnailItem[]> {
-  try {
-    const res = await fetch('/api/posters/sync');
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data.posters)) {
-        persistPosterList(data.posters);
-        return data.posters;
-      }
-    }
-  } catch (err) {
-    console.warn('Live posters fetch note:', err);
-  }
-  return getStoredPosters();
-}
-
-export function saveStoredPosters(newItems: ThumbnailItem[]): ThumbnailItem[] {
-  if (typeof window === 'undefined') return newItems;
-  const withKind = newItems.map((t) => ({
-    ...t,
-    kind: 'poster' as const,
-    id: t.id.startsWith('poster-') ? t.id : `poster-${t.id}`
-  }));
-  const current = getStoredPosters();
-  const seen = new Set(current.map((t) => t.id));
-  const fresh = withKind.filter((t) => !seen.has(t.id));
-  const merged = [...fresh, ...current];
-  persistPosterList(merged);
-  return merged;
-}
-
-export function persistPosterList(list: ThumbnailItem[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(POSTERS_KEY, JSON.stringify(list.filter(isCloudPersistable)));
-  } catch (e) {
-    console.warn('LocalStorage poster save warning:', e);
-  }
-}
-
 export async function syncBoardsToServer(boards: CollectionBoard[]): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders) return;
     await fetch('/api/boards', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify(boards),
     });
   } catch (err) {
@@ -578,12 +481,16 @@ export async function syncBoardsToServer(boards: CollectionBoard[]): Promise<voi
 export async function syncBoardsFromServer(): Promise<CollectionBoard[]> {
   if (typeof window === 'undefined') return [];
   try {
-    const res = await fetch('/api/boards');
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders) {
+      return [];
+    }
+    const res = await fetch('/api/boards', { headers: { Authorization: authHeaders.Authorization } });
     if (res.ok) {
       const serverBoards = await res.json();
       if (Array.isArray(serverBoards)) {
         const filtered = serverBoards.filter(
-          c => c.id !== 'col-1' && c.id !== 'col-2' && c.name !== '🔥 High CTR Hooks' && c.name !== '🖤 Dark & Minimalist Tech'
+          (c) => c.id !== 'col-1' && c.id !== 'col-2'
         );
         localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(filtered));
         return filtered;
@@ -593,6 +500,13 @@ export async function syncBoardsFromServer(): Promise<CollectionBoard[]> {
     console.warn('Failed to sync boards from server:', err);
   }
   return getStoredCollections();
+}
+
+export function clearLocalUserCollections(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(COLLECTIONS_KEY);
+  } catch {}
 }
 
 export function getStoredCollections(): CollectionBoard[] {
@@ -605,7 +519,7 @@ export function getStoredCollections(): CollectionBoard[] {
     }
     const parsed: CollectionBoard[] = JSON.parse(raw);
     const filtered = (Array.isArray(parsed) ? parsed : []).filter(
-      c => c.id !== 'col-1' && c.id !== 'col-2' && c.name !== '🔥 High CTR Hooks' && c.name !== '🖤 Dark & Minimalist Tech'
+      (c) => c.id !== 'col-1' && c.id !== 'col-2'
     );
     if (filtered.length !== parsed.length) {
       localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(filtered));
@@ -618,24 +532,83 @@ export function getStoredCollections(): CollectionBoard[] {
 
 export function deleteCollection(collectionId: string): CollectionBoard[] {
   if (typeof window === 'undefined') return [];
-  const list = getStoredCollections().filter(c => c.id !== collectionId);
+  const list = getStoredCollections().filter((c) => c.id !== collectionId);
   try {
     localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(list));
   } catch (e) {
     console.warn('Failed to delete collection from localStorage:', e);
   }
   syncBoardsToServer(list);
+
+  import('./firebase')
+    .then(async ({ auth, handleFirestoreError, OperationType }) => {
+      if (!auth.currentUser) return;
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      const { db } = await import('./firestore');
+      try {
+        await deleteDoc(doc(db, 'collections', collectionId));
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.DELETE, `collections/${collectionId}`);
+        } catch {}
+      }
+    })
+    .catch(() => {});
+
   return list;
+}
+
+async function syncSingleCollectionToFirestore(board: CollectionBoard): Promise<void> {
+  try {
+    const { auth, handleFirestoreError, OperationType } = await import('./firebase');
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+    const { doc, getDoc, setDoc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+    const { db } = await import('./firestore');
+    const ref = doc(db, 'collections', board.id);
+    try {
+      const snap = await getDoc(ref);
+      const cleanPayload = stripUndefined({
+        id: board.id.slice(0, 128),
+        userId: currentUser.uid.slice(0, 128),
+        name: (board.name || 'Untitled Board').slice(0, 120),
+        description: (board.description || '').slice(0, 500),
+        thumbnailIds: (Array.isArray(board.thumbnailIds) ? board.thumbnailIds : [])
+          .filter((id): id is string => typeof id === 'string' && id.length <= 128)
+          .slice(0, 2000),
+        colorTheme: (board.colorTheme || '').slice(0, 64),
+      });
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          ...cleanPayload,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await updateDoc(ref, {
+          name: cleanPayload.name,
+          description: cleanPayload.description,
+          thumbnailIds: cleanPayload.thumbnailIds,
+          colorTheme: cleanPayload.colorTheme,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } catch (err) {
+      try {
+        handleFirestoreError(err, OperationType.WRITE, `collections/${board.id}`);
+      } catch {}
+    }
+  } catch {}
 }
 
 export function addThumbnailsToBoard(collectionId: string, thumbIds: string[]): CollectionBoard[] {
   const uniqueIds = Array.from(new Set(thumbIds.filter(Boolean)));
   if (uniqueIds.length === 0) return getStoredCollections();
   const collections = getStoredCollections();
-  const updated = collections.map(c => {
+  const updated = collections.map((c) => {
     if (c.id === collectionId) {
       const existing = new Set(c.thumbnailIds || []);
-      const toAdd = uniqueIds.filter(id => !existing.has(id));
+      const toAdd = uniqueIds.filter((id) => !existing.has(id));
       if (toAdd.length > 0) {
         return { ...c, thumbnailIds: [...(c.thumbnailIds || []), ...toAdd] };
       }
@@ -646,6 +619,10 @@ export function addThumbnailsToBoard(collectionId: string, thumbIds: string[]): 
     localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
   } catch {}
   syncBoardsToServer(updated);
+  const target = updated.find((c) => c.id === collectionId);
+  if (target) {
+    syncSingleCollectionToFirestore(target);
+  }
   return updated;
 }
 
@@ -656,7 +633,7 @@ export function addThumbnailToBoard(collectionId: string, thumbId: string): Coll
 export function saveCollection(collection: CollectionBoard): CollectionBoard[] {
   if (typeof window === 'undefined') return [collection, ...DEFAULT_COLLECTIONS];
   const list = getStoredCollections();
-  const existsIndex = list.findIndex(c => c.id === collection.id);
+  const existsIndex = list.findIndex((c) => c.id === collection.id);
   let updated: CollectionBoard[];
   if (existsIndex >= 0) {
     updated = [...list];
@@ -666,31 +643,20 @@ export function saveCollection(collection: CollectionBoard): CollectionBoard[] {
   }
   localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
   syncBoardsToServer(updated);
-
-  // Sync to Firestore
-  try {
-    import('firebase/firestore')
-      .then(async ({ doc, setDoc }) => {
-        const { db } = await import('./firestore');
-        if (db) {
-          await setDoc(doc(db, 'collections', collection.id), stripUndefined(collection), { merge: true }).catch(() => {});
-        }
-      })
-      .catch(() => {});
-  } catch {}
+  syncSingleCollectionToFirestore(collection);
 
   return updated;
 }
 
 export function toggleThumbnailInCollection(collectionId: string, thumbId: string): CollectionBoard[] {
   const collections = getStoredCollections();
-  const updated = collections.map(c => {
+  const updated = collections.map((c) => {
     if (c.id === collectionId) {
       const exists = c.thumbnailIds.includes(thumbId);
       return {
         ...c,
         thumbnailIds: exists
-          ? c.thumbnailIds.filter(id => id !== thumbId)
+          ? c.thumbnailIds.filter((id) => id !== thumbId)
           : [...c.thumbnailIds, thumbId]
       };
     }
@@ -699,18 +665,9 @@ export function toggleThumbnailInCollection(collectionId: string, thumbId: strin
   localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
   syncBoardsToServer(updated);
 
-  const target = updated.find(c => c.id === collectionId);
+  const target = updated.find((c) => c.id === collectionId);
   if (target) {
-    try {
-      import('firebase/firestore')
-        .then(async ({ doc, setDoc }) => {
-          const { db } = await import('./firestore');
-          if (db) {
-            await setDoc(doc(db, 'collections', target.id), stripUndefined(target), { merge: true }).catch(() => {});
-          }
-        })
-        .catch(() => {});
-    } catch {}
+    syncSingleCollectionToFirestore(target);
   }
 
   return updated;

@@ -1,7 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { NicheCategory } from '@/lib/types';
-import { GoogleGenAI } from '@google/genai';
 import { isSafeYouTubeUrl } from '@/lib/urlSafety';
+import {
+  requireAdmin,
+  verifyCsrfAndJson,
+  getClientIp,
+  logSecurityEvent,
+  safeErrorResponse,
+} from '@/lib/serverAuth';
+import { safeExternalFetch, readResponseTextWithLimit } from '@/lib/ssrfFetch';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const channelExtractSchema = z.object({
+  channelUrl: z.string().trim().min(2).max(500),
+  limit: z.union([z.number(), z.string()]).optional(),
+});
 
 interface ExtractedChannelVideo {
   id: string;
@@ -273,16 +290,32 @@ function extractAllVideos(obj: any, channelFallbackName: string, seenIds: Set<st
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { channelUrl, limit = 60 } = body;
+    const csrfError = verifyCsrfAndJson(req);
+    if (csrfError) return csrfError;
 
-    const requestedLimit = Math.min(Math.max(Number(limit) || 60, 1), 100);
+    const authResult = await requireAdmin(req);
+    if ('errorResponse' in authResult) return authResult.errorResponse;
 
-    if (!channelUrl || typeof channelUrl !== 'string') {
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `yt-channel:${authResult.user.uid}`,
+      limit: 15,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.allowed) {
+      logSecurityEvent('rate_limit_exceeded', { endpoint: '/api/youtube/channel', uid: authResult.user.uid, ip });
+      return rateLimitResponse(rl.retryAfterSeconds);
+    }
+
+    const rawBody = await req.json().catch(() => null);
+    const parsed = channelExtractSchema.safeParse(rawBody);
+    if (!parsed.success) {
       return NextResponse.json({ error: 'Channel URL or handle is required' }, { status: 400 });
     }
 
-    let input = channelUrl.trim();
+    const rawLimit = Number(parsed.data.limit ?? 60);
+    const requestedLimit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 60, 1), 100);
+    const input = parsed.data.channelUrl;
 
     // Check if input is actually a single video URL
     const singleVideoMatch = input.match(/(?:watch\?(?:.*&)?v=|youtu\.be\/|\/shorts\/|\/embed\/|\/live\/)([a-zA-Z0-9_-]{11})/i);
@@ -293,12 +326,16 @@ export async function POST(req: NextRequest) {
       let thumbUrl = `https://i.ytimg.com/vi/${vId}/maxresdefault.jpg`;
 
       try {
-        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${vId}&format=json`);
+        const oembedRes = await safeExternalFetch(
+          `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${encodeURIComponent(vId)}&format=json`,
+          { allowedUrlCheck: isSafeYouTubeUrl, timeoutMs: 8000 }
+        );
         if (oembedRes.ok) {
-          const odata = await oembedRes.json();
+          const odataText = await readResponseTextWithLimit(oembedRes, 256 * 1024);
+          const odata = JSON.parse(odataText);
           if (odata.title) videoTitle = odata.title;
           if (odata.author_name) authorName = odata.author_name;
-          if (odata.thumbnail_url) thumbUrl = odata.thumbnail_url;
+          if (odata.thumbnail_url && isSafeYouTubeUrl(odata.thumbnail_url)) thumbUrl = odata.thumbnail_url;
         }
       } catch (directVidErr) {
         console.warn('Single video oEmbed in channel route error:', directVidErr);
@@ -329,7 +366,7 @@ export async function POST(req: NextRequest) {
         items: [singleItem]
       });
     }
-    
+
     // Normalize channel URL
     let targetUrl = input;
     if (input.startsWith('@')) {
@@ -372,13 +409,13 @@ export async function POST(req: NextRequest) {
 
     let html = '';
     try {
-      const res = await fetch(targetUrl, {
+      const res = await safeExternalFetch(targetUrl, {
         headers,
-        cache: 'no-store',
-        signal: AbortSignal.timeout(10000),
+        allowedUrlCheck: isSafeYouTubeUrl,
+        timeoutMs: 10000,
       });
       if (res.ok && (!res.url || isSafeYouTubeUrl(res.url))) {
-        html = await res.text();
+        html = await readResponseTextWithLimit(res, 5 * 1024 * 1024);
       }
     } catch (e) {
       console.error('Fetch channel page error:', e);
@@ -453,9 +490,10 @@ export async function POST(req: NextRequest) {
         paginationAttempts++;
         try {
           const browseUrl = `https://www.youtube.com/youtubei/v1/browse?key=${encodeURIComponent(innertubeApiKey)}`;
-          const browseRes = await fetch(browseUrl, {
+          const browseRes = await safeExternalFetch(browseUrl, {
             method: 'POST',
-            signal: AbortSignal.timeout(10000),
+            allowedUrlCheck: isSafeYouTubeUrl,
+            timeoutMs: 10000,
             headers: {
               'Content-Type': 'application/json',
               'User-Agent': headers['User-Agent'],
@@ -475,7 +513,8 @@ export async function POST(req: NextRequest) {
           });
 
           if (!browseRes.ok) break;
-          const browseData = await browseRes.json();
+          const browseText = await readResponseTextWithLimit(browseRes, 3 * 1024 * 1024);
+          const browseData = JSON.parse(browseText);
 
           // Extract videos from continuation response
           extractAllVideos(browseData, channelTitle || input, seenVideoIds, extractedVideos);
@@ -490,12 +529,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Secondary RSS Fallback if scraped list is empty (e.g. if bot-blocked on some regions)
-    if (extractedVideos.length === 0 && channelId) {
+    if (extractedVideos.length === 0 && channelId && /^[a-zA-Z0-9_-]{24}$/.test(channelId)) {
       try {
-        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-        const rssRes = await fetch(rssUrl, { cache: 'no-store' });
+        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
+        const rssRes = await safeExternalFetch(rssUrl, { allowedUrlCheck: isSafeYouTubeUrl, timeoutMs: 8000 });
         if (rssRes.ok) {
-          const xml = await rssRes.text();
+          const xml = await readResponseTextWithLimit(rssRes, 2 * 1024 * 1024);
           const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
           let entryMatch;
           while ((entryMatch = entryRegex.exec(xml)) !== null && extractedVideos.length < requestedLimit) {
@@ -529,54 +568,6 @@ export async function POST(req: NextRequest) {
         }
       } catch (rssErr) {
         console.warn('RSS fallback error:', rssErr);
-      }
-    }
-
-    // Tertiary AI Grounding Fallback if needed
-    if (extractedVideos.length === 0 && process.env.GEMINI_API_KEY) {
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const prompt = `Find 30 to ${requestedLimit} recent regular long-form YouTube video uploads (NOT shorts, NOT reels) for the channel: "${input}".
-Return a strict JSON array of objects with keys: "videoId" (exact 11-char YouTube ID), "title", "creator", "niche".`;
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-          }
-        });
-
-        if (response && response.text) {
-          const parsed = JSON.parse(response.text);
-          if (Array.isArray(parsed)) {
-            for (const item of parsed) {
-              let vId = item.videoId || '';
-              if (vId.includes('v=')) {
-                vId = vId.split('v=')[1].slice(0, 11);
-              } else if (vId.includes('youtu.be/')) {
-                vId = vId.split('youtu.be/')[1].slice(0, 11);
-              }
-              if (vId && vId.length === 11 && !seenVideoIds.has(vId)) {
-                seenVideoIds.add(vId);
-                const { niche, tags } = classifyNicheFromTitle(item.title || '', item.creator || channelTitle);
-                extractedVideos.push({
-                  id: `ch-yt-${vId}`,
-                  videoId: vId,
-                  title: item.title || 'YouTube Video',
-                  creator: item.creator || channelTitle || input,
-                  imageUrl: `https://i.ytimg.com/vi/${vId}/maxresdefault.jpg`,
-                  sourceUrl: `https://www.youtube.com/watch?v=${vId}`,
-                  niche: (item.niche as NicheCategory) || niche,
-                  tags: tags
-                });
-                if (extractedVideos.length >= requestedLimit) break;
-              }
-            }
-          }
-        }
-      } catch (geminiErr) {
-        console.warn('Gemini channel extract fallback error:', geminiErr);
       }
     }
 
@@ -617,8 +608,7 @@ Return a strict JSON array of objects with keys: "videoId" (exact 11-char YouTub
       items: extractedVideos
     });
 
-  } catch (err: any) {
-    console.error('Channel extractor error:', err);
-    return NextResponse.json({ error: err.message || 'Failed to extract channel videos' }, { status: 500 });
+  } catch (err: unknown) {
+    return safeErrorResponse(err, 'Failed to extract channel videos');
   }
 }

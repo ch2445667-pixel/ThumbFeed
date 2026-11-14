@@ -1,2 +1,2 @@
 // Content script for YouTube pages
-console.log("ThumbVault Grabber active on YouTube.");
+// ThumbFeed extension active on YouTube watch pages.

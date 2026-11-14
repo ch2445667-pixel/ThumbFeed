@@ -137,37 +137,44 @@ export async function fetchMissingYouTubeDetails(
     return allCached;
   }
 
-  // Fetch up to 30 at a time
+  // Fetch up to 30 at a time (only when authenticated)
   const batch = missingVideoIds.slice(0, 30);
 
   try {
-    const res = await fetch('/api/youtube/details', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoIds: batch }),
-    });
+    const { getFirebaseIdToken } = await import('./firebase');
+    const token = await getFirebaseIdToken();
+    if (token) {
+      const res = await fetch('/api/youtube/details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ videoIds: batch }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      const details: Record<
-        string,
-        { title?: string; creator?: string; views?: string; subscribers?: string; publishedTime?: string }
-      > = data.details || {};
+      if (res.ok) {
+        const data = await res.json();
+        const details: Record<
+          string,
+          { title?: string; creator?: string; views?: string; subscribers?: string; publishedTime?: string }
+        > = data.details || {};
 
-      for (const [vid, detail] of Object.entries(details)) {
-        if (detail) {
-          memoryCache.set(vid, {
-            videoId: vid,
-            title: detail.title,
-            creator: normalizeCreatorName(detail.creator),
-            views: detail.views,
-            subscribers: detail.subscribers,
-            publishedTime: detail.publishedTime,
-            cachedAt: Date.now(),
-          });
+        for (const [vid, detail] of Object.entries(details)) {
+          if (detail) {
+            memoryCache.set(vid, {
+              videoId: vid,
+              title: detail.title,
+              creator: normalizeCreatorName(detail.creator),
+              views: detail.views,
+              subscribers: detail.subscribers,
+              publishedTime: detail.publishedTime,
+              cachedAt: Date.now(),
+            });
+          }
         }
+        saveToStorage();
       }
-      saveToStorage();
     }
   } catch (err) {
     console.warn('Failed to fetch missing YouTube details:', err);

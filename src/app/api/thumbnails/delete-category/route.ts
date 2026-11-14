@@ -1,72 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllGalleryItems, deleteGalleryItem, saveGalleryItems, invalidateGalleryCache } from '@/lib/galleryService';
+import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
+import { getAllGalleryItems, deleteGalleryItem, saveGalleryItems, invalidateGalleryCache } from '@/lib/galleryService';
+import { isR2Configured, uploadJsonToR2, R2_APP_DATA } from '@/lib/r2';
+import {
+  requireAdmin,
+  verifyCsrfAndJson,
+  getClientIp,
+  logSecurityEvent,
+  safeErrorResponse,
+} from '@/lib/serverAuth';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const ADMIN_EMAILS = ['canonwater2025@gmail.com', 'shivashiva66407@gmail.com'];
-
-function isLocalDevRequest(req: NextRequest): boolean {
-  if (process.env.NODE_ENV !== 'development') return false;
-  const host = (req.headers.get('host') || '').toLowerCase().split(',')[0].trim();
-  return (
-    host === 'localhost' ||
-    host.startsWith('localhost:') ||
-    host === '127.0.0.1' ||
-    host.startsWith('127.0.0.1:') ||
-    host === '[::1]' ||
-    host.startsWith('[::1]:') ||
-    host.includes('ais-dev') ||
-    host.includes('run.app') ||
-    host.includes('ai.studio')
-  );
-}
-
-async function verifyAdmin(idToken: string): Promise<string | null> {
-  if (!idToken) return 'Sign in as the owner to delete a category.';
-  try {
-    const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
-    if (!fs.existsSync(configPath)) return 'Firebase configuration is missing.';
-    const firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    if (!firebaseConfig?.apiKey) return 'Firebase API key is missing.';
-
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${firebaseConfig.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      }
-    );
-    if (!res.ok) return `Sign-in check failed (HTTP ${res.status}). Please sign in again.`;
-    const data = await res.json();
-    const userRecord = data?.users?.[0];
-    const email = (userRecord?.email || '').trim().toLowerCase();
-    if (!userRecord?.emailVerified || !ADMIN_EMAILS.some((e) => e.toLowerCase() === email)) {
-      return 'Only the owner can delete a category.';
-    }
-    return null;
-  } catch (err) {
-    return `Sign-in check could not run: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
+const deleteCategorySchema = z.object({
+  category: z.string().trim().min(1).max(60),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { category, idToken } = body || {};
+    const csrfError = verifyCsrfAndJson(req);
+    if (csrfError) return csrfError;
 
-    if (!category || typeof category !== 'string' || !category.trim()) {
-      return NextResponse.json({ error: 'A category name is required' }, { status: 400 });
-    }
-    const name = category.trim();
+    const authResult = await requireAdmin(req);
+    if ('errorResponse' in authResult) return authResult.errorResponse;
 
-    const authError = isLocalDevRequest(req) ? null : await verifyAdmin(idToken);
-    if (authError) {
-      return NextResponse.json({ error: authError }, { status: 403 });
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `delete-category:${authResult.user.uid}`,
+      limit: 20,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.allowed) {
+      logSecurityEvent('rate_limit_exceeded', { endpoint: '/api/thumbnails/delete-category', uid: authResult.user.uid, ip });
+      return rateLimitResponse(rl.retryAfterSeconds);
     }
+
+    const rawBody = await req.json().catch(() => null);
+    const parsed = deleteCategorySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'A valid category name is required' }, { status: 400 });
+    }
+    const name = parsed.data.category;
 
     const allItems = await getAllGalleryItems(true);
     const matches = (t?: string) => (t || '').trim().toLowerCase() === name.toLowerCase();
@@ -92,7 +70,7 @@ export async function POST(req: NextRequest) {
           : item.niche;
         toUpdate.push({
           ...item,
-          niche: nextNiche as any,
+          niche: nextNiche,
           tags: remainingTags,
         });
       }
@@ -110,7 +88,6 @@ export async function POST(req: NextRequest) {
       stripped = toUpdate.length;
     }
 
-    // Also remove from categories.json if present
     const DATA_DIR = path.join(process.cwd(), 'data');
     const CAT_FILE = path.join(DATA_DIR, 'categories.json');
     if (fs.existsSync(CAT_FILE)) {
@@ -119,11 +96,22 @@ export async function POST(req: NextRequest) {
         if (Array.isArray(cats)) {
           const updatedCats = cats.filter((c) => !matches(c));
           fs.writeFileSync(CAT_FILE, JSON.stringify(updatedCats, null, 2), 'utf-8');
+          if (isR2Configured()) {
+            await uploadJsonToR2(R2_APP_DATA.CATEGORIES, updatedCats).catch(() => {});
+          }
         }
       } catch {}
     }
 
     invalidateGalleryCache();
+
+    logSecurityEvent('category_deleted', {
+      uid: authResult.user.uid,
+      category: name,
+      removed: deleted,
+      strippedFrom: stripped,
+      ip,
+    });
 
     return NextResponse.json({
       success: true,
@@ -135,8 +123,7 @@ export async function POST(req: NextRequest) {
           ? `Removed ${deleted} thumbnail${deleted === 1 ? '' : 's'} and stripped "${name}" from ${stripped}.`
           : `Stripped "${name}" from ${stripped} thumbnail${stripped === 1 ? '' : 's'}.`,
     });
-  } catch (err: any) {
-    console.error('Delete category error:', err);
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+  } catch (err: unknown) {
+    return safeErrorResponse(err, 'Failed to delete category');
   }
 }

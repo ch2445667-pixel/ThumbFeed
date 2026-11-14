@@ -1,7 +1,15 @@
 .gcloudignore
 .git
 .gitignore
+.env
+.env*
+*.env
 node_modules/
 .next/
+data/
+AUDIT.md
+scripts/
+extension/
 *.log
 .DS_Store
+

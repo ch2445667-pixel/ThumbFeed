@@ -18,7 +18,7 @@ import {
 } from './icons/AppIcons';
 import { ThumbnailItem, NicheCategory, CollectionBoard } from '../lib/types';
 import { convertToJpg, getYoutubeJpgUrl } from '../lib/imageOptimizer';
-import { Cloud } from 'lucide-react';
+import { Cloud, ArrowLeft, Bookmark } from 'lucide-react';
 import { CloudflareStorageModal } from './CloudflareStorageModal';
 import {
   getAllCategories,
@@ -27,6 +27,15 @@ import {
 } from '../lib/categories';
 import { extractDedupeKeys, addThumbnailsToBoard } from '../lib/storage';
 import { sanitizeSafeImageSrc } from '../lib/urlSafety';
+import { formatShortViews } from '../lib/formatViews';
+import { useAuth } from '../lib/authContext';
+
+function createRandomSuffix(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+  }
+  return Date.now().toString(36);
+}
 
 // Real official Pinterest logo SVG in clean white/currentColor style
 const RealPinterestIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -228,6 +237,7 @@ interface UnifiedCategoryBarProps {
   collections?: CollectionBoard[];
   selectedBoardId?: string;
   onSelectBoard?: (boardId: string) => void;
+  hideBoardSelector?: boolean;
 }
 
 const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
@@ -240,6 +250,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
   collections = [],
   selectedBoardId = '',
   onSelectBoard,
+  hideBoardSelector = false,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newCatInput, setNewCatInput] = useState('');
@@ -258,7 +269,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
   };
 
   return (
-    <div className="p-3 bg-[#151518] border border-white/10 rounded-[14px] space-y-2 text-white">
+    <div className="p-4 bg-[#151821] border border-white/[0.08] rounded-[14px] space-y-2.5 text-white">
       <div className="flex items-center justify-between text-xs flex-wrap gap-2">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="font-semibold text-white/90 text-[11px]">
@@ -292,7 +303,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
             className="text-[11px] font-semibold text-white/70 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
           >
             <IconPlus className="w-3 h-3" />
-            <span>+ New Category</span>
+            <span>New Category</span>
           </button>
         )}
       </div>
@@ -349,7 +360,7 @@ const UnifiedCategoryBar: React.FC<UnifiedCategoryBarProps> = ({
       </div>
 
       {/* Target Board selector in Add Options alongside categories */}
-      {collections && collections.length > 0 && (
+      {!hideBoardSelector && collections && collections.length > 0 && (
         <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-white/90 text-[11px] flex items-center gap-1.5">
@@ -472,13 +483,13 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
       {selectedCategories.map(cat => (
         <span
           key={cat}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-accent text-accent-on shadow-2xs"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-[11px] font-semibold bg-white text-black shadow-2xs whitespace-nowrap"
         >
           <span>{cat}</span>
           <button
             type="button"
             onClick={(e) => handleRemove(e, cat)}
-            className="text-accent-on hover:text-accent-on cursor-pointer leading-none text-xs ml-0.5"
+            className="text-black/70 hover:text-black cursor-pointer leading-none text-xs ml-0.5"
             title={`Remove ${cat}`}
           >
             ×
@@ -486,14 +497,14 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
         </span>
       ))}
       {selectedCategories.length === 0 && (
-        <span className="text-[11px] text-ink-faint italic mr-1">None</span>
+        <span className="text-[11px] text-white/40 italic mr-1">No category</span>
       )}
 
       {/* Button to open multi-select popover */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="px-2 py-0.5 rounded text-[11px] font-semibold bg-surface hover:bg-surface-raised text-ink hover:text-ink border border-line flex items-center gap-1 cursor-pointer transition-colors"
+        className="px-2 py-0.5 rounded-[6px] text-[11px] font-semibold bg-white/[0.06] hover:bg-white/[0.12] text-white/85 border border-white/10 flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
       >
         <IconPlus className="w-3 h-3" />
         <span>Category</span>
@@ -501,32 +512,32 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
 
       {/* Popover Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-surface-raised border border-line rounded-xl shadow-2xl p-2.5 space-y-2">
-          <div className="flex items-center justify-between pb-1.5 border-b border-line text-xs">
-            <span className="font-bold text-ink text-[11px]">Select Categories</span>
+        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-[#151821] border border-white/15 rounded-[12px] shadow-2xl p-2.5 space-y-2 text-white">
+          <div className="flex items-center justify-between pb-1.5 border-b border-white/10 text-xs">
+            <span className="font-semibold text-white text-[11px]">Select Categories</span>
             <button
               type="button"
               onClick={() => setIsAddingNew(!isAddingNew)}
-              className="text-[11px] font-semibold text-ink hover:underline cursor-pointer"
+              className="text-[11px] font-semibold text-white/80 hover:text-white hover:underline cursor-pointer"
             >
               {isAddingNew ? 'Cancel' : '+ New Category'}
             </button>
           </div>
 
           {isAddingNew && (
-            <form onSubmit={handleCreateNew} className="flex items-center gap-1.5 p-1.5 bg-surface border border-line rounded-lg">
+            <form onSubmit={handleCreateNew} className="flex items-center gap-1.5 p-1.5 bg-[#090a0d] border border-white/10 rounded-[8px]">
               <input
                 type="text"
                 value={newCatInput}
                 onChange={(e) => setNewCatInput(e.target.value)}
                 placeholder="Category name..."
-                className="flex-1 bg-transparent text-xs text-ink placeholder:text-ink-faint focus:outline-none"
+                className="flex-1 bg-transparent text-xs text-white placeholder:text-white/35 focus:outline-none"
                 autoFocus
               />
               <button
                 type="submit"
                 disabled={!newCatInput.trim()}
-                className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-accent-on disabled:opacity-40 cursor-pointer"
+                className="px-2 py-0.5 rounded-[6px] text-[10px] font-bold bg-white text-black disabled:opacity-40 cursor-pointer"
               >
                 Add
               </button>
@@ -539,7 +550,7 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search categories..."
-              className="w-full px-2 py-1 bg-surface border border-line rounded-lg text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
+              className="w-full px-2.5 py-1 bg-[#090a0d] border border-white/10 rounded-[8px] text-xs text-white placeholder:text-white/35 focus:outline-none focus:border-white/25"
             />
           </div>
 
@@ -551,16 +562,16 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
                   key={cat}
                   type="button"
                   onClick={() => handleToggle(cat)}
-                  className={`w-full flex items-center justify-between px-2 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors text-left ${
+                  className={`w-full flex items-center justify-between px-2 py-1 rounded-[7px] text-xs font-medium cursor-pointer transition-colors text-left ${
                     isSelected
-                      ? 'bg-surface text-ink font-semibold'
-                      : 'hover:bg-surface-raised text-ink'
+                      ? 'bg-white/15 text-white font-semibold'
+                      : 'hover:bg-white/[0.06] text-white/80'
                   }`}
                 >
                   <span>{cat}</span>
                   {isSelected && (
                     <span
-                      className="w-3.5 h-3.5 rounded flex items-center justify-center bg-accent text-accent-on text-[10px]"
+                      className="w-3.5 h-3.5 rounded flex items-center justify-center bg-white text-black text-[10px] font-bold"
                     >
                       ✓
                     </span>
@@ -569,7 +580,7 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
               );
             })}
             {filtered.length === 0 && (
-              <div className="text-center py-2 text-[11px] text-ink-faint">
+              <div className="text-center py-2 text-[11px] text-white/40">
                 No matching category found
               </div>
             )}
@@ -588,6 +599,7 @@ export const AddModal: React.FC<AddModalProps> = ({
   initialMediaKind = 'thumbnail',
   collections = []
 }) => {
+  const { getIdToken } = useAuth();
   const [activeTab, setActiveTab] = useState<AddTabMode>('upload');
   const [mediaKind, setMediaKind] = useState<AddMediaKind>('thumbnail');
   const unitWord = 'Thumbnail';
@@ -629,14 +641,20 @@ export const AddModal: React.FC<AddModalProps> = ({
   const [r2BucketName, setR2BucketName] = useState('');
 
   const checkR2Status = useCallback(() => {
-    fetch('/api/r2/status')
-      .then(res => res.json())
-      .then(data => {
+    getIdToken()
+      .then((token) => {
+        if (!token) return null;
+        return fetch('/api/r2/status', {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then((res) => (res.ok ? res.json() : null));
+      })
+      .then((data) => {
+        if (!data) return;
         setR2Configured(Boolean(data?.configured));
         setR2BucketName(data?.bucket || '');
       })
       .catch(() => {});
-  }, []);
+  }, [getIdToken]);
 
   useEffect(() => {
     if (isOpen) {
@@ -705,7 +723,7 @@ export const AddModal: React.FC<AddModalProps> = ({
 
       const prefix = isPoster ? 'poster' : 'img';
       return {
-        id: `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: `${prefix}-${createRandomSuffix()}`,
         dataUrl: jpgDataUrl,
         title: cleanTitle || `Curated ${unitWord}`,
         creator: isPoster ? 'Cinema' : 'You',
@@ -804,7 +822,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           setQueuedImages(prev => [
             ...prev,
             {
-              id: `${isPoster ? 'poster' : 'img'}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              id: `${isPoster ? 'poster' : 'img'}-${createRandomSuffix()}`,
               dataUrl: safeUrl,
               title: `Pasted ${unitWord} ${prev.length + 1}`,
               creator: isPoster ? 'Cinema' : 'You',
@@ -1024,9 +1042,16 @@ export const AddModal: React.FC<AddModalProps> = ({
     });
 
     try {
+      const token = await getIdToken();
+      if (!token) {
+        throw new Error('Admin sign-in is required to upload thumbnails.');
+      }
       const res = await fetch('/api/r2/upload-thumbnail', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ items: payload })
       });
 
@@ -1100,7 +1125,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
             source: 'r2-storage',
             createdAt: new Date().toISOString(),
-            likesCount: Math.floor(Math.random() * 80) + 40
+            likesCount: 0
           };
         });
       } else {
@@ -1132,7 +1157,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           breakdownNotes: isPoster ? 'Uploaded movie poster.' : 'Uploaded thumbnail design.',
           source: 'r2-storage',
           createdAt: new Date().toISOString(),
-          likesCount: Math.floor(Math.random() * 80) + 40
+          likesCount: 0
         };
       });
     } finally {
@@ -1186,14 +1211,20 @@ export const AddModal: React.FC<AddModalProps> = ({
         const videoIds = videoMatches.map(m => m.id);
         let detailsMap: Record<string, any> = {};
         try {
-          const detRes = await fetch('/api/youtube/details', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ videoIds })
-          });
-          if (detRes.ok) {
-            const detData = await detRes.json();
-            detailsMap = detData.details || {};
+          const token = await getIdToken();
+          if (token) {
+            const detRes = await fetch('/api/youtube/details', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ videoIds })
+            });
+            if (detRes.ok) {
+              const detData = await detRes.json();
+              detailsMap = detData.details || {};
+            }
           }
         } catch (detErr) {
           console.warn('YouTube details fetch note:', detErr);
@@ -1249,9 +1280,16 @@ export const AddModal: React.FC<AddModalProps> = ({
         setYoutubeItems(items);
       } else {
         // 2. Channel Bulk Extraction
+        const token = await getIdToken();
+        if (!token) {
+          throw new Error('Admin sign-in is required to extract YouTube channels.');
+        }
         const res = await fetch('/api/youtube/channel', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             channelUrl: trimmed,
             limit: youtubeChannelLimit
@@ -1313,9 +1351,16 @@ export const AddModal: React.FC<AddModalProps> = ({
     setPinterestItems([]);
 
     try {
+      const token = await getIdToken();
+      if (!token) {
+        throw new Error('Admin sign-in is required to extract Pinterest pins.');
+      }
       const res = await fetch('/api/pinterest/extract', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ text: trimmed })
       });
       const data = await res.json();
@@ -1374,11 +1419,11 @@ export const AddModal: React.FC<AddModalProps> = ({
     const unitLabel = isPoster ? 'posters' : 'thumbnails';
     setUploadStatusText(`Uploading 0/${uniqueItems.length} ${unitLabel}...`);
 
-    let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
+    let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item) => {
       const chosenCategories = item.tags || [];
       const assignedId = isPoster
-        ? `poster-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`
-        : (item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${Date.now()}-${idx}`));
+        ? `poster-${createRandomSuffix()}`
+        : (item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-ext-${createRandomSuffix()}`));
       return {
         id: assignedId,
         kind: mediaKind,
@@ -1397,7 +1442,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         publishedTime: item.publishedTime,
         source: 'r2-storage',
         createdAt: new Date().toISOString(),
-        likesCount: Math.floor(Math.random() * 150) + 40
+        likesCount: 0
       };
     });
 
@@ -1430,6 +1475,11 @@ export const AddModal: React.FC<AddModalProps> = ({
       let firstWarning = '';
       let firstError = '';
 
+      const token = await getIdToken();
+      if (!token) {
+        throw new Error('Admin sign-in is required to upload thumbnails.');
+      }
+
       const CHUNK_SIZE = 12;
       for (let start = 0; start < uploadPayload.length; start += CHUNK_SIZE) {
         const chunk = uploadPayload.slice(start, start + CHUNK_SIZE);
@@ -1438,7 +1488,10 @@ export const AddModal: React.FC<AddModalProps> = ({
 
         const res = await fetch('/api/r2/upload-thumbnail', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ items: chunk })
         });
 
@@ -1538,176 +1591,352 @@ export const AddModal: React.FC<AddModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isReviewStage =
+    (activeTab === 'upload' && queuedImages.length > 0) ||
+    (activeTab === 'youtube' && youtubeItems.length > 0) ||
+    (activeTab === 'pinterest' && pinterestItems.length > 0);
+
+  const selectedYoutubeCount = youtubeItems.filter(i => i.selected !== false).length;
+  const selectedPinterestCount = pinterestItems.filter(i => i.selected !== false).length;
+  const activeReviewCount =
+    activeTab === 'upload'
+      ? queuedImages.length
+      : activeTab === 'youtube'
+        ? selectedYoutubeCount
+        : selectedPinterestCount;
+
+  const activeBoardName = selectedBoardId
+    ? collections.find(b => b.id === selectedBoardId)?.name || 'Selected Board'
+    : 'Feed only';
+
+  const handleBackFromReview = () => {
+    if (isUploadingToCloud) return;
+    setCloudError('');
+    if (activeTab === 'upload') setQueuedImages([]);
+    if (activeTab === 'youtube') setYoutubeItems([]);
+    if (activeTab === 'pinterest') setPinterestItems([]);
+  };
+
+  const renderBoardPanel = () => (
+    <div className="p-4 bg-[#151821] border border-white/[0.08] rounded-[14px] space-y-3 text-white">
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="font-semibold text-white/90 text-[11px] flex items-center gap-1.5">
+          <Bookmark className="w-3.5 h-3.5 text-white/60 shrink-0" />
+          <span>Save to Board</span>
+        </span>
+        <span className="text-[11px] text-white/50 truncate max-w-[160px]">
+          {activeBoardName}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setSelectedBoardId('')}
+          className={`px-2.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+            !selectedBoardId
+              ? 'bg-white text-black font-bold shadow-xs'
+              : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 border border-white/10'
+          }`}
+        >
+          <span>{!selectedBoardId ? '✓ ' : ''}</span>
+          <span>Feed only</span>
+        </button>
+
+        {collections.map((board) => {
+          const isSelected = selectedBoardId === board.id;
+          return (
+            <button
+              key={board.id}
+              type="button"
+              onClick={() => setSelectedBoardId(board.id)}
+              className={`px-2.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                isSelected
+                  ? 'bg-white text-black font-bold shadow-xs'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 border border-white/10'
+              }`}
+            >
+              <span>{isSelected ? '✓ ' : '+ '}</span>
+              <span>{board.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {collections.length === 0 && (
+        <p className="text-[11px] text-white/40">
+          No boards yet — items will be saved directly to your main Feed.
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <>
       <div
         id="add-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/45 backdrop-blur-md animate-fade-blur"
-    >
-      {/* Click outside to close */}
-      <div className="fixed inset-0" onClick={onClose} />
+        className={`fixed inset-0 z-50 flex ${
+          isReviewStage ? 'items-stretch justify-stretch p-0 bg-[#090a0d]' : 'items-center justify-center p-3 sm:p-5 bg-black/45 backdrop-blur-md'
+        } animate-fade-blur`}
+      >
+      {/* Click outside to close (input modal only) */}
+      {!isReviewStage && <div className="fixed inset-0" onClick={onClose} />}
 
-      {/* Main Modal Box - Blurred Obsidian Card */}
+      {/* Always-mounted file input so "Add more" works in both compact & full-screen stages */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={(e) => {
+          if (e.target.files) handleMultipleFiles(e.target.files);
+          e.target.value = '';
+        }}
+        className="hidden"
+      />
+
+      {/* Main Container: compact blurred card for URL/dropzone, full-screen studio workspace for confirmation/tags/boards */}
       <div
         id="add-modal-content"
-        className="relative w-full max-w-[540px] bg-[#0e0e10]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[14px] p-3 sm:p-4 shadow-[0_44px_100px_-20px_rgba(0,0,0,0.95)] overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in text-white"
-        style={{ backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)' }}
+        className={
+          isReviewStage
+            ? 'relative w-full h-full bg-[#090a0d] z-10 flex flex-col overflow-hidden text-white'
+            : 'relative w-full max-w-[540px] bg-[#0e0e10]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[14px] p-3 sm:p-4 shadow-[0_44px_100px_-20px_rgba(0,0,0,0.95)] overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in text-white'
+        }
+        style={isReviewStage ? undefined : { backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)' }}
       >
-        {/* Top Bar: Centered Expanding Tabs, Close Button on Right, Cloudflare on Left */}
-        <div className="relative flex items-center justify-center mb-3">
-          {/* Cloudflare Storage Button on left */}
-          <button
-            type="button"
-            onClick={() => setIsR2ModalOpen(true)}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-[10px] text-[11px] font-medium transition-all cursor-pointer ${
-              r2Configured
-                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/20'
-                : 'bg-orange-500/10 text-orange-300 border border-orange-500/25 hover:bg-orange-500/20'
-            }`}
-            title={r2Configured ? `Cloudflare R2 connected (${r2BucketName}) - Click to configure` : 'Connect Cloudflare R2 Storage'}
-          >
-            <Cloud className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">
-              {r2Configured ? 'R2 Storage' : 'Connect R2'}
-            </span>
-            <span className={`w-1.5 h-1.5 rounded-full ${r2Configured ? 'bg-emerald-400' : 'bg-orange-400'}`} />
-          </button>
-
-          <div className="inline-flex gap-0.5 p-1 bg-[#151518]/90 rounded-[14px] border border-white/[0.08] shadow-sm">
-            {/* Tab: Upload */}
-            <button
-              type="button"
-              id="tab-upload-images"
-              onClick={() => setActiveTab('upload')}
-              className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
-                activeTab === 'upload'
-                  ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
-                  : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
-              }`}
-            >
-              <RealUploadIcon className="w-4 h-4 shrink-0" />
-              <span
-                className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
-                  activeTab === 'upload' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
-                }`}
+        {/* Top Bar */}
+        {isReviewStage ? (
+          <header className="h-14 sm:h-16 px-4 sm:px-6 border-b border-white/[0.08] bg-[#090a0d] flex items-center justify-between gap-4 shrink-0">
+            {/* Left: Back + Review Title + R2 status */}
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={handleBackFromReview}
+                disabled={isUploadingToCloud}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-medium text-white/85 hover:text-white transition-colors cursor-pointer disabled:opacity-40 whitespace-nowrap shrink-0"
               >
-                Upload
-              </span>
-              {queuedImages.length > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-600 text-white">
-                  {queuedImages.length}
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back</span>
+              </button>
+
+              <div className="hidden sm:flex items-center gap-2 text-xs min-w-0">
+                <span className="font-semibold text-white truncate">Review &amp; Upload</span>
+                <span className="text-white/30" aria-hidden="true">·</span>
+                <span className="text-white/60 tabular whitespace-nowrap">
+                  {activeReviewCount} selected
                 </span>
-              )}
-            </button>
+              </div>
 
-            {/* Tab: YouTube */}
-            <button
-              type="button"
-              id="tab-youtube-import"
-              onClick={() => setActiveTab('youtube')}
-              className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
-                activeTab === 'youtube'
-                  ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
-                  : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
-              }`}
-            >
-              <RealYoutubeIcon className="w-4 h-4 shrink-0" />
-              <span
-                className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
-                  activeTab === 'youtube' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
+              <button
+                type="button"
+                onClick={() => setIsR2ModalOpen(true)}
+                className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-[10px] text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  r2Configured
+                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/20'
+                    : 'bg-orange-500/10 text-orange-300 border border-orange-500/25 hover:bg-orange-500/20'
                 }`}
+                title={r2Configured ? `Cloudflare R2 connected (${r2BucketName}) - Click to configure` : 'Connect Cloudflare R2 Storage'}
               >
-                YouTube
-              </span>
-            </button>
-
-            {/* Tab: Pinterest with Real Pinterest Logo */}
-            <button
-              type="button"
-              id="tab-pinterest-import"
-              onClick={() => setActiveTab('pinterest')}
-              className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
-                activeTab === 'pinterest'
-                  ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
-                  : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
-              }`}
-            >
-              <RealPinterestIcon className="w-4 h-4 shrink-0" />
-              <span
-                className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
-                  activeTab === 'pinterest' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
-                }`}
-              >
-                Pinterest
-              </span>
-            </button>
-          </div>
-
-          {/* Close button on right */}
-          <button
-            type="button"
-            id="add-modal-close-btn"
-            onClick={onClose}
-            aria-label="Close add modal"
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[11px] flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-            title="Close"
-          >
-            <IconClose className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Optional Target Board Selection */}
-        {collections && collections.length > 0 && (
-          <div className="mb-2.5 px-0.5">
-            <div className="flex items-center justify-between px-3 py-1.5 rounded-[11px] bg-white/[0.03] border border-white/[0.06] text-xs">
-              <span className="text-white/60 text-[11px]">Save directly to Board:</span>
-              <select
-                value={selectedBoardId}
-                onChange={(e) => setSelectedBoardId(e.target.value)}
-                className="bg-[#151518] border border-white/10 rounded-[8px] px-2 py-0.5 text-xs text-white focus:outline-none cursor-pointer"
-              >
-                <option value="">None (Feed only)</option>
-                {collections.map(board => (
-                  <option key={board.id} value={board.id}>
-                    {board.name}
-                  </option>
-                ))}
-              </select>
+                <Cloud className="w-3.5 h-3.5 shrink-0" />
+                <span>{r2Configured ? 'R2 Storage' : 'Connect R2'}</span>
+              </button>
             </div>
+
+            {/* Center: Source Tabs */}
+            <div className="inline-flex gap-0.5 p-1 bg-[#151518] rounded-[14px] border border-white/[0.08] shadow-sm shrink-0">
+              <button
+                type="button"
+                id="tab-upload-images"
+                onClick={() => setActiveTab('upload')}
+                className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer whitespace-nowrap ${
+                  activeTab === 'upload'
+                    ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-1.5 shadow-xs'
+                    : 'text-[#8b8b93] hover:text-white px-2.5 py-1.5'
+                }`}
+              >
+                <RealUploadIcon className="w-4 h-4 shrink-0" />
+                <span className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${activeTab === 'upload' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'}`}>
+                  Upload
+                </span>
+              </button>
+
+              <button
+                type="button"
+                id="tab-youtube-import"
+                onClick={() => setActiveTab('youtube')}
+                className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer whitespace-nowrap ${
+                  activeTab === 'youtube'
+                    ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-1.5 shadow-xs'
+                    : 'text-[#8b8b93] hover:text-white px-2.5 py-1.5'
+                }`}
+              >
+                <RealYoutubeIcon className="w-4 h-4 shrink-0" />
+                <span className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${activeTab === 'youtube' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'}`}>
+                  YouTube
+                </span>
+              </button>
+
+              <button
+                type="button"
+                id="tab-pinterest-import"
+                onClick={() => setActiveTab('pinterest')}
+                className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer whitespace-nowrap ${
+                  activeTab === 'pinterest'
+                    ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-1.5 shadow-xs'
+                    : 'text-[#8b8b93] hover:text-white px-2.5 py-1.5'
+                }`}
+              >
+                <RealPinterestIcon className="w-4 h-4 shrink-0" />
+                <span className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${activeTab === 'pinterest' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'}`}>
+                  Pinterest
+                </span>
+              </button>
+            </div>
+
+            {/* Right: Close */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                id="add-modal-close-btn"
+                onClick={onClose}
+                aria-label="Close add modal"
+                className="w-9 h-9 rounded-[10px] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.08] border border-white/[0.08] transition-colors cursor-pointer"
+                title="Close (Esc)"
+              >
+                <IconClose className="w-4 h-4" />
+              </button>
+            </div>
+          </header>
+        ) : (
+          <div className="relative flex items-center justify-center mb-3">
+            {/* Cloudflare Storage Button on left */}
+            <button
+              type="button"
+              onClick={() => setIsR2ModalOpen(true)}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-[10px] text-[11px] font-medium transition-all cursor-pointer ${
+                r2Configured
+                  ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/20'
+                  : 'bg-orange-500/10 text-orange-300 border border-orange-500/25 hover:bg-orange-500/20'
+              }`}
+              title={r2Configured ? `Cloudflare R2 connected (${r2BucketName}) - Click to configure` : 'Connect Cloudflare R2 Storage'}
+            >
+              <Cloud className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">
+                {r2Configured ? 'R2 Storage' : 'Connect R2'}
+              </span>
+              <span className={`w-1.5 h-1.5 rounded-full ${r2Configured ? 'bg-emerald-400' : 'bg-orange-400'}`} />
+            </button>
+
+            <div className="inline-flex gap-0.5 p-1 bg-[#151518]/90 rounded-[14px] border border-white/[0.08] shadow-sm">
+              {/* Tab: Upload */}
+              <button
+                type="button"
+                id="tab-upload-images"
+                onClick={() => setActiveTab('upload')}
+                className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
+                  activeTab === 'upload'
+                    ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
+                    : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
+                }`}
+              >
+                <RealUploadIcon className="w-4 h-4 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
+                    activeTab === 'upload' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
+                  }`}
+                >
+                  Upload
+                </span>
+                {queuedImages.length > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-600 text-white">
+                    {queuedImages.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Tab: YouTube */}
+              <button
+                type="button"
+                id="tab-youtube-import"
+                onClick={() => setActiveTab('youtube')}
+                className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
+                  activeTab === 'youtube'
+                    ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
+                    : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
+                }`}
+              >
+                <RealYoutubeIcon className="w-4 h-4 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
+                    activeTab === 'youtube' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
+                  }`}
+                >
+                  YouTube
+                </span>
+              </button>
+
+              {/* Tab: Pinterest with Real Pinterest Logo */}
+              <button
+                type="button"
+                id="tab-pinterest-import"
+                onClick={() => setActiveTab('pinterest')}
+                className={`flex items-center rounded-[11px] font-medium text-xs transition-all cursor-pointer ${
+                  activeTab === 'pinterest'
+                    ? 'bg-[#f2f2f3] text-[#0a0a0b] px-3.5 py-2 shadow-xs'
+                    : 'text-[#8b8b93] hover:text-white px-2.5 py-2'
+                }`}
+              >
+                <RealPinterestIcon className="w-4 h-4 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap transition-all duration-300 font-medium ${
+                    activeTab === 'pinterest' ? 'max-w-[90px] ml-1.5 opacity-100' : 'max-w-0 opacity-0'
+                  }`}
+                >
+                  Pinterest
+                </span>
+              </button>
+            </div>
+
+            {/* Close button on right */}
+            <button
+              type="button"
+              id="add-modal-close-btn"
+              onClick={onClose}
+              aria-label="Close add modal"
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[11px] flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+              title="Close"
+            >
+              <IconClose className="w-4 h-4" />
+            </button>
           </div>
         )}
 
-        {/* Modal Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-0.5 py-1 space-y-3 custom-scrollbar">
-
-          {/* ========================================================= */}
-          {/* TAB 1: UPLOAD / PASTE SECTION */}
-          {/* ========================================================= */}
-          {activeTab === 'upload' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              
-              {/* Paste Notice Toast if any */}
-              {pasteNotice && (
-                <div
-                  className={`p-2.5 rounded-[11px] text-xs flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150 ${
-                    pasteNotice.isError
-                      ? 'bg-red-500/10 border border-red-500/20 text-red-300'
-                      : 'bg-white/[0.05] border border-white/10 text-white'
-                  }`}
-                >
-                  <span>{pasteNotice.text}</span>
-                  <button
-                    type="button"
-                    onClick={() => setPasteNotice(null)}
-                    className="text-white/40 hover:text-white text-sm leading-none"
+        {/* Body */}
+        {!isReviewStage ? (
+          <div className="flex-1 overflow-y-auto px-0.5 py-1 space-y-3 custom-scrollbar">
+            {/* TAB 1: UPLOAD DROPZONE */}
+            {activeTab === 'upload' && (
+              <div className="space-y-3 animate-in fade-in duration-200">
+                {pasteNotice && (
+                  <div
+                    className={`p-2.5 rounded-[11px] text-xs flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150 ${
+                      pasteNotice.isError
+                        ? 'bg-red-500/10 border border-red-500/20 text-red-300'
+                        : 'bg-white/[0.05] border border-white/10 text-white'
+                    }`}
                   >
-                    &times;
-                  </button>
-                </div>
-              )}
+                    <span>{pasteNotice.text}</span>
+                    <button
+                      type="button"
+                      onClick={() => setPasteNotice(null)}
+                      className="text-white/40 hover:text-white text-sm leading-none"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
 
-              {/* Viewfinder Drop Zone when no images queued */}
-              {queuedImages.length === 0 && (
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -1717,25 +1946,11 @@ export const AddModal: React.FC<AddModalProps> = ({
                     dragOver ? 'border-white/40 bg-white/[0.08] scale-[0.99]' : ''
                   }`}
                 >
-                  {/* Viewfinder corner brackets */}
                   <i className="viewfinder-corner top-4 left-4 border-t-2 border-l-2 rounded-tl-[8px]" />
                   <i className="viewfinder-corner top-4 right-4 border-t-2 border-r-2 rounded-tr-[8px]" />
                   <i className="viewfinder-corner bottom-4 left-4 border-b-2 border-l-2 rounded-bl-[8px]" />
                   <i className="viewfinder-corner bottom-4 right-4 border-b-2 border-r-2 rounded-br-[8px]" />
 
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files) handleMultipleFiles(e.target.files);
-                      e.target.value = '';
-                    }}
-                    className="hidden"
-                  />
-
-                  {/* Center Icon Box */}
                   <div className="w-[54px] h-[54px] rounded-[16px] bg-[#0e0e10] border border-white/14 shadow-[0_10px_24px_-8px_rgba(0,0,0,0.85)] flex items-center justify-center mb-4 group-hover:-translate-y-1 transition-transform duration-300">
                     {isProcessingFiles ? (
                       <IconSpinner className="w-5 h-5 animate-spin text-white" />
@@ -1744,7 +1959,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                     )}
                   </div>
 
-                  {/* Sentence form text, same font size, no kbd button, PNG, JPG, WebP in single line with commas */}
                   <div className="space-y-1">
                     <p className="text-xs text-white/90 font-medium">
                       {isProcessingFiles
@@ -1756,172 +1970,18 @@ export const AddModal: React.FC<AddModalProps> = ({
                     </p>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Queued Images List */}
-              {queuedImages.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  {/* Queue Header with Quick Batch Actions */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-surface border border-line rounded-xl text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-ink">
-                        {queuedImages.length} {queuedImages.length === 1 ? 'image' : 'images'} ready
-                      </span>
-                      <span className="text-[11px] text-ink-faint">•</span>
-                      <span className="text-[11px] text-ink-muted">You can still paste more or click browse</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-2.5 py-1 rounded-lg bg-surface-raised hover:bg-surface-raised text-ink border border-line text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer"
-                      >
-                        <IconPlus className="w-3 h-3" />
-                        <span>Add more</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setQueuedImages([])}
-                        className="px-2 py-1 rounded-lg text-ink-faint hover:text-ink dark:hover:text-ink text-[11px] transition-colors cursor-pointer"
-                      >
-                        Clear all
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Single Unified Category Bar for Queued Images */}
-                  <UnifiedCategoryBar
-                    label="Select category for all images"
-                    itemCount={queuedImages.length}
-                    categories={availableCategories}
-                    selectedCategories={uploadCategories}
-                    onToggleCategory={handleToggleUploadCategory}
-                    onCategoryCreated={handleCategoryCreated}
-                    collections={collections}
-                    selectedBoardId={selectedBoardId}
-                    onSelectBoard={(id) => setSelectedBoardId(id)}
-                  />
-
-                  {/* Queued Cards Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
-                    {queuedImages.map((img, index) => (
-                      <div
-                        key={img.id}
-                        className="p-3 bg-surface-raised border border-line rounded-xl flex items-start gap-3 relative group hover:border-line-strong transition-all"
-                      >
-                        {/* Aspect 16:9 Preview */}
-                        <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-stage shrink-0 relative border border-line">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={sanitizeSafeImageSrc(img.dataUrl)}
-                            alt={img.title}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        {/* Title & Category */}
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <input
-                            type="text"
-                            value={img.title}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setQueuedImages(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
-                            }}
-                            placeholder="Thumbnail Title"
-                            className="w-full px-2 py-1 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-line-strong"
-                          />
-
-                          <div className="space-y-1">
-                            <span className="text-[11px] text-ink-muted font-medium">Categories:</span>
-                            <ItemCategoryMultiSelect
-                              selectedCategories={img.tags || []}
-                              availableCategories={availableCategories}
-                              onChange={(cats) => {
-                                setQueuedImages(prev => prev.map((p, i) => i === index ? {
-                                  ...p,
-                                  niche: (cats[0] || '') as NicheCategory,
-                                  tags: cats
-                                } : p));
-                              }}
-                              onCategoryCreated={handleCategoryCreated}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Remove item button */}
-                        <button
-                          type="button"
-                          onClick={() => setQueuedImages(prev => prev.filter((_, i) => i !== index))}
-                          className="p-1 text-ink-faint hover:text-ink dark:hover:text-ink rounded-md transition-colors cursor-pointer"
-                          title="Remove image"
-                        >
-                          <IconTrash className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Bottom Action for Queued Images */}
-                  {cloudError && (
-                    <div className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-xs">
-                      {cloudError}
-                    </div>
-                  )}
-                  <div className="pt-3 border-t border-line flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setQueuedImages([])}
-                      disabled={isUploadingToCloud}
-                      className="px-3.5 py-2 rounded-xl text-xs font-semibold text-ink-faint hover:text-ink dark:hover:text-ink transition-colors cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="button"
-                      id="save-all-queued-images-btn"
-                      onClick={handleUploadQueuedImages}
-                      disabled={isUploadingToCloud || queuedImages.length === 0}
-                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-accent-on bg-accent hover:opacity-90 active:scale-[0.97] disabled:opacity-50 transition-all shadow-md flex items-center gap-2 cursor-pointer"
-                    >
-                      {isUploadingToCloud ? (
-                        <>
-                          <IconSpinner className="w-4 h-4 animate-spin" />
-                          <span>{uploadStatusText || 'Saving to Cloud...'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <IconCheck className="w-4 h-4" />
-                          <span>
-                            Upload {queuedImages.length} {queuedImages.length === 1 ? unitWord : `${unitWord}s`} to Cloud
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* TAB 2: YOUTUBE IMPORT (Single / Multiple Links / Channel) */}
-          {/* ========================================================= */}
-          {activeTab === 'youtube' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              {youtubeItems.length === 0 ? (
+            {/* TAB 2: YOUTUBE LINK / CHANNEL INPUT */}
+            {activeTab === 'youtube' && (
+              <div className="space-y-3 animate-in fade-in duration-200">
                 <div className="viewfinder-dz relative min-h-[300px] flex flex-col items-center justify-center p-6 text-center select-none group transition-all">
-                  {/* Viewfinder corner brackets */}
                   <i className="viewfinder-corner top-4 left-4 border-t-2 border-l-2 rounded-tl-[8px]" />
                   <i className="viewfinder-corner top-4 right-4 border-t-2 border-r-2 rounded-tr-[8px]" />
                   <i className="viewfinder-corner bottom-4 left-4 border-b-2 border-l-2 rounded-bl-[8px]" />
                   <i className="viewfinder-corner bottom-4 right-4 border-b-2 border-r-2 rounded-br-[8px]" />
 
-                  {/* Center Icon Box */}
                   <div className="w-[54px] h-[54px] rounded-[16px] bg-[#0e0e10] border border-white/14 shadow-[0_10px_24px_-8px_rgba(0,0,0,0.85)] flex items-center justify-center mb-3.5 group-hover:-translate-y-1 transition-transform duration-300">
                     <RealYoutubeIcon className="w-6 h-6 text-white" />
                   </div>
@@ -1950,7 +2010,6 @@ export const AddModal: React.FC<AddModalProps> = ({
                     className="w-full max-w-[420px] px-3.5 py-2.5 bg-[#0e0e10]/90 border border-white/12 rounded-[14px] text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-all resize-none shadow-inner"
                   />
 
-                  {/* Channel Limit Selector if channel entered */}
                   {isChannelInput(youtubeInput) && (
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-white/50 text-[11px]">Extract count:</span>
@@ -1996,163 +2055,18 @@ export const AddModal: React.FC<AddModalProps> = ({
                     )}
                   </button>
                 </div>
-              ) : (
-                /* YouTube Extracted Result List */
-                <div className="space-y-3 pt-1">
-                  <div className="flex items-center justify-between text-xs p-2.5 bg-[#151518] border border-white/10 rounded-[14px]">
-                    <span className="font-semibold text-white">
-                      Found {youtubeItems.length} thumbnails
-                    </span>
+              </div>
+            )}
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const allSelected = youtubeItems.every(i => i.selected !== false);
-                          setYoutubeItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
-                        }}
-                        className="px-2.5 py-1 bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 rounded-[8px] text-[11px] font-medium text-white transition-colors cursor-pointer"
-                      >
-                        {youtubeItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setYoutubeItems([])}
-                        className="px-2.5 py-1 text-white/40 hover:text-white text-[11px] transition-colors"
-                      >
-                        Reset
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Single Unified Category Bar for YouTube */}
-                  <UnifiedCategoryBar
-                    label="Select category for all thumbnails"
-                    itemCount={youtubeItems.length}
-                    categories={availableCategories}
-                    selectedCategories={youtubeCategories}
-                    onToggleCategory={handleToggleYoutubeCategory}
-                    onCategoryCreated={handleCategoryCreated}
-                    collections={collections}
-                    selectedBoardId={selectedBoardId}
-                    onSelectBoard={(id) => setSelectedBoardId(id)}
-                  />
-
-                  {/* Extracted cards list */}
-                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
-                    {youtubeItems.map((item, index) => (
-                      <div
-                        key={item.id}
-                        className={`p-2.5 rounded-[14px] border transition-all flex items-start gap-3 ${
-                          item.selected !== false
-                            ? 'bg-[#151518] border-white/15'
-                            : 'bg-[#101116] border-white/5 opacity-50'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={item.selected !== false}
-                          onChange={() => {
-                            setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, selected: p.selected === false ? true : false } : p));
-                          }}
-                          className="mt-1 rounded accent-white cursor-pointer"
-                        />
-
-                        <div className="w-24 sm:w-28 aspect-video rounded-[10px] overflow-hidden bg-black shrink-0 relative border border-white/10">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={sanitizeSafeImageSrc(item.imageUrl)}
-                            alt={item.title}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          <input
-                            type="text"
-                            value={item.title}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
-                            }}
-                            placeholder="Thumbnail Title"
-                            className="w-full px-2 py-1 bg-[#0e0e10] border border-white/10 rounded-[8px] text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/25"
-                          />
-
-                          <div className="flex items-center justify-between text-[11px] text-white/50">
-                            <span className="truncate">{item.creator}</span>
-                            {item.views && <span>{item.views}</span>}
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setYoutubeItems(prev => prev.filter((_, i) => i !== index))}
-                          className="p-1 text-white/30 hover:text-white transition-colors cursor-pointer"
-                          title="Remove"
-                        >
-                          <IconTrash className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {cloudError && (
-                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-300 rounded-[11px] text-xs">
-                      {cloudError}
-                    </div>
-                  )}
-
-                  <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setYoutubeItems([])}
-                      className="px-3.5 py-1.5 text-xs text-white/50 hover:text-white"
-                    >
-                      Back
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSaveBatchItems(youtubeItems)}
-                      disabled={isUploadingToCloud || youtubeItems.filter(i => i.selected !== false).length === 0}
-                      className="px-5 py-2 rounded-[11px] text-xs font-semibold text-black bg-white hover:bg-white/90 disabled:opacity-40 transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
-                    >
-                      {isUploadingToCloud ? (
-                        <>
-                          <IconSpinner className="w-4 h-4 animate-spin" />
-                          <span>{uploadStatusText || 'Saving...'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <IconCheck className="w-4 h-4" />
-                          <span>
-                            Import {youtubeItems.filter(i => i.selected !== false).length} Thumbnails
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* TAB 3: PINTEREST IMPORT */}
-          {/* ========================================================= */}
-          {activeTab === 'pinterest' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              {pinterestItems.length === 0 ? (
+            {/* TAB 3: PINTEREST LINK INPUT */}
+            {activeTab === 'pinterest' && (
+              <div className="space-y-3 animate-in fade-in duration-200">
                 <div className="viewfinder-dz relative min-h-[300px] flex flex-col items-center justify-center p-6 text-center select-none group transition-all">
-                  {/* Viewfinder corner brackets */}
                   <i className="viewfinder-corner top-4 left-4 border-t-2 border-l-2 rounded-tl-[8px]" />
                   <i className="viewfinder-corner top-4 right-4 border-t-2 border-r-2 rounded-tr-[8px]" />
                   <i className="viewfinder-corner bottom-4 left-4 border-b-2 border-l-2 rounded-bl-[8px]" />
                   <i className="viewfinder-corner bottom-4 right-4 border-b-2 border-r-2 rounded-br-[8px]" />
 
-                  {/* Center Icon Box */}
                   <div className="w-[54px] h-[54px] rounded-[16px] bg-[#0e0e10] border border-white/14 shadow-[0_10px_24px_-8px_rgba(0,0,0,0.85)] flex items-center justify-center mb-3.5 group-hover:-translate-y-1 transition-transform duration-300">
                     <RealPinterestIcon className="w-6 h-6 text-white" />
                   </div>
@@ -2206,13 +2120,277 @@ export const AddModal: React.FC<AddModalProps> = ({
                     )}
                   </button>
                 </div>
-              ) : (
-                /* Pinterest Extracted Result List */
-                <div className="space-y-3 pt-1">
-                  <div className="flex items-center justify-between text-xs p-2.5 bg-[#151518] border border-white/10 rounded-[14px]">
-                    <span className="font-semibold text-white">
-                      Found {pinterestItems.length} Pinterest pins
-                    </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ============================================================= */
+          /* FULL-SCREEN REVIEW, TAGS, BOARDS & UPLOAD CONFIRMATION WORKSPACE */
+          /* ============================================================= */
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden animate-in fade-in duration-200">
+            {/* LEFT / MAIN MEDIA REVIEW GRID */}
+            <div className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 bg-[#090a0d] custom-scrollbar">
+              {/* Upload Review */}
+              {activeTab === 'upload' && queuedImages.length > 0 && (
+                <div className="space-y-5">
+                  {/* Toolbar */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2.5 text-xs">
+                      <span className="font-semibold text-white tabular">
+                        {queuedImages.length} {queuedImages.length === 1 ? 'thumbnail' : 'thumbnails'} ready
+                      </span>
+                      <span className="text-white/30" aria-hidden="true">·</span>
+                      <span className="text-white/50">You can paste more (Ctrl+V) or add files</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-3 py-1.5 rounded-[8px] bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/10 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        <IconPlus className="w-3.5 h-3.5" />
+                        <span>Add more</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQueuedImages([])}
+                        className="px-3 py-1.5 rounded-[8px] text-white/50 hover:text-white hover:bg-white/[0.06] text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Responsive Cards Grid (single large showcase if 1 item, spacious grid if multiple) */}
+                  <div
+                    className={
+                      queuedImages.length === 1
+                        ? 'max-w-3xl mx-auto'
+                        : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4'
+                    }
+                  >
+                    {queuedImages.map((img, index) => (
+                      <div
+                        key={img.id}
+                        className="p-3.5 bg-[#151821] border border-white/[0.08] rounded-[14px] flex flex-col gap-3 group hover:border-white/20 transition-all"
+                      >
+                        <div className="w-full aspect-video rounded-[10px] overflow-hidden bg-[#050608] relative border border-white/[0.08]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={sanitizeSafeImageSrc(img.dataUrl)}
+                            alt={img.title}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setQueuedImages(prev => prev.filter((_, i) => i !== index))}
+                            className="absolute top-2 right-2 w-7 h-7 rounded-[8px] bg-black/70 hover:bg-red-500/90 text-white/80 hover:text-white border border-white/10 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Remove image"
+                          >
+                            <IconTrash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2.5 flex-1 flex flex-col">
+                          <input
+                            type="text"
+                            value={img.title}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setQueuedImages(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
+                            }}
+                            placeholder="Thumbnail Title"
+                            className="w-full px-2.5 py-1.5 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-xs font-medium text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                          />
+
+                          <input
+                            type="text"
+                            value={img.creator}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setQueuedImages(prev => prev.map((p, i) => i === index ? { ...p, creator: val } : p));
+                            }}
+                            placeholder="Channel / Creator Name"
+                            className="w-full px-2.5 py-1 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-[11px] text-white/80 placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                          />
+
+                          <div className="pt-0.5">
+                            <ItemCategoryMultiSelect
+                              selectedCategories={img.tags || []}
+                              availableCategories={availableCategories}
+                              onChange={(cats) => {
+                                setQueuedImages(prev => prev.map((p, i) => i === index ? {
+                                  ...p,
+                                  niche: (cats[0] || '') as NicheCategory,
+                                  tags: cats
+                                } : p));
+                              }}
+                              onCategoryCreated={handleCategoryCreated}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* YouTube Review */}
+              {activeTab === 'youtube' && youtubeItems.length > 0 && (
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2.5 text-xs">
+                      <span className="font-semibold text-white tabular">
+                        Found {youtubeItems.length} {youtubeItems.length === 1 ? 'thumbnail' : 'thumbnails'}
+                      </span>
+                      <span className="text-white/30" aria-hidden="true">·</span>
+                      <span className="text-white/60 tabular">{selectedYoutubeCount} selected for upload</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allSelected = youtubeItems.every(i => i.selected !== false);
+                          setYoutubeItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
+                        }}
+                        className="px-3 py-1.5 rounded-[8px] bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-medium text-white transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        {youtubeItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setYoutubeItems([])}
+                        className="px-3 py-1.5 rounded-[8px] text-white/50 hover:text-white hover:bg-white/[0.06] text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className={
+                      youtubeItems.length === 1
+                        ? 'max-w-3xl mx-auto'
+                        : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4'
+                    }
+                  >
+                    {youtubeItems.map((item, index) => {
+                      const isSelected = item.selected !== false;
+                      const formattedViews = item.views ? formatShortViews(item.views) : '';
+                      return (
+                        <div
+                          key={item.id}
+                          className={`p-3.5 rounded-[14px] border flex flex-col gap-3 transition-all ${
+                            isSelected
+                              ? 'bg-[#151821] border-white/[0.12] hover:border-white/25'
+                              : 'bg-[#0f1117] border-white/[0.05] opacity-55'
+                          }`}
+                        >
+                          <div
+                            className="w-full aspect-video rounded-[10px] overflow-hidden bg-[#050608] relative border border-white/[0.08] cursor-pointer"
+                            onClick={() => {
+                              setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, selected: p.selected === false ? true : false } : p));
+                            }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={sanitizeSafeImageSrc(item.imageUrl)}
+                              alt={item.title}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover"
+                            />
+                            <label
+                              className="absolute top-2 left-2 flex items-center justify-center w-6 h-6 rounded-[7px] bg-black/70 border border-white/15 cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, selected: p.selected === false ? true : false } : p));
+                                }}
+                                className="rounded accent-white cursor-pointer"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setYoutubeItems(prev => prev.filter((_, i) => i !== index));
+                              }}
+                              className="absolute top-2 right-2 w-7 h-7 rounded-[8px] bg-black/70 hover:bg-red-500/90 text-white/80 hover:text-white border border-white/10 flex items-center justify-center transition-colors cursor-pointer"
+                              title="Remove"
+                            >
+                              <IconTrash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          <div className="space-y-2 flex-1 flex flex-col">
+                            <input
+                              type="text"
+                              value={item.title}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
+                              }}
+                              placeholder="Thumbnail Title"
+                              className="w-full px-2.5 py-1.5 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-xs font-medium text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                            />
+
+                            <div className="flex items-center justify-between gap-2 text-[11px] text-white/60">
+                              <input
+                                type="text"
+                                value={item.creator}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setYoutubeItems(prev => prev.map((p, i) => i === index ? { ...p, creator: val } : p));
+                                }}
+                                placeholder="Channel Name"
+                                className="flex-1 min-w-0 px-2 py-1 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-[11px] text-white/85 placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                              />
+                              {formattedViews && (
+                                <span className="tabular shrink-0 text-white/55">
+                                  {formattedViews}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="pt-0.5">
+                              <ItemCategoryMultiSelect
+                                selectedCategories={item.tags || []}
+                                availableCategories={availableCategories}
+                                onChange={(cats) => {
+                                  setYoutubeItems(prev => prev.map((p, i) => i === index ? {
+                                    ...p,
+                                    niche: (cats[0] || '') as NicheCategory,
+                                    tags: cats
+                                  } : p));
+                                }}
+                                onCategoryCreated={handleCategoryCreated}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Pinterest Review */}
+              {activeTab === 'pinterest' && pinterestItems.length > 0 && (
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2.5 text-xs">
+                      <span className="font-semibold text-white tabular">
+                        Found {pinterestItems.length} Pinterest {pinterestItems.length === 1 ? 'pin' : 'pins'}
+                      </span>
+                      <span className="text-white/30" aria-hidden="true">·</span>
+                      <span className="text-white/60 tabular">{selectedPinterestCount} selected for upload</span>
+                    </div>
 
                     <div className="flex items-center gap-2">
                       <button
@@ -2221,112 +2399,216 @@ export const AddModal: React.FC<AddModalProps> = ({
                           const allSelected = pinterestItems.every(i => i.selected !== false);
                           setPinterestItems(prev => prev.map(p => ({ ...p, selected: !allSelected })));
                         }}
-                        className="px-2.5 py-1 bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 rounded-[8px] text-[11px] font-medium text-white transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-[8px] bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-medium text-white transition-colors cursor-pointer whitespace-nowrap"
                       >
                         {pinterestItems.every(i => i.selected !== false) ? 'Deselect All' : 'Select All'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setPinterestItems([])}
-                        className="px-2.5 py-1 text-white/40 hover:text-white text-[11px] transition-colors"
+                        className="px-3 py-1.5 rounded-[8px] text-white/50 hover:text-white hover:bg-white/[0.06] text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
                       >
                         Reset
                       </button>
                     </div>
                   </div>
 
-                  {/* Single Unified Category Bar for Pinterest */}
+                  <div
+                    className={
+                      pinterestItems.length === 1
+                        ? 'max-w-3xl mx-auto'
+                        : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4'
+                    }
+                  >
+                    {pinterestItems.map((item, index) => {
+                      const isSelected = item.selected !== false;
+                      return (
+                        <div
+                          key={item.id}
+                          className={`p-3.5 rounded-[14px] border flex flex-col gap-3 transition-all ${
+                            isSelected
+                              ? 'bg-[#151821] border-white/[0.12] hover:border-white/25'
+                              : 'bg-[#0f1117] border-white/[0.05] opacity-55'
+                          }`}
+                        >
+                          <div
+                            className="w-full aspect-video rounded-[10px] overflow-hidden bg-[#050608] relative border border-white/[0.08] cursor-pointer"
+                            onClick={() => {
+                              setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, selected: !p.selected } : p));
+                            }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={sanitizeSafeImageSrc(item.imageUrl)}
+                              alt={item.title}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover"
+                            />
+                            <label
+                              className="absolute top-2 left-2 flex items-center justify-center w-6 h-6 rounded-[7px] bg-black/70 border border-white/15 cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, selected: !p.selected } : p));
+                                }}
+                                className="rounded accent-white cursor-pointer"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPinterestItems(prev => prev.filter((_, i) => i !== index));
+                              }}
+                              className="absolute top-2 right-2 w-7 h-7 rounded-[8px] bg-black/70 hover:bg-red-500/90 text-white/80 hover:text-white border border-white/10 flex items-center justify-center transition-colors cursor-pointer"
+                              title="Remove"
+                            >
+                              <IconTrash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          <div className="space-y-2 flex-1 flex flex-col">
+                            <input
+                              type="text"
+                              value={item.title}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
+                              }}
+                              placeholder="Pin Title"
+                              className="w-full px-2.5 py-1.5 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-xs font-medium text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                            />
+
+                            <input
+                              type="text"
+                              value={item.creator}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, creator: val } : p));
+                              }}
+                              placeholder="Creator"
+                              className="w-full px-2.5 py-1 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-[11px] text-white/85 placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                            />
+
+                            <div className="pt-0.5">
+                              <ItemCategoryMultiSelect
+                                selectedCategories={item.tags || []}
+                                availableCategories={availableCategories}
+                                onChange={(cats) => {
+                                  setPinterestItems(prev => prev.map((p, i) => i === index ? {
+                                    ...p,
+                                    niche: (cats[0] || '') as NicheCategory,
+                                    tags: cats
+                                  } : p));
+                                }}
+                                onCategoryCreated={handleCategoryCreated}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT SIDEBAR: TAGS/CATEGORIES, BOARDS & UPLOAD CONFIRMATION */}
+            <aside className="w-full lg:w-[360px] xl:w-[400px] shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.08] bg-[#0f1117] flex flex-col max-h-[46vh] lg:max-h-none">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar">
+                {activeTab === 'upload' && (
                   <UnifiedCategoryBar
-                    label="Select category for all pins"
+                    label="Apply categories to all"
+                    itemCount={queuedImages.length}
+                    categories={availableCategories}
+                    selectedCategories={uploadCategories}
+                    onToggleCategory={handleToggleUploadCategory}
+                    onCategoryCreated={handleCategoryCreated}
+                    hideBoardSelector={true}
+                  />
+                )}
+                {activeTab === 'youtube' && (
+                  <UnifiedCategoryBar
+                    label="Apply categories to all"
+                    itemCount={youtubeItems.length}
+                    categories={availableCategories}
+                    selectedCategories={youtubeCategories}
+                    onToggleCategory={handleToggleYoutubeCategory}
+                    onCategoryCreated={handleCategoryCreated}
+                    hideBoardSelector={true}
+                  />
+                )}
+                {activeTab === 'pinterest' && (
+                  <UnifiedCategoryBar
+                    label="Apply categories to all"
                     itemCount={pinterestItems.length}
                     categories={availableCategories}
                     selectedCategories={pinterestCategories}
                     onToggleCategory={handleTogglePinterestCategory}
                     onCategoryCreated={handleCategoryCreated}
-                    collections={collections}
-                    selectedBoardId={selectedBoardId}
-                    onSelectBoard={(id) => setSelectedBoardId(id)}
+                    hideBoardSelector={true}
                   />
+                )}
 
-                  {/* Pinterest Cards List */}
-                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
-                    {pinterestItems.map((item, index) => (
-                      <div
-                        key={item.id}
-                        className={`p-2.5 rounded-[14px] border transition-all flex items-start gap-3 ${
-                          item.selected !== false
-                            ? 'bg-[#151518] border-white/15'
-                            : 'bg-[#101116] border-white/5 opacity-50'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={item.selected !== false}
-                          onChange={() => {
-                            setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, selected: !p.selected } : p));
-                          }}
-                          className="mt-1 rounded accent-white cursor-pointer"
-                        />
+                {renderBoardPanel()}
 
-                        <div className="w-24 sm:w-28 aspect-video rounded-[10px] overflow-hidden bg-black shrink-0 relative border border-white/10">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={sanitizeSafeImageSrc(item.imageUrl)}
-                            alt={item.title}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          <input
-                            type="text"
-                            value={item.title}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setPinterestItems(prev => prev.map((p, i) => i === index ? { ...p, title: val } : p));
-                            }}
-                            placeholder="Pin Title"
-                            className="w-full px-2 py-1 bg-[#0e0e10] border border-white/10 rounded-[8px] text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/25"
-                          />
-
-                          <div className="text-[11px] text-white/50 truncate">
-                            {item.creator || 'Pinterest'}
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setPinterestItems(prev => prev.filter((_, i) => i !== index))}
-                          className="p-1 text-white/30 hover:text-white transition-colors cursor-pointer"
-                          title="Remove"
-                        >
-                          <IconTrash className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                {cloudError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-300 rounded-[10px] text-xs">
+                    {cloudError}
                   </div>
+                )}
+              </div>
 
-                  {cloudError && (
-                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-300 rounded-[11px] text-xs">
-                      {cloudError}
-                    </div>
+              {/* Sticky Confirmation Footer */}
+              <div className="p-4 sm:p-5 border-t border-white/[0.08] bg-[#0f1117] shrink-0 space-y-3">
+                <div className="flex items-center justify-between text-xs text-white/60">
+                  <span className="tabular">{activeReviewCount} {activeReviewCount === 1 ? 'item' : 'items'} selected</span>
+                  <span className="truncate max-w-[180px]">{activeBoardName}</span>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleBackFromReview}
+                    disabled={isUploadingToCloud}
+                    className="px-4 py-2.5 rounded-[10px] text-xs font-semibold text-white/75 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors cursor-pointer disabled:opacity-40 whitespace-nowrap"
+                  >
+                    Cancel
+                  </button>
+
+                  {activeTab === 'upload' && (
+                    <button
+                      type="button"
+                      id="save-all-queued-images-btn"
+                      onClick={handleUploadQueuedImages}
+                      disabled={isUploadingToCloud || queuedImages.length === 0}
+                      className="flex-1 px-5 py-2.5 rounded-[10px] text-xs font-bold text-black bg-white hover:bg-white/90 active:scale-[0.99] disabled:opacity-40 transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                    >
+                      {isUploadingToCloud ? (
+                        <>
+                          <IconSpinner className="w-4 h-4 animate-spin" />
+                          <span>{uploadStatusText || 'Saving to Cloud...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconCheck className="w-4 h-4" />
+                          <span>
+                            Upload {queuedImages.length} {queuedImages.length === 1 ? unitWord : `${unitWord}s`} to Cloud
+                          </span>
+                        </>
+                      )}
+                    </button>
                   )}
 
-                  <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
+                  {activeTab === 'youtube' && (
                     <button
                       type="button"
-                      onClick={() => setPinterestItems([])}
-                      className="px-3.5 py-1.5 text-xs text-white/50 hover:text-white"
-                    >
-                      Back
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSaveBatchItems(pinterestItems)}
-                      disabled={isUploadingToCloud || pinterestItems.filter(i => i.selected !== false).length === 0}
-                      className="px-5 py-2 rounded-[11px] text-xs font-semibold text-black bg-white hover:bg-white/90 disabled:opacity-40 transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
+                      onClick={() => handleSaveBatchItems(youtubeItems)}
+                      disabled={isUploadingToCloud || selectedYoutubeCount === 0}
+                      className="flex-1 px-5 py-2.5 rounded-[10px] text-xs font-bold text-black bg-white hover:bg-white/90 active:scale-[0.99] disabled:opacity-40 transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
                     >
                       {isUploadingToCloud ? (
                         <>
@@ -2337,18 +2619,40 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <>
                           <IconCheck className="w-4 h-4" />
                           <span>
-                            Import {pinterestItems.filter(i => i.selected !== false).length} Pins
+                            Import {selectedYoutubeCount} {selectedYoutubeCount === 1 ? 'Thumbnail' : 'Thumbnails'}
                           </span>
                         </>
                       )}
                     </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+                  )}
 
-        </div>
+                  {activeTab === 'pinterest' && (
+                    <button
+                      type="button"
+                      onClick={() => handleSaveBatchItems(pinterestItems)}
+                      disabled={isUploadingToCloud || selectedPinterestCount === 0}
+                      className="flex-1 px-5 py-2.5 rounded-[10px] text-xs font-bold text-black bg-white hover:bg-white/90 active:scale-[0.99] disabled:opacity-40 transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                    >
+                      {isUploadingToCloud ? (
+                        <>
+                          <IconSpinner className="w-4 h-4 animate-spin" />
+                          <span>{uploadStatusText || 'Saving...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconCheck className="w-4 h-4" />
+                          <span>
+                            Import {selectedPinterestCount} {selectedPinterestCount === 1 ? 'Pin' : 'Pins'}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </aside>
+          </div>
+        )}
       </div>
     </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Cloud, CheckCircle2, AlertCircle, X, Loader2, ExternalLink, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../lib/authContext';
 
 interface CloudflareStorageModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
   onClose,
   onConnected,
 }) => {
+  const { getIdToken } = useAuth();
   const [accountId, setAccountId] = useState('');
   const [accessKeyId, setAccessKeyId] = useState('');
   const [secretAccessKey, setSecretAccessKey] = useState('');
@@ -52,9 +54,18 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
     setError(null);
     setSuccessMessage(null);
 
-    fetch('/api/r2/status')
-      .then(res => res.json())
-      .then(data => {
+    getIdToken()
+      .then((token) => {
+        if (!token) {
+          setCurrentStatus({ configured: false });
+          return null;
+        }
+        return fetch('/api/r2/status', {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then((res) => (res.ok ? res.json() : null));
+      })
+      .then((data) => {
+        if (!data) return;
         setCurrentStatus(data);
         if (data.configured) {
           setBucketName(data.bucket || '');
@@ -65,7 +76,7 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
       })
       .catch(() => {})
       .finally(() => setIsCheckingCurrent(false));
-  }, [isOpen]);
+  }, [isOpen, getIdToken]);
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,9 +90,16 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
     setSuccessMessage(null);
 
     try {
+      const token = await getIdToken();
+      if (!token) {
+        throw new Error('Admin sign-in is required to connect Cloudflare R2.');
+      }
       const res = await fetch('/api/r2/connect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           accountId,
           accessKeyId,
@@ -129,7 +147,7 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-blur"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-blur"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

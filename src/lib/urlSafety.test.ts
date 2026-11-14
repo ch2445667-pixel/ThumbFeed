@@ -58,6 +58,8 @@ describe('sanitizeMediaKey', () => {
     assert.equal(sanitizeMediaKey('thumbnails/%2e%2e/_app_data/boards.json'), null);
     assert.equal(sanitizeMediaKey('thumbnails/photo.jpg\0.png'), null);
     assert.equal(sanitizeMediaKey('thumbnails/photo.html'), null);
+    assert.equal(sanitizeMediaKey('thumbnails/vector.svg'), null);
+    assert.equal(sanitizeMediaKey('thumbnails/vector.SVG'), null);
   });
 
   it('allows valid image keys', () => {

@@ -1,10 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { collection, getDocs, query, limit, doc, deleteDoc } from 'firebase/firestore';
-import { db } from './firestore';
-import { INITIAL_THUMBNAILS } from './mockData';
 import { ThumbnailItem } from './types';
-import { parseDimensions } from './dimensions';
 import {
   downloadJsonFromR2,
   uploadJsonToR2,
@@ -161,15 +157,17 @@ export async function saveGalleryItems(itemsToSave: ThumbnailItem[]): Promise<bo
   await removeDeletedTombstones(resurrectKeys).catch(() => {});
 
   // Primary Cloud Sync: Write to Cloudflare R2 bucket as _app_data/thumbnails.json
+  let r2Ok = true;
   if (isR2Configured()) {
     try {
-      await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, combined);
+      r2Ok = await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, combined);
     } catch (err) {
+      r2Ok = false;
       console.warn('Failed to sync thumbnails to Cloudflare R2:', err);
     }
   }
 
-  return localOk;
+  return localOk && r2Ok;
 }
 
 export async function updateGalleryItemMetadata(
@@ -370,24 +368,6 @@ export async function deleteGalleryItem(
     }
   }
 
-  // Delete from Firestore if db connection is alive
-  if (db) {
-    for (const m of matchedItems) {
-      if (m.id) {
-        try {
-          await deleteDoc(doc(db, 'thumbnails', m.id));
-        } catch {
-          // Ignore if Firestore doc not found
-        }
-      }
-    }
-    if (idToMatch) {
-      try {
-        await deleteDoc(doc(db, 'thumbnails', idToMatch));
-      } catch {}
-    }
-  }
-
   return {
     success: ok,
     storageDeleted,
@@ -432,12 +412,7 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
     return false;
   };
 
-  // 1. Initial curated thumbnails (if any)
-  for (const item of INITIAL_THUMBNAILS) {
-    if (!isTombstoned(item)) itemsList.push(item);
-  }
-
-  // 2. Local file thumbnails
+  // 1. Local file thumbnails
   const localItems = readStoredFile();
   for (const item of localItems) {
     if (!isTombstoned(item)) itemsList.push(item);
@@ -521,50 +496,6 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
     } catch (err) {
       console.warn('Error syncing with Cloudflare R2 catalog:', err);
     }
-  }
-
-  // 4. Firestore thumbnails collection (if available)
-  try {
-    if (db) {
-      const q = query(collection(db, 'thumbnails'), limit(1000));
-      const snapshot = await getDocs(q);
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data && data.imageUrl) {
-          const dims = parseDimensions(data.breakdownNotes || data.breakdown_notes || '');
-          const id = data.id || docSnap.id;
-          const candidate: ThumbnailItem = {
-            id,
-            kind: data.kind || (data.niche === 'Cinema' ? 'poster' : 'thumbnail'),
-            title: data.title || 'YouTube Thumbnail',
-            creator: data.creator || 'Creator',
-            imageUrl: data.imageUrl || data.image_url,
-            thumbSmallUrl: data.thumbSmallUrl || data.thumb_small_url,
-            sourceUrl: data.sourceUrl || data.source_url || data.imageUrl || data.image_url,
-            niche: data.niche || '',
-            styles: Array.isArray(data.styles) ? data.styles : [],
-            tags: Array.isArray(data.tags) ? data.tags : (data.niche ? [data.niche] : []),
-            colors: Array.isArray(data.colors) ? data.colors : [],
-            width: data.width || dims?.width,
-            height: data.height || dims?.height,
-            ocrText: data.ocrText || data.ocr_text || '',
-            emotion: data.emotion || 'Curious',
-            breakdownNotes: data.breakdownNotes || data.breakdown_notes || '',
-            viewsEstimate: data.viewsEstimate || data.views_estimate || '',
-            subscribersCount: data.subscribersCount || '',
-            publishedTime: data.publishedTime || data.published_time,
-            source: data.source || 'r2-storage',
-            createdAt: data.createdAt || data.created_at || new Date().toISOString(),
-            likesCount: Number(data.likesCount || data.likes_count || 0)
-          };
-          if (!isTombstoned(candidate)) {
-            itemsList.push(candidate);
-          }
-        }
-      });
-    }
-  } catch (err) {
-    // Firestore sync note
   }
 
   // Deduplicate everything so each thumbnail appears strictly once

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(new URL(tab.url).search);
   const videoId = urlParams.get('v');
 
-  if (!videoId) {
+  if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
     contentContainer.style.display = 'none';
     notYtMsg.style.display = 'block';
     return;
@@ -31,24 +31,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   channelNameEl.innerText = 'YouTube Creator';
 
   downloadBtn.addEventListener('click', () => {
-    window.open(hdThumbUrl, '_blank');
+    chrome.tabs.create({ url: hdThumbUrl });
   });
 
   saveBtn.addEventListener('click', async () => {
-    saveBtn.innerText = 'Sending to Vault...';
+    saveBtn.innerText = 'Saving...';
     saveBtn.disabled = true;
 
     try {
-      // Save directly to local storage / mock receiver
+      const uniqueSuffix = typeof crypto?.randomUUID === 'function'
+        ? crypto.randomUUID().slice(0, 8)
+        : Math.random().toString(36).slice(2, 10);
       const item = {
-        id: `yt-${videoId}-${Date.now()}`,
+        id: `yt-${videoId}-${uniqueSuffix}`,
         title: tab.title.replace(' - YouTube', ''),
         imageUrl: hdThumbUrl,
         sourceUrl: tab.url,
         createdAt: new Date().toISOString()
       };
 
-      // Store in chrome storage
       chrome.storage.local.get(['capturedThumbnails'], (res) => {
         const list = res.capturedThumbnails || [];
         list.unshift(item);
@@ -57,9 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           statusMsg.style.display = 'block';
         });
       });
-    } catch (e) {
-      saveBtn.innerText = 'Sent!';
-      statusMsg.style.display = 'block';
+    } catch {
+      saveBtn.innerText = 'Save failed';
+      saveBtn.disabled = false;
     }
   });
 });

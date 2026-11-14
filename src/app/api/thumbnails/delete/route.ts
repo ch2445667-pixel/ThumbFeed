@@ -1,63 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { isR2Configured, deleteFromR2, extractR2KeyFromUrl } from '../../../../lib/r2';
-import { db } from '../../../../lib/firestore';
-import { doc, deleteDoc } from 'firebase/firestore';
 import { deleteGalleryItem, invalidateGalleryCache } from '../../../../lib/galleryService';
+import { sanitizeMediaKey } from '../../../../lib/urlSafety';
+import {
+  requireAdmin,
+  verifyCsrfAndJson,
+  getClientIp,
+  logSecurityEvent,
+  safeErrorResponse,
+} from '../../../../lib/serverAuth';
+import { checkRateLimit, rateLimitResponse } from '../../../../lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const deleteSchema = z
+  .object({
+    id: z.string().trim().max(160).optional(),
+    imageUrl: z.string().trim().max(2048).optional(),
+    r2Key: z.string().trim().max(512).optional(),
+  })
+  .refine((v) => Boolean(v.id || v.imageUrl || v.r2Key), {
+    message: 'Thumbnail ID or imageUrl is required',
+  });
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { id, imageUrl, r2Key: explicitR2Key } = body;
+    const csrfError = verifyCsrfAndJson(req);
+    if (csrfError) return csrfError;
 
-    if (!id && !imageUrl && !explicitR2Key) {
-      return NextResponse.json({ error: 'Thumbnail ID or imageUrl is required' }, { status: 400 });
+    const authResult = await requireAdmin(req);
+    if ('errorResponse' in authResult) return authResult.errorResponse;
+
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `delete-thumb:${authResult.user.uid}`,
+      limit: 60,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.allowed) {
+      logSecurityEvent('rate_limit_exceeded', { endpoint: '/api/thumbnails/delete', uid: authResult.user.uid, ip });
+      return rateLimitResponse(rl.retryAfterSeconds);
     }
 
-    const errors: string[] = [];
-    const r2Key = explicitR2Key || (imageUrl ? extractR2KeyFromUrl(imageUrl) : null);
+    const rawBody = await req.json().catch(() => null);
+    const parsed = deleteSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Thumbnail ID or imageUrl is required' },
+        { status: 400 }
+      );
+    }
 
-    // 1. Delete from authoritative local file and Cloudflare R2 catalog & objects
+    const { id, imageUrl, r2Key: explicitR2Key } = parsed.data;
+    const sanitizedExplicit = explicitR2Key ? sanitizeMediaKey(explicitR2Key) : null;
+    if (explicitR2Key && !sanitizedExplicit) {
+      return NextResponse.json({ error: 'Invalid media key' }, { status: 400 });
+    }
+
+    const r2Key = sanitizedExplicit || (imageUrl ? extractR2KeyFromUrl(imageUrl) : null);
+
     let galleryDeleted = false;
     let storageDeleted = false;
-    try {
-      const result = await deleteGalleryItem(id, imageUrl, r2Key || undefined);
-      galleryDeleted = result.success;
-      if (result.storageDeleted) {
-        storageDeleted = true;
-      }
-    } catch (gErr) {
-      errors.push(`Gallery delete error: ${gErr instanceof Error ? gErr.message : String(gErr)}`);
+
+    const result = await deleteGalleryItem(id, imageUrl, r2Key || undefined);
+    galleryDeleted = result.success;
+    if (result.storageDeleted) {
+      storageDeleted = true;
     }
 
-    // 2. Extra guarantee: directly delete the R2 object and small variant if key is known
     if (r2Key && isR2Configured()) {
-      try {
-        const deleted = await deleteFromR2(r2Key);
-        if (deleted) storageDeleted = true;
-        // Delete webp small preview variant
-        const base = r2Key.replace(/\.[^/.]+$/, '');
-        await deleteFromR2(`small/${base}.webp`).catch(() => {});
-        await deleteFromR2(`small/${r2Key}`).catch(() => {});
-      } catch (r2Err) {
-        errors.push(`R2 direct delete error: ${r2Err instanceof Error ? r2Err.message : String(r2Err)}`);
-      }
-    }
-
-    // 3. Remove document from Firestore database if present
-    let dbDeleted = false;
-    try {
-      if (db && id) {
-        await deleteDoc(doc(db, 'thumbnails', id));
-        dbDeleted = true;
-      }
-    } catch (dbErr) {
-      errors.push(`DB error: ${dbErr instanceof Error ? dbErr.message : String(dbErr)}`);
+      const deleted = await deleteFromR2(r2Key);
+      if (deleted) storageDeleted = true;
+      const base = r2Key.replace(/\.[^/.]+$/, '');
+      await deleteFromR2(`small/${base}.webp`).catch(() => {});
+      await deleteFromR2(`small/${r2Key}`).catch(() => {});
     }
 
     invalidateGalleryCache();
+
+    logSecurityEvent('thumbnail_deleted', {
+      uid: authResult.user.uid,
+      id: id || undefined,
+      r2Key: r2Key || undefined,
+      storageDeleted,
+      ip,
+    });
 
     return NextResponse.json({
       success: true,
@@ -65,16 +94,13 @@ export async function POST(req: NextRequest) {
       imageUrl,
       galleryDeleted,
       storageDeleted,
-      dbDeleted,
       permanent: true,
       canDeleteStorageObjects: isR2Configured(),
-      warnings: errors.length > 0 ? errors : undefined,
       message: storageDeleted
         ? 'Thumbnail permanently deleted from feed and Cloudflare R2 storage'
         : 'Thumbnail removed from feed',
     });
   } catch (err: unknown) {
-    console.error('Delete thumbnail error:', err);
-    return NextResponse.json({ error: (err as any)?.message || 'Internal Server Error' }, { status: 500 });
+    return safeErrorResponse(err, 'Failed to delete thumbnail');
   }
 }

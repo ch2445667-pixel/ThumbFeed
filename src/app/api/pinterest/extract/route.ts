@@ -1,5 +1,25 @@
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { isSafePinterestUrl } from '../../../../lib/urlSafety';
+import {
+  requireAdmin,
+  verifyCsrfAndJson,
+  getClientIp,
+  logSecurityEvent,
+  safeErrorResponse,
+} from '../../../../lib/serverAuth';
+import { safeExternalFetch, readResponseTextWithLimit } from '../../../../lib/ssrfFetch';
+import { checkRateLimit, rateLimitResponse } from '../../../../lib/rateLimit';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const extractSchema = z.object({
+  url: z.string().trim().max(2048).optional(),
+  urls: z.array(z.string().trim().max(2048)).max(50).optional(),
+  text: z.string().max(50000).optional(),
+});
 
 interface ExtractedPin {
   id: string;
@@ -40,9 +60,9 @@ async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null>
     return null;
   }
   try {
-    const res = await fetch(targetUrl, {
-      redirect: 'follow',
-      signal: AbortSignal.timeout(10000),
+    const res = await safeExternalFetch(targetUrl, {
+      allowedUrlCheck: isSafePinterestUrl,
+      timeoutMs: 10000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -51,10 +71,9 @@ async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null>
 
     if (!res.ok) return null;
     if (res.url && !isSafePinterestUrl(res.url)) return null;
-    const html = await res.text();
+    const html = await readResponseTextWithLimit(res, 3 * 1024 * 1024);
     const finalUrl = res.url || targetUrl;
 
-    // Extract title
     const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
     let title = titleMatch ? titleMatch[1].replace(/\|\s*Pinterest.*$/i, '').trim() : '';
     if (!title || title.toLowerCase() === 'pinterest') {
@@ -62,7 +81,6 @@ async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null>
       title = ogTitle ? ogTitle[1].replace(/\|\s*Pinterest.*$/i, '').trim() : 'Pinterest Pin';
     }
 
-    // Extract images
     const allImgs = html.match(/https:\/\/i\.pinimg\.com\/[^\s\"\'\\\<\>]+/g) || [];
     const valid: string[] = [];
     const seen = new Set<string>();
@@ -79,19 +97,19 @@ async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null>
       }
       const cleanImg = img.replace(/[\)\}\"\'].*$/, '');
       const hd = cleanImg.replace(/\/(236x|474x|170x|60x60|136x136)\//, '/736x/');
-      if (!seen.has(hd)) {
+      if (!seen.has(hd) && isSafePinterestUrl(hd)) {
         seen.add(hd);
         valid.push(hd);
       }
     }
 
-    // Prefer originals or 736x
-    let bestImage = valid.find(img => img.includes('/originals/')) || valid.find(img => img.includes('/736x/')) || valid[0];
+    let bestImage = valid.find((img) => img.includes('/originals/')) || valid.find((img) => img.includes('/736x/')) || valid[0];
 
     if (!bestImage) {
       const ogImgMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']*)["']/i);
       if (ogImgMatch && ogImgMatch[1]) {
-        bestImage = ogImgMatch[1].replace(/\/(236x|474x|170x)\//, '/736x/');
+        const candidate = ogImgMatch[1].replace(/\/(236x|474x|170x)\//, '/736x/');
+        if (isSafePinterestUrl(candidate)) bestImage = candidate;
       }
     }
 
@@ -99,7 +117,7 @@ async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null>
 
     const { niche, tags } = classifyPinterestNiche(title);
     const pinIdMatch = finalUrl.match(/pin\/(\d+)/) || targetUrl.match(/pin\/(\d+)/);
-    const id = pinIdMatch ? pinIdMatch[1] : `pin-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const id = pinIdMatch ? `pin-${pinIdMatch[1]}` : `pin-${crypto.randomUUID().slice(0, 12)}`;
 
     return {
       id,
@@ -118,11 +136,33 @@ async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null>
 
 export async function POST(req: NextRequest) {
   try {
-    const { url, urls, text } = await req.json();
+    const csrfError = verifyCsrfAndJson(req);
+    if (csrfError) return csrfError;
 
+    const authResult = await requireAdmin(req);
+    if ('errorResponse' in authResult) return authResult.errorResponse;
+
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `pinterest-extract:${authResult.user.uid}`,
+      limit: 20,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.allowed) {
+      logSecurityEvent('rate_limit_exceeded', { endpoint: '/api/pinterest/extract', uid: authResult.user.uid, ip });
+      return rateLimitResponse(rl.retryAfterSeconds);
+    }
+
+    const rawBody = await req.json().catch(() => null);
+    const parsed = extractSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid Pinterest extract payload' }, { status: 400 });
+    }
+
+    const { url, urls, text } = parsed.data;
     const candidates: string[] = [];
 
-    if (text && typeof text === 'string') {
+    if (text) {
       const urlRegex = /https?:\/\/(?:[a-zA-Z0-9-]+\.)?pinterest\.[a-z.]+\/[^\s\"\'\<\>]+|https?:\/\/pin\.it\/[^\s\"\'\<\>]+|https?:\/\/i\.pinimg\.com\/[^\s\"\'\<\>]+/gi;
       const found = text.match(urlRegex) || [];
       candidates.push(...found);
@@ -132,16 +172,12 @@ export async function POST(req: NextRequest) {
       candidates.push(...urls);
     }
 
-    if (url && typeof url === 'string') {
+    if (url) {
       candidates.push(url);
     }
 
     const uniqueCleanUrls = Array.from(
-      new Set(
-        candidates
-          .filter((c): c is string => typeof c === 'string')
-          .map(cleanPinterestUrl)
-      )
+      new Set(candidates.map(cleanPinterestUrl))
     ).filter((u) => u.length > 10 && isSafePinterestUrl(u));
 
     if (uniqueCleanUrls.length === 0) {
@@ -149,7 +185,6 @@ export async function POST(req: NextRequest) {
     }
 
     const results: ExtractedPin[] = [];
-
     for (const targetUrl of uniqueCleanUrls.slice(0, 30)) {
       const pin = await extractSinglePin(targetUrl);
       if (pin) {
@@ -162,7 +197,7 @@ export async function POST(req: NextRequest) {
       count: results.length,
       items: results
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to extract Pinterest pins' }, { status: 500 });
+  } catch (err: unknown) {
+    return safeErrorResponse(err, 'Failed to extract Pinterest pins');
   }
 }

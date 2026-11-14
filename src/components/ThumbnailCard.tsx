@@ -7,6 +7,7 @@ import { getCachedYouTubeDetail, resolveThumbnailDisplayMeta } from '../lib/yout
 import { formatShortViews } from '../lib/formatViews';
 import { getStoredCollections, toggleThumbnailInCollection, saveCollection } from '../lib/storage';
 import { sanitizeSafeImageSrc } from '../lib/urlSafety';
+import { useAuth } from '../lib/authContext';
 
 interface ThumbnailCardProps {
   item: ThumbnailItem;
@@ -45,6 +46,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   collections: propCollections,
   onCollectionsChange,
 }) => {
+  const { user, signIn } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isBoardMenuOpen, setIsBoardMenuOpen] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
@@ -114,6 +116,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   };
 
   const handleToggleBoard = (boardId: string) => {
+    if (!user) return;
     const wasInBoard = activeCollections.find((b) => b.id === boardId)?.thumbnailIds.includes(item.id);
     const updated = toggleThumbnailInCollection(boardId, item.id);
     setLocalCollections(updated);
@@ -127,9 +130,13 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 
   const handleCreateAndAddBoard = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBoardName.trim()) return;
+    if (!user || !newBoardName.trim()) return;
+    const newId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? `board-${crypto.randomUUID().slice(0, 8)}`
+        : `board-${Date.now()}`;
     const newBoard: CollectionBoard = {
-      id: `board-${Date.now()}`,
+      id: newId,
       name: newBoardName.trim(),
       thumbnailIds: [item.id],
       createdAt: new Date().toISOString(),
@@ -260,78 +267,98 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
                 </button>
               </div>
 
-              {/* Boards List */}
-              <div className="max-h-40 overflow-y-auto space-y-0.5 pr-0.5">
-                {activeCollections.length === 0 ? (
-                  <div className="px-2 py-2 text-[11px] text-white/40 text-center">
-                    No boards created yet
-                  </div>
-                ) : (
-                  activeCollections.map((board) => {
-                    const isIncluded = board.thumbnailIds.includes(item.id);
-                    return (
-                      <button
-                        key={board.id}
-                        type="button"
-                        onClick={() => handleToggleBoard(board.id)}
-                        className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
-                          isIncluded
-                            ? 'bg-white/10 text-white'
-                            : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Folder className={`w-3.5 h-3.5 shrink-0 ${isIncluded ? 'text-white' : 'text-white/40'}`} />
-                          <span className="truncate">{board.name}</span>
-                        </div>
-                        {isIncluded && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Quick New Board Form */}
-              <div className="pt-1.5 mt-1 border-t border-white/[0.08]">
-                {isCreatingBoard ? (
-                  <form onSubmit={handleCreateAndAddBoard} className="flex items-center gap-1">
-                    <input
-                      type="text"
-                      value={newBoardName}
-                      onChange={(e) => setNewBoardName(e.target.value)}
-                      placeholder="Board name..."
-                      autoFocus
-                      className="w-full rounded-md border border-white/15 bg-white/[0.06] px-2 py-1 text-xs text-white placeholder-white/40 focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newBoardName.trim()}
-                      className="p-1 rounded bg-white text-black disabled:opacity-40 hover:bg-white/90"
-                    >
-                      <Check className="w-3 h-3 stroke-[2.5]" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCreatingBoard(false);
-                        setNewBoardName('');
-                      }}
-                      className="p-1 text-white/40 hover:text-white"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </form>
-                ) : (
+              {!user ? (
+                <div className="px-2 py-2.5 text-center space-y-2">
+                  <p className="text-[11px] text-white/55">
+                    Sign in with Google to save thumbnails to your boards.
+                  </p>
                   <button
                     type="button"
-                    onClick={() => setIsCreatingBoard(true)}
-                    className="w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
+                    onClick={() => {
+                      setIsBoardMenuOpen(false);
+                      signIn();
+                    }}
+                    className="w-full py-1.5 px-2.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3 h-3" />
-                    <span>Create new board</span>
+                    Sign in with Google
                   </button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  {/* Boards List */}
+                  <div className="max-h-40 overflow-y-auto space-y-0.5 pr-0.5">
+                    {activeCollections.length === 0 ? (
+                      <div className="px-2 py-2 text-[11px] text-white/40 text-center">
+                        No boards created yet
+                      </div>
+                    ) : (
+                      activeCollections.map((board) => {
+                        const isIncluded = board.thumbnailIds.includes(item.id);
+                        return (
+                          <button
+                            key={board.id}
+                            type="button"
+                            onClick={() => handleToggleBoard(board.id)}
+                            className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
+                              isIncluded
+                                ? 'bg-white/10 text-white'
+                                : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Folder className={`w-3.5 h-3.5 shrink-0 ${isIncluded ? 'text-white' : 'text-white/40'}`} />
+                              <span className="truncate">{board.name}</span>
+                            </div>
+                            {isIncluded && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Quick New Board Form */}
+                  <div className="pt-1.5 mt-1 border-t border-white/[0.08]">
+                    {isCreatingBoard ? (
+                      <form onSubmit={handleCreateAndAddBoard} className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={newBoardName}
+                          onChange={(e) => setNewBoardName(e.target.value)}
+                          placeholder="Board name..."
+                          autoFocus
+                          className="w-full rounded-md border border-white/15 bg-white/[0.06] px-2 py-1 text-xs text-white placeholder-white/40 focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!newBoardName.trim()}
+                          className="p-1 rounded bg-white text-black disabled:opacity-40 hover:bg-white/90"
+                        >
+                          <Check className="w-3 h-3 stroke-[2.5]" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCreatingBoard(false);
+                            setNewBoardName('');
+                          }}
+                          className="p-1 text-white/40 hover:text-white"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </form>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsCreatingBoard(true)}
+                        className="w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Create new board</span>
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

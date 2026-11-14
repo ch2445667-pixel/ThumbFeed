@@ -27,11 +27,17 @@ export default function TermsPage() {
       <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">Terms of Service</h1>
       <p className="mt-2 text-xs text-ink-faint">Last updated September 30, 2026</p>
 
-      <Section title="The service">
+      <Section title="Eligibility &amp; agreement">
         <p>
           ThumbFeed provides a gallery of thumbnail references, filtering and
           inspection tools, and personal collections for planning your own
-          designs. By using the service you agree to these terms.
+          designs. You must be at least 18 years old to create an account or use
+          this service. By accessing or using ThumbFeed, you agree to these
+          terms and our{" "}
+          <Link href="/privacy" className="underline hover:text-ink">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </Section>
 
@@ -40,25 +46,35 @@ export default function TermsPage() {
           Thumbnails displayed in the gallery belong to their original creators
           and are shown as references for study. Nothing here transfers any
           ownership or licence to reuse that artwork. Your own collections and
-          uploads remain yours.
+          saved boards remain yours.
         </p>
       </Section>
 
-      <Section title="Acceptable use">
+      <Section title="Acceptable use &amp; account termination">
         <p>
-          Do not misuse the service: no scraping at abusive rates, no uploading
-          unlawful or infringing material, and no attempting to access accounts
-          or data that are not yours. Accounts that violate these rules may be
-          restricted or removed.
+          Do not misuse the service: no automated scraping at abusive rates, no
+          uploading unlawful or infringing material, and no attempting to access
+          accounts, administrative endpoints, or data that are not yours.
+          Accounts that violate these rules may be suspended or removed. You may
+          also delete your own account and stored workspace data at any time
+          from your profile settings.
         </p>
       </Section>
 
-      <Section title="Availability">
+      <Section title="Availability, governing context &amp; contact">
         <p>
           The service is provided as is, without warranties of any kind. Features
-          may change or be discontinued, and we are not liable for any loss
-          arising from use of the service. Continued use after changes to these
-          terms means you accept the updated terms.
+          may change or be discontinued, and we are not liable for indirect loss
+          arising from use of the service. These terms are governed by the
+          applicable laws of Pakistan. Questions or takedown inquiries may be
+          sent to{" "}
+          <a
+            href="mailto:canonwater2025@gmail.com"
+            className="underline hover:text-ink"
+          >
+            canonwater2025@gmail.com
+          </a>
+          .
         </p>
       </Section>
     </main>

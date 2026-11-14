@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, UploadCloud, Youtube, Link as LinkIcon, Check, Plus, Trash2, Eye, Palette, Tag, Cloud, RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react';
+import { ArrowLeft, UploadCloud, Youtube, Check, Plus, Trash2, Cloud, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ThumbnailItem, NicheCategory, VisualStyle } from '../../lib/types';
 import { getStoredThumbnails, saveStoredThumbnail, deleteStoredThumbnailPermanently } from '../../lib/storage';
 import { sanitizeSafeImageSrc } from '../../lib/urlSafety';
@@ -46,11 +46,11 @@ const VISUAL_STYLES: VisualStyle[] = [
 ];
 
 export default function AdminPage() {
-  const { user, isAdmin, loading, signingIn, signIn } = useAuth();
+  const { user, isAdmin, loading, signingIn, signIn, getIdToken } = useAuth();
   const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>([]);
   const [inputUrl, setInputUrl] = useState('');
   const [videoTitleInput, setVideoTitleInput] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [isSavingToR2, setIsSavingToR2] = useState(false);
@@ -67,7 +67,7 @@ export default function AdminPage() {
   const [ocrText, setOcrText] = useState('');
   const [breakdownNotes, setBreakdownNotes] = useState('');
   const [viewsEstimate, setViewsEstimate] = useState('1.5M');
-  const [emotion, setEmotion] = useState<any>('Shocked');
+  const [emotion] = useState<ThumbnailItem['emotion']>('Shocked');
 
   // Cloudflare R2 Connection State
   const [r2Status, setR2Status] = useState<{
@@ -75,73 +75,92 @@ export default function AdminPage() {
     bucket?: string;
     publicUrl?: string;
     message?: string;
-    missing?: string[];
-    connection?: { ok: boolean; message?: string };
   } | null>(null);
   const [checkingR2, setCheckingR2] = useState(false);
 
   const checkR2Status = async () => {
     setCheckingR2(true);
     try {
-      const res = await fetch('/api/r2/status');
+      const token = await getIdToken();
+      if (!token) {
+        setR2Status({ configured: false, message: 'Sign in as admin to check R2 status.' });
+        return;
+      }
+      const res = await fetch('/api/r2/status', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setR2Status({ configured: false, message: 'Unable to check R2 storage status.' });
+        return;
+      }
       const data = await res.json();
       setR2Status(data);
-    } catch (e: any) {
-      setR2Status({ configured: false, message: e?.message || 'Failed to query R2 status' });
+    } catch {
+      setR2Status({ configured: false, message: 'Failed to query R2 status.' });
     } finally {
       setCheckingR2(false);
     }
   };
 
   useEffect(() => {
+    if (loading || !isAdmin) return;
     setThumbnails(getStoredThumbnails());
     checkR2Status();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, isAdmin]);
 
-  // Helper to extract YouTube Thumbnail URL from watch URL
-  const extractYoutubeThumbnail = (url: string) => {
-    let videoId = '';
+  // Helper to extract YouTube video ID & Thumbnail URL from watch URL
+  const extractYoutubeVideoId = (url: string): string | null => {
     const matchWatch = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    if (matchWatch && matchWatch[1]) {
-      videoId = matchWatch[1];
-      return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
-    }
-    return url;
+    return matchWatch?.[1] || null;
   };
 
-  const handleFetchAndAnalyze = async () => {
-    if (!inputUrl.trim()) return;
-    setIsAnalyzing(true);
-
-    const resolvedImageUrl = extractYoutubeThumbnail(inputUrl.trim());
-    setPreviewImage(resolvedImageUrl);
+  const handleLoadPreview = async () => {
+    const raw = inputUrl.trim();
+    if (!raw) return;
+    setIsLoadingPreview(true);
+    setUploadError('');
 
     try {
-      const res = await fetch('/api/ai-tagger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageUrl: resolvedImageUrl,
-          videoTitle: videoTitleInput.trim()
-        })
-      });
+      const videoId = extractYoutubeVideoId(raw);
+      const resolvedImageUrl = videoId
+        ? `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
+        : sanitizeSafeImageSrc(raw);
 
-      const json = await res.json();
-      if (json.success && json.data) {
-        const d = json.data;
-        if (d.title) setTitle(d.title);
-        if (d.niche) setNiche(d.niche);
-        if (d.styles) setSelectedStyles(d.styles);
-        if (d.tags) setTagsInput(d.tags.join(', '));
-        if (d.colors) setColorsInput(d.colors.join(', '));
-        if (d.ocrText !== undefined) setOcrText(d.ocrText);
-        if (d.emotion) setEmotion(d.emotion);
-        if (d.breakdownNotes) setBreakdownNotes(d.breakdownNotes);
+      if (!resolvedImageUrl) {
+        setUploadError('Please enter a valid YouTube link or HTTPS image URL.');
+        return;
       }
-    } catch (err) {
-      console.error('AI Tagger failed:', err);
+
+      setPreviewImage(resolvedImageUrl);
+      if (videoTitleInput.trim()) {
+        setTitle(videoTitleInput.trim());
+      }
+
+      if (videoId) {
+        const token = await getIdToken();
+        if (token) {
+          const res = await fetch('/api/youtube/details', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ videoIds: [videoId] }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            const detail = json?.details?.[videoId];
+            if (detail?.title && !videoTitleInput.trim()) setTitle(detail.title);
+            if (detail?.creator) setCreator(detail.creator);
+            if (detail?.views) setViewsEstimate(detail.views);
+          }
+        }
+      }
+    } catch {
+      setUploadError('Could not load details from that URL. You can fill fields manually.');
     } finally {
-      setIsAnalyzing(false);
+      setIsLoadingPreview(false);
     }
   };
 
@@ -191,10 +210,24 @@ export default function AdminPage() {
     let finalSource: any = 'r2-storage';
     let extractedColors = parsedColors;
 
+    let assignedId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? `thumb-${crypto.randomUUID().slice(0, 12)}`
+        : `thumb-${Date.now()}`;
+
     try {
+      const token = await getIdToken();
+      if (!token) {
+        setUploadError('Admin sign-in is required to upload thumbnails.');
+        return;
+      }
+
       const res = await fetch('/api/r2/upload-thumbnail', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           items: [{
             imageUrl: previewImage,
@@ -216,13 +249,11 @@ export default function AdminPage() {
 
       const uploaded = json?.items?.[0];
       if (r2Status?.configured && uploaded?.uploadedToBucket === false) {
-        setUploadError(
-          (Array.isArray(json?.warnings) && json.warnings[0]) ||
-            'Cloudflare R2 upload did not complete. Verify your R2 bucket settings.'
-        );
+        setUploadError('Cloudflare R2 upload did not complete. Verify your R2 bucket settings.');
         return;
       }
 
+      if (uploaded?.id) assignedId = uploaded.id;
       if (uploaded?.imageUrl) {
         finalImageUrl = uploaded.imageUrl;
         thumbSmallUrl = uploaded.thumbSmallUrl;
@@ -231,15 +262,15 @@ export default function AdminPage() {
           extractedColors = uploaded.colors;
         }
       }
-    } catch (err: any) {
-      setUploadError(err?.message || 'Failed to upload thumbnail to Cloudflare R2.');
+    } catch {
+      setUploadError('Failed to upload thumbnail to Cloudflare R2.');
       return;
     } finally {
       setIsSavingToR2(false);
     }
 
     const newItem: ThumbnailItem = {
-      id: `thumb-${Date.now()}`,
+      id: assignedId,
       title: title || 'Curated Thumbnail Inspiration',
       creator: creator || 'YouTube Creator',
       imageUrl: finalImageUrl,
@@ -254,7 +285,7 @@ export default function AdminPage() {
       viewsEstimate,
       source: finalSource,
       createdAt: new Date().toISOString(),
-      likesCount: Math.floor(Math.random() * 500) + 100
+      likesCount: 0
     };
 
     const updated = saveStoredThumbnail(newItem);
@@ -338,7 +369,7 @@ export default function AdminPage() {
 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#401D1A]/10 dark:bg-[#E4E0D3]/20 text-[#401D1A] dark:text-[#E4E0D3] border border-[#401D1A]/20 dark:border-[#E4E0D3]/30">
-              Admin & AI Curation Hub
+              Admin Curation Hub
             </span>
           </div>
         </div>
@@ -346,10 +377,10 @@ export default function AdminPage() {
         {/* Title */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#401D1A] dark:text-[#FFFFFF]">
-            Add Thumbnail & AI Auto-Tagging Engine
+            Add &amp; Manage Thumbnails
           </h1>
           <p className="text-sm text-[#401D1A]/70 dark:text-[#E4E0D3]/70 mt-1">
-            Input a YouTube video URL, image link, or upload an image file. The AI analyzes visual hooks, colors, styles, and text automatically.
+            Input a YouTube video URL, image link, or upload an image file to publish straight to Cloudflare R2 and your gallery.
           </p>
         </div>
 
@@ -378,24 +409,14 @@ export default function AdminPage() {
                 <p className="text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70 mt-1 leading-relaxed">
                   {r2Status?.configured ? (
                     <>
-                      Thumbnails and WebP previews are saved directly to your R2 bucket <span className="font-mono font-bold text-[#401D1A] dark:text-[#FFFFFF] bg-[#E4E0D3]/40 dark:bg-white/10 px-1.5 py-0.5 rounded">&quot;{r2Status.bucket}&quot;</span>. Serving via <span className="font-mono text-[11px]">{r2Status.publicUrl}</span>.
+                      Thumbnails and WebP previews are saved directly to your R2 bucket <span className="font-mono font-bold text-[#401D1A] dark:text-[#FFFFFF] bg-[#E4E0D3]/40 dark:bg-white/10 px-1.5 py-0.5 rounded">&quot;{r2Status.bucket}&quot;</span>.
                     </>
                   ) : (
                     <>
-                      Add <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_ACCOUNT_ID</code>, <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_ACCESS_KEY_ID</code>, <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_SECRET_ACCESS_KEY</code>, and <code className="font-mono bg-[#E4E0D3]/40 dark:bg-white/10 px-1 py-0.5 rounded">R2_BUCKET_NAME</code> to `.env` to store all thumbnails in Cloudflare R2.
+                      Configure Cloudflare R2 credentials from the main gallery R2 settings modal or server environment to sync uploads across devices.
                     </>
                   )}
                 </p>
-                {r2Status?.missing && r2Status.missing.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    <span className="text-[11px] font-medium text-[#401D1A]/60 dark:text-[#E4E0D3]/60 mr-1">Missing keys:</span>
-                    {r2Status.missing.map(m => (
-                      <span key={m} className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                        {m}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -413,10 +434,10 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Ingestion & AI Engine Panel */}
+        {/* Ingestion & Tagging Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column: Input Source & Live AI Tagging */}
+          {/* Left Column: Input Source & Preview */}
           <div className="lg:col-span-5 space-y-6">
             
             {/* Input Box */}
@@ -439,7 +460,7 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70 block mb-1">Video Title / Topic (Optional - helps AI precision)</label>
+                  <label className="text-xs text-[#401D1A]/70 dark:text-[#E4E0D3]/70 block mb-1">Video Title Override (Optional)</label>
                   <input
                     type="text"
                     placeholder="e.g. $1 vs $1,000,000 Luxury Island!"
@@ -452,12 +473,12 @@ export default function AdminPage() {
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={handleFetchAndAnalyze}
-                    disabled={!inputUrl.trim() || isAnalyzing}
+                    onClick={handleLoadPreview}
+                    disabled={!inputUrl.trim() || isLoadingPreview}
                     className="flex-1 py-2.5 px-4 bg-[#401D1A] dark:bg-[#E4E0D3] dark:text-[#401D1A] hover:opacity-90 disabled:opacity-50 text-[#FFFFFF] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md"
                   >
-                    <Sparkles className="w-4 h-4" />
-                    <span>{isAnalyzing ? 'AI Analyzing Thumbnail...' : 'Analyze & Auto-Tag with AI'}</span>
+                    <Youtube className="w-4 h-4" />
+                    <span>{isLoadingPreview ? 'Loading Details...' : 'Load Thumbnail & Details'}</span>
                   </button>
                 </div>
               </div>
@@ -508,8 +529,8 @@ export default function AdminPage() {
               
               <div className="flex items-center justify-between border-b border-[#401D1A]/10 dark:border-[#E4E0D3]/15 pb-3">
                 <h3 className="text-sm font-bold text-[#401D1A] dark:text-[#FFFFFF] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#401D1A] dark:text-[#E4E0D3]" />
-                  2. Review & Refine AI Tags
+                  <Check className="w-4 h-4 text-[#401D1A] dark:text-[#E4E0D3]" />
+                  2. Review Metadata &amp; Tags
                 </h3>
                 {savedSuccess && (
                   <span className="flex items-center gap-1 text-xs font-semibold text-[#401D1A] dark:text-[#E4E0D3] bg-[#E4E0D3]/60 dark:bg-[#FFFFFF]/10 px-2.5 py-1 rounded-lg border border-[#401D1A]/20 dark:border-[#E4E0D3]/30 animate-in fade-in">

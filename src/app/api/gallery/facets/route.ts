@@ -1,12 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAllGalleryItems } from '../../../../lib/galleryService';
 import { COLOR_FAMILY_ORDER, familyOfHex, familiesForItem, type ColorFamily } from '../../../../lib/colorFamilies';
+import { getClientIp, safeErrorResponse } from '../../../../lib/serverAuth';
+import { checkRateLimit, rateLimitResponse } from '../../../../lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `gallery-facets:${ip}`,
+      limit: 120,
+      windowMs: 60 * 1000,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfterSeconds);
+
     const rows = await getAllGalleryItems();
 
     const nicheCounts: Record<string, number> = { All: rows.length };
@@ -55,7 +65,6 @@ export async function GET() {
 
     return NextResponse.json({ nicheCounts, colorLibrary, total: rows.length });
   } catch (err: unknown) {
-    console.error('Gallery facets error:', err);
-    return NextResponse.json({ error: 'Failed to load facets' }, { status: 500 });
+    return safeErrorResponse(err, 'Failed to load gallery facets');
   }
 }

@@ -27,39 +27,60 @@ export default function PrivacyPage() {
       <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">Privacy Policy</h1>
       <p className="mt-2 text-xs text-ink-faint">Last updated September 30, 2026</p>
 
+      <Section title="Who can use ThumbFeed">
+        <p>
+          ThumbFeed is intended for creators and designers aged 18 and over. We do
+          not knowingly collect personal information from anyone under 18 years
+          of age.
+        </p>
+      </Section>
+
       <Section title="What we collect">
         <p>
-          If you sign in with Google, we receive your basic profile information:
-          your name, email address and profile photo. If you save thumbnails or
-          build collections, that content is stored so it appears on your devices.
-          Display preferences such as theme, grid density and view mode are kept
-          in your browser only.
+          You can browse the public gallery without signing in. If you sign in
+          with Google, we receive your basic account identifiers from Firebase
+          Authentication: your user ID, name, verified email address, and profile
+          photo. If you create custom profile details, boards, or saved
+          collections, that data is stored so your workspace syncs across your
+          devices. Display preferences such as theme, grid density, and view mode
+          remain in your browser&apos;s local storage.
         </p>
       </Section>
 
       <Section title="How we use it">
         <p>
-          Your data runs the service and nothing else: keeping you signed in,
-          syncing your saved thumbnails, and remembering your preferences. We do
-          not sell personal data, we do not show third-party ads, and we do not
-          build advertising profiles.
+          Your data is used strictly to operate ThumbFeed: authenticating your
+          session, syncing your profile and saved boards, enforcing administrator
+          access controls for uploads, and serving curated thumbnail assets. We
+          do not sell personal data, show third-party ads, or share user lists
+          with advertisers.
         </p>
       </Section>
 
-      <Section title="Where it lives">
+      <Section title="Where it lives &amp; data transfers">
         <p>
-          Authentication runs through Google and Firebase. Thumbnails and media assets
-          are stored securely with Cloudflare R2. Preferences that never need to
-          leave your device stay in your browser local storage.
+          ThumbFeed operates from Pakistan and uses Google Firebase (Authentication
+          and Firestore) and Cloudflare R2 object storage to host application data
+          and media assets. Local browser preferences stay on your device unless
+          you sign in to sync your profile or boards.
         </p>
       </Section>
 
-      <Section title="Your control">
+      <Section title="Retention, self-serve deletion &amp; contact">
         <p>
-          Signing out stops syncing immediately. You can request deletion of your
-          stored data at any time, and clearing your browser storage removes all
-          local preferences. Thumbnails shown in the public gallery are
-          references to third-party artwork and carry no personal data.
+          Signing out clears locally cached profile and board state from your
+          browser immediately. Your synced profile and boards remain only while
+          your account is active. You can permanently delete your account,
+          profile metadata, and synced boards directly at any time from the Edit
+          Profile menu in the sidebar (&ldquo;Delete Account &amp; Data&rdquo;).
+          For privacy questions or manual deletion assistance, contact{" "}
+          <a
+            href="mailto:canonwater2025@gmail.com"
+            className="underline hover:text-ink"
+          >
+            canonwater2025@gmail.com
+          </a>
+          .
         </p>
       </Section>
     </main>

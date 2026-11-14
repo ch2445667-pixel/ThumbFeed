@@ -1,8 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 1. Global Safety Net — default deny catch-all first
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Helpers
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
     function isSignedIn() {
-      return request.auth != null;
+      return request.auth != null
+        && request.auth.token.email_verified == true;
     }
 
     function isOwner(userId) {
@@ -11,7 +26,6 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn()
-        && request.auth.token.email_verified == true
         && (
           request.auth.token.email == 'canonwater2025@gmail.com' ||
           request.auth.token.email == 'shivashiva66407@gmail.com'
@@ -19,52 +33,162 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() >= 1 && id.size() <= 128 && !id.matches('.*[/\\\\].*');
+      return id is string
+        && id.size() >= 1
+        && id.size() <= 128
+        && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    // User Profiles: strict PII isolation — only owner or verified admin can read/write
+    function isStoredTimestamp(val) {
+      return val is timestamp || (val is string && val.size() <= 64);
+    }
+
+    // 3. Validation Blueprints
+    function isValidUserProfileFields(data) {
+      return data.id is string
+        && data.id.size() >= 1
+        && data.id.size() <= 128
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 320
+        && data.displayName is string
+        && data.displayName.size() <= 120
+        && data.photoURL is string
+        && data.photoURL.size() <= 2048
+        && isStoredTimestamp(data.createdAt)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserProfileCreate(data, userId) {
+      return data.keys().hasAll(['id', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt'])
+        && isValidUserProfileFields(data)
+        && data.id == userId
+        && data.email == request.auth.token.email
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    function isValidUserProfileUpdate(data, userId) {
+      return data.keys().hasAll(['id', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt'])
+        && isValidUserProfileFields(data)
+        && data.id == userId
+        && data.updatedAt == request.time;
+    }
+
+    function isValidCollectionFields(data) {
+      return isValidId(data.id)
+        && isValidId(data.userId)
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 120
+        && (!('description' in data) || (data.description is string && data.description.size() <= 500))
+        && (!('colorTheme' in data) || (data.colorTheme is string && data.colorTheme.size() <= 64))
+        && data.thumbnailIds is list
+        && data.thumbnailIds.size() <= 2000
+        && (data.thumbnailIds.size() == 0 || (data.thumbnailIds[0] is string && data.thumbnailIds[0].size() <= 128))
+        && isStoredTimestamp(data.createdAt)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCollectionCreate(data, collectionId) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'thumbnailIds', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'userId', 'name', 'description', 'thumbnailIds', 'colorTheme', 'createdAt', 'updatedAt'])
+        && isValidCollectionFields(data)
+        && data.id == collectionId
+        && data.userId == request.auth.uid
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    function isValidCollectionUpdate(data, collectionId) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'thumbnailIds', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'userId', 'name', 'description', 'thumbnailIds', 'colorTheme', 'createdAt', 'updatedAt'])
+        && isValidCollectionFields(data)
+        && data.id == collectionId
+        && data.updatedAt == request.time;
+    }
+
+    function isValidThumbnail(data, thumbnailId) {
+      return data.keys().hasAll(['id', 'title', 'imageUrl', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'userId', 'title', 'creator', 'imageUrl', 'niche', 'colors', 'tags', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && data.id == thumbnailId
+        && (!('userId' in data) || (data.userId is string && data.userId.size() <= 128))
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 300
+        && (!('creator' in data) || (data.creator is string && data.creator.size() <= 120))
+        && data.imageUrl is string
+        && data.imageUrl.size() >= 1
+        && data.imageUrl.size() <= 2048
+        && (!('niche' in data) || (data.niche is string && data.niche.size() <= 80))
+        && (!('colors' in data) || (data.colors is list && data.colors.size() <= 10 && (data.colors.size() == 0 || data.colors[0] is string)))
+        && (!('tags' in data) || (data.tags is list && data.tags.size() <= 30 && (data.tags.size() == 0 || data.tags[0] is string)))
+        && isStoredTimestamp(data.createdAt)
+        && data.updatedAt is timestamp;
+    }
+
+    // 4. Collection Rules
+    // /users/{userId}: strict PII isolation — no list queries; owner/admin only
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create, update: if isOwner(userId)
-        && isValidId(userId)
-        && request.resource.data.keys().hasAll(['id', 'email'])
-        && request.resource.data.id == userId
-        && request.resource.data.email is string
-        && request.resource.data.email.size() <= 320;
-      allow delete: if isOwner(userId) || isAdmin();
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfileCreate(incoming(), userId);
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfileUpdate(incoming(), userId)
+        && incoming().id == existing().id
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']);
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
     }
 
-    // Thumbnails: public gallery read; writes require authentication + valid schema
-    match /thumbnails/{thumbnailId} {
-      allow read: if true;
-      allow create, update: if isSignedIn()
-        && isValidId(thumbnailId)
-        && request.resource.data.keys().hasAll(['id', 'title', 'imageUrl'])
-        && request.resource.data.id is string
-        && request.resource.data.title is string
-        && request.resource.data.title.size() <= 300
-        && request.resource.data.imageUrl is string
-        && request.resource.data.imageUrl.size() <= 2048;
-      allow delete: if isSignedIn();
-    }
-
-    // Collections & Boards: authenticated access with strict schema validation
+    // /collections/{collectionId}: strict per-owner isolation + admin escape hatch
     match /collections/{collectionId} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && isValidId(collectionId)
-        && request.resource.data.keys().hasAll(['id', 'name', 'thumbnailIds'])
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 1
-        && request.resource.data.name.size() <= 120
-        && request.resource.data.thumbnailIds is list
-        && request.resource.data.thumbnailIds.size() <= 2000;
-      allow delete: if isSignedIn();
+      allow get: if isValidId(collectionId)
+        && isSignedIn()
+        && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(collectionId)
+        && isSignedIn()
+        && isValidCollectionCreate(incoming(), collectionId);
+      allow update: if isValidId(collectionId)
+        && isSignedIn()
+        && isValidCollectionUpdate(incoming(), collectionId)
+        && (existing().userId == request.auth.uid || isAdmin())
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && (
+          isAdmin() ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'thumbnailIds', 'colorTheme', 'updatedAt'])
+        );
+      allow delete: if isValidId(collectionId)
+        && isSignedIn()
+        && (existing().userId == request.auth.uid || isAdmin());
     }
 
-    // Default deny catch-all
-    match /{document=**} {
-      allow read, write: if false;
+    // /thumbnails/{thumbnailId}: public gallery read; writes restricted strictly to verified admins
+    match /thumbnails/{thumbnailId} {
+      allow get, list: if true;
+      allow create: if isValidId(thumbnailId)
+        && isAdmin()
+        && isValidThumbnail(incoming(), thumbnailId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(thumbnailId)
+        && isAdmin()
+        && isValidThumbnail(incoming(), thumbnailId)
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'creator', 'imageUrl', 'niche', 'colors', 'tags', 'updatedAt']);
+      allow delete: if isValidId(thumbnailId) && isAdmin();
     }
   }
 }

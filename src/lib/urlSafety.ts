@@ -10,7 +10,6 @@ const ALLOWED_MEDIA_EXTENSIONS = new Set([
   '.png',
   '.webp',
   '.gif',
-  '.svg',
   '.avif',
 ]);
 

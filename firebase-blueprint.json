@@ -2,66 +2,65 @@
   "entities": {
     "UserProfile": {
       "title": "UserProfile",
-      "description": "Authenticated user profile",
+      "description": "Authenticated user profile isolated to its owner or verified admin",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "email": { "type": "string" },
-        "displayName": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "createdAt": { "type": "string" }
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "maxLength": 320 },
+        "displayName": { "type": "string", "maxLength": 120 },
+        "photoURL": { "type": "string", "maxLength": 2048 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "email"]
+      "required": ["id", "email", "createdAt", "updatedAt"]
     },
     "Thumbnail": {
       "title": "Thumbnail",
-      "description": "Stored thumbnail item",
+      "description": "Public gallery thumbnail item managed solely by verified admins",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "title": { "type": "string" },
-        "creator": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "niche": { "type": "string" },
-        "colors": {
-          "type": "array"
-        },
-        "tags": {
-          "type": "array"
-        },
-        "createdAt": { "type": "string" }
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "creator": { "type": "string", "maxLength": 120 },
+        "imageUrl": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "niche": { "type": "string", "maxLength": 80 },
+        "colors": { "type": "array" },
+        "tags": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "title", "imageUrl"]
+      "required": ["id", "title", "imageUrl", "createdAt", "updatedAt"]
     },
     "CollectionBoard": {
       "title": "CollectionBoard",
-      "description": "User-curated inspiration board of thumbnails",
+      "description": "User-owned inspiration board of thumbnails",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "thumbnailIds": {
-          "type": "array"
-        },
-        "createdAt": { "type": "string" }
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 500 },
+        "thumbnailIds": { "type": "array" },
+        "colorTheme": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "name", "thumbnailIds"]
+      "required": ["id", "userId", "name", "thumbnailIds", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "UserProfile",
-      "description": "User profile collection"
+      "description": "Private user profiles (read/write limited strictly to owner or verified admin)"
     },
     "/thumbnails/{thumbnailId}": {
       "schema": "Thumbnail",
-      "description": "Public or user-contributed thumbnails collection"
+      "description": "Public gallery catalog (public read, verified admin writes only)"
     },
     "/collections/{collectionId}": {
       "schema": "CollectionBoard",
-      "description": "Saved inspiration boards"
+      "description": "User-owned saved boards (read/list/write limited strictly to owner userId or verified admin)"
     }
   }
 }

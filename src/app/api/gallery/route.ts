@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getAllGalleryItems } from '../../../lib/galleryService';
 import { familiesFromHexes, type ColorFamily } from '../../../lib/colorFamilies';
 import { ThumbnailItem } from '../../../lib/types';
+import { getClientIp, safeErrorResponse } from '../../../lib/serverAuth';
+import { checkRateLimit, rateLimitResponse } from '../../../lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const PAGE_SIZE = 36;
+const DEFAULT_PAGE_SIZE = 36;
+const MAX_PAGE_SIZE = 100;
 
-/** Deterministic shuffle shared with the client so page order is stable. */
+const galleryQuerySchema = z.object({
+  search: z.string().max(200).optional().default(''),
+  niche: z.string().max(80).optional().default('All'),
+  styles: z.string().max(500).optional().default(''),
+  colors: z.string().max(300).optional().default(''),
+  sort: z.enum(['latest', 'popular', 'random']).optional().default('random'),
+  seed: z.coerce.number().int().min(1).max(2_147_483_647).optional().default(882391),
+  page: z.coerce.number().int().min(0).max(1000).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional().default(DEFAULT_PAGE_SIZE),
+});
+
 function seededShuffle<T>(array: T[], seed: number): T[] {
   const arr = [...array];
   if (arr.length <= 1) return arr;
@@ -39,25 +53,47 @@ function matchesSearch(item: ThumbnailItem, q: string): boolean {
 
 export async function GET(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `gallery-get:${ip}`,
+      limit: 120,
+      windowMs: 60 * 1000,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfterSeconds);
+
     const url = new URL(req.url);
-    const search = (url.searchParams.get('search') || '').trim();
-    const niche = url.searchParams.get('niche') || 'All';
-    const styles = (url.searchParams.get('styles') || '')
+    const parsed = galleryQuerySchema.safeParse({
+      search: url.searchParams.get('search') ?? undefined,
+      niche: url.searchParams.get('niche') ?? undefined,
+      styles: url.searchParams.get('styles') ?? undefined,
+      colors: url.searchParams.get('colors') ?? undefined,
+      sort: url.searchParams.get('sort') ?? undefined,
+      seed: url.searchParams.get('seed') ?? undefined,
+      page: url.searchParams.get('page') ?? undefined,
+      pageSize: url.searchParams.get('pageSize') ?? undefined,
+    });
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid gallery query parameters' }, { status: 400 });
+    }
+
+    const search = parsed.data.search.trim();
+    const niche = parsed.data.niche.trim() || 'All';
+    const styles = parsed.data.styles
       .split(',')
       .map((s) => s.trim())
-      .filter(Boolean);
-    const colors = (url.searchParams.get('colors') || '')
+      .filter(Boolean)
+      .slice(0, 20);
+    const colors = parsed.data.colors
       .split(',')
       .map((s) => s.trim())
-      .filter(Boolean) as ColorFamily[];
-    const sort = url.searchParams.get('sort') || 'random';
-    const seed = Number(url.searchParams.get('seed') || 882391) || 882391;
-    const page = Math.max(0, Number(url.searchParams.get('page') || 0) || 0);
-    const from = page * PAGE_SIZE;
+      .filter(Boolean)
+      .slice(0, 20) as ColorFamily[];
+    const { sort, seed, page, pageSize } = parsed.data;
+    const from = page * pageSize;
 
     const allItems = await getAllGalleryItems();
 
-    // 1. Filter by niche
     let filtered = allItems;
     if (niche && niche !== 'All') {
       const lowerNiche = niche.toLowerCase();
@@ -68,48 +104,42 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 2. Filter by styles
     if (styles.length > 0) {
       filtered = filtered.filter((item) =>
         (item.styles || []).some((st) => styles.includes(st))
       );
     }
 
-    // 3. Filter by search query
     if (search) {
       filtered = filtered.filter((item) => matchesSearch(item, search));
     }
 
-    // 4. Filter by color families
     if (colors.length > 0) {
       filtered = filtered.filter((item) =>
         familiesFromHexes(item.colors || []).some((family) => colors.includes(family))
       );
     }
 
-    // 5. Sort
     if (sort === 'popular') {
       filtered = [...filtered].sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0));
     } else if (sort === 'random') {
       filtered = seededShuffle(filtered, seed);
     } else {
-      // Latest
       filtered = [...filtered].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     }
 
     const total = filtered.length;
-    const pageItems = filtered.slice(from, from + PAGE_SIZE);
+    const pageItems = filtered.slice(from, from + pageSize);
 
     return NextResponse.json({
       items: pageItems,
       total,
       page,
-      pageSize: PAGE_SIZE,
+      pageSize,
     });
   } catch (err: unknown) {
-    console.error('Gallery feed error:', err);
-    return NextResponse.json({ items: [], total: 0, page: 0, pageSize: PAGE_SIZE });
+    return safeErrorResponse(err, 'Failed to load gallery items');
   }
 }

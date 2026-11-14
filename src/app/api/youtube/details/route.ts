@@ -1,4 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { isSafeYouTubeUrl } from '@/lib/urlSafety';
+import {
+  requireAdmin,
+  verifyCsrfAndJson,
+  getClientIp,
+  logSecurityEvent,
+  safeErrorResponse,
+} from '@/lib/serverAuth';
+import { safeExternalFetch, readResponseTextWithLimit } from '@/lib/ssrfFetch';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const detailsSchema = z.object({
+  videoIds: z.array(z.string().trim().regex(/^[a-zA-Z0-9_-]{11}$/)).max(30),
+});
 
 function formatViews(count: number): string {
   if (isNaN(count) || count < 0) return '';
@@ -49,11 +67,30 @@ interface VideoDetail {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const videoIds: string[] = Array.isArray(body?.videoIds)
-      ? body.videoIds.slice(0, 30) // limit to 30 per batch for speed
-      : [];
+    const csrfError = verifyCsrfAndJson(req);
+    if (csrfError) return csrfError;
 
+    const authResult = await requireAdmin(req);
+    if ('errorResponse' in authResult) return authResult.errorResponse;
+
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `yt-details:${authResult.user.uid}`,
+      limit: 60,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.allowed) {
+      logSecurityEvent('rate_limit_exceeded', { endpoint: '/api/youtube/details', uid: authResult.user.uid, ip });
+      return rateLimitResponse(rl.retryAfterSeconds);
+    }
+
+    const rawBody = await req.json().catch(() => null);
+    const parsed = detailsSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid videoIds payload', details: {} }, { status: 400 });
+    }
+
+    const videoIds = parsed.data.videoIds;
     if (videoIds.length === 0) {
       return NextResponse.json({ details: {} });
     }
@@ -61,11 +98,7 @@ export async function POST(req: NextRequest) {
     const results: Record<string, VideoDetail> = {};
 
     await Promise.all(
-      videoIds.map(async (vid) => {
-        if (typeof vid !== 'string') return;
-        const cleanId = vid.trim();
-        if (!/^[a-zA-Z0-9_-]{11}$/.test(cleanId)) return;
-
+      videoIds.map(async (cleanId) => {
         let title: string | undefined;
         let creator: string | undefined;
         let views: string | undefined;
@@ -73,40 +106,38 @@ export async function POST(req: NextRequest) {
         let publishedTime: string | undefined;
 
         try {
-          // 1. Fetch official YouTube oEmbed for clean title and channel name
           const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${encodeURIComponent(cleanId)}&format=json`;
-          const oembedRes = await fetch(oembedUrl, {
+          const oembedRes = await safeExternalFetch(oembedUrl, {
+            allowedUrlCheck: isSafeYouTubeUrl,
+            timeoutMs: 8000,
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ThumbFeed/1.0)' },
-            signal: AbortSignal.timeout(8000),
-            next: { revalidate: 86400 } // cache for 24 hours
           });
 
           if (oembedRes.ok) {
-            const data = await oembedRes.json();
+            const text = await readResponseTextWithLimit(oembedRes, 256 * 1024);
+            const data = JSON.parse(text);
             if (data.title && data.title !== 'YouTube') title = data.title;
             if (data.author_name) creator = data.author_name;
           }
         } catch {
-          // Ignore oEmbed failure and continue to scrape
+          // Ignore oEmbed failure and continue
         }
 
         try {
-          // 2. Fetch video page HTML to extract viewCount, subs, and date
           const watchUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(cleanId)}`;
-          const pageRes = await fetch(watchUrl, {
+          const pageRes = await safeExternalFetch(watchUrl, {
+            allowedUrlCheck: isSafeYouTubeUrl,
+            timeoutMs: 8000,
             headers: {
               'User-Agent':
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
               'Accept-Language': 'en-US,en;q=0.9',
             },
-            cache: 'no-store',
-            signal: AbortSignal.timeout(8000),
           });
 
           if (pageRes.ok) {
-            const html = await pageRes.text();
+            const html = await readResponseTextWithLimit(pageRes, 3 * 1024 * 1024);
 
-            // Extract view count from meta tag or ytInitialData JSON
             const metaCountMatch = html.match(/itemprop=["']interactionCount["']\s+content=["'](\d+)["']/i);
             const jsonCountMatch = html.match(/"viewCount":\s*["'](\d+)["']/i);
             const simpleTextMatch = html.match(/"views":\s*\{\s*"simpleText":\s*["']([^"']+)["']/i);
@@ -119,16 +150,16 @@ export async function POST(req: NextRequest) {
               views = simpleTextMatch[1];
             }
 
-            // Extract subscribers if available
-            const subsMatch = html.match(/"subscriberCountText":\s*\{\s*"simpleText":\s*["']([^"']+)["']/i) ||
-                              html.match(/"subscriberCountText":\s*\{\s*"accessibility":\s*\{\s*"accessibilityData":\s*\{\s*"label":\s*["']([^"']+)["']/i);
+            const subsMatch =
+              html.match(/"subscriberCountText":\s*\{\s*"simpleText":\s*["']([^"']+)["']/i) ||
+              html.match(/"subscriberCountText":\s*\{\s*"accessibility":\s*\{\s*"accessibilityData":\s*\{\s*"label":\s*["']([^"']+)["']/i);
             if (subsMatch && subsMatch[1]) {
               subscribers = subsMatch[1].replace(/subscribers?/i, 'subs').trim();
             }
 
-            // Extract published / upload time
-            const dateMatch = html.match(/"dateText":\s*\{\s*"simpleText":\s*["']([^"']+)["']/i) ||
-                              html.match(/"relativeDateText":\s*\{\s*"simpleText":\s*["']([^"']+)["']/i);
+            const dateMatch =
+              html.match(/"dateText":\s*\{\s*"simpleText":\s*["']([^"']+)["']/i) ||
+              html.match(/"relativeDateText":\s*\{\s*"simpleText":\s*["']([^"']+)["']/i);
             if (dateMatch && dateMatch[1]) {
               publishedTime = dateMatch[1];
             } else {
@@ -138,10 +169,10 @@ export async function POST(req: NextRequest) {
               }
             }
 
-            // Fallback for creator / title if oEmbed didn't provide it
             if (!creator) {
-              const authorMatch = html.match(/<link itemprop=["']name["']\s+content=["']([^"']+)["']/i) ||
-                                  html.match(/"ownerChannelName":\s*["']([^"']+)["']/i);
+              const authorMatch =
+                html.match(/<link itemprop=["']name["']\s+content=["']([^"']+)["']/i) ||
+                html.match(/"ownerChannelName":\s*["']([^"']+)["']/i);
               if (authorMatch && authorMatch[1]) creator = authorMatch[1];
             }
 
@@ -154,7 +185,6 @@ export async function POST(req: NextRequest) {
           // Continue with whatever metadata was gathered
         }
 
-        // Normalize creator if tanzee or missing
         if (creator && (creator.toLowerCase().includes('tanzee') || creator.trim() === 'YouTube Creator')) {
           creator = 'Unknown';
         }
@@ -173,8 +203,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ details: results });
-  } catch (error: any) {
-    console.error('YouTube details API error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch details', details: {} }, { status: 500 });
+  } catch (error: unknown) {
+    return safeErrorResponse(error, 'Failed to fetch YouTube details');
   }
 }

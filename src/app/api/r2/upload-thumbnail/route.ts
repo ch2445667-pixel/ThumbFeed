@@ -1,34 +1,44 @@
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { extractColorProfile } from '../../../../lib/colorExtract';
 import { withDimensions } from '../../../../lib/dimensions';
-import { isR2Configured, uploadToR2, getR2Config } from '../../../../lib/r2';
-import { db } from '../../../../lib/firestore';
-import { doc, setDoc } from 'firebase/firestore';
+import { isR2Configured, uploadToR2, deleteFromR2, getR2Config } from '../../../../lib/r2';
 import { saveGalleryItems, invalidateGalleryCache } from '../../../../lib/galleryService';
 import { ThumbnailItem } from '../../../../lib/types';
 import { isSafeExternalHttpUrl } from '../../../../lib/urlSafety';
+import {
+  requireAdmin,
+  verifyCsrfAndJson,
+  getClientIp,
+  logSecurityEvent,
+  safeErrorResponse,
+} from '../../../../lib/serverAuth';
+import { safeExternalFetch, readResponseBufferWithLimit } from '../../../../lib/ssrfFetch';
+import { checkRateLimit, rateLimitResponse } from '../../../../lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_UPLOAD_IMAGE_BYTES = 15 * 1024 * 1024; // 15MB cap
 const MAX_BATCH_ITEMS = 100;
+const ALLOWED_SHARP_FORMATS = new Set(['jpeg', 'png', 'webp', 'gif', 'avif']);
 
-interface UploadItemPayload {
-  id?: string;
-  kind?: 'thumbnail' | 'poster';
-  videoId?: string;
-  imageUrl: string;
-  sourceUrl?: string;
-  title: string;
-  creator?: string;
-  niche?: string;
-  tags?: string[];
-  styles?: string[];
-  views?: string;
-  viewsEstimate?: string;
-  publishedTime?: string;
-}
+const uploadItemSchema = z.object({
+  id: z.string().trim().regex(/^[a-zA-Z0-9_-]{1,128}$/).optional(),
+  kind: z.enum(['thumbnail', 'poster']).optional(),
+  videoId: z.string().trim().regex(/^[a-zA-Z0-9_-]{1,64}$/).optional(),
+  imageUrl: z.string().trim().min(1).max(20 * 1024 * 1024),
+  sourceUrl: z.string().trim().max(2048).optional(),
+  title: z.string().trim().min(1).max(180).default('Thumbnail'),
+  creator: z.string().trim().max(100).optional(),
+  niche: z.string().trim().max(60).optional(),
+  tags: z.array(z.string().trim().max(60)).max(25).optional(),
+  styles: z.array(z.string().trim().max(80)).max(15).optional(),
+  views: z.string().trim().max(40).optional(),
+  viewsEstimate: z.string().trim().max(40).optional(),
+  publishedTime: z.string().trim().max(60).optional(),
+});
 
 function sanitizeFilename(title: string, videoId: string): string {
   const cleanTitle = title
@@ -38,21 +48,20 @@ function sanitizeFilename(title: string, videoId: string): string {
     .slice(0, 40);
 
   const cleanVid = (videoId || 'thumb').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) || 'thumb';
-  const randSuffix = Math.random().toString(36).slice(2, 7);
+  const randSuffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
   if (cleanTitle) {
     return `${cleanTitle}_${cleanVid}_${randSuffix}.jpg`;
   }
   return `thumb_${cleanVid}_${randSuffix}.jpg`;
 }
 
-async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ buffer: Buffer; contentType: string } | null> {
+async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<Buffer | null> {
   if (imageUrl.startsWith('data:image/')) {
     const matches = imageUrl.match(/^data:(image\/(?:png|jpeg|jpg|webp|gif));base64,([A-Za-z0-9+/=]+)$/i);
     if (matches && matches[2].length <= MAX_UPLOAD_IMAGE_BYTES * 1.4) {
-      const contentType = matches[1];
       const buffer = Buffer.from(matches[2], 'base64');
-      if (buffer.length <= MAX_UPLOAD_IMAGE_BYTES) {
-        return { buffer, contentType };
+      if (buffer.length > 0 && buffer.length <= MAX_UPLOAD_IMAGE_BYTES) {
+        return buffer;
       }
     }
     return null;
@@ -74,22 +83,19 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
 
   for (const url of urlsToTry) {
     try {
-      const res = await fetch(url, {
-        redirect: 'follow',
-        signal: AbortSignal.timeout(12000),
+      const res = await safeExternalFetch(url, {
+        timeoutMs: 12000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
       if (res.ok) {
         if (res.url && !isSafeExternalHttpUrl(res.url)) continue;
-        const contentType = res.headers.get('content-type') || 'image/jpeg';
-        if (contentType.toLowerCase().startsWith('text/')) continue;
-        const arrayBuffer = await res.arrayBuffer();
-        if (arrayBuffer.byteLength > MAX_UPLOAD_IMAGE_BYTES) continue;
-        const buffer = Buffer.from(arrayBuffer);
+        const contentType = (res.headers.get('content-type') || '').toLowerCase();
+        if (!contentType.startsWith('image/') || contentType.includes('svg')) continue;
+        const buffer = await readResponseBufferWithLimit(res, MAX_UPLOAD_IMAGE_BYTES);
         if (buffer.length > 2000 || url.includes('hqdefault')) {
-          return { buffer, contentType };
+          return buffer;
         }
       }
     } catch {
@@ -100,227 +106,269 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
   return null;
 }
 
-async function optimizeBuffer(input: Buffer, isPoster: boolean): Promise<Buffer> {
-  try {
-    const mod = await import('sharp').then((m: any) => m.default || m);
-    const matteColor = isPoster ? '#000000' : '#090a0d';
-    const maxSide = isPoster ? 1000 : 1280;
-    return await mod(input)
-      .resize({ width: maxSide, height: maxSide, fit: 'inside', withoutEnlargement: true })
-      .flatten({ background: matteColor })
-      .jpeg({ quality: 82, mozjpeg: true })
-      .toBuffer();
-  } catch (err) {
-    console.warn('Image optimize note (uploading original):', err instanceof Error ? err.message : err);
-    return input;
+async function decodeAndOptimizeImage(input: Buffer, isPoster: boolean): Promise<{
+  optimizedJpg: Buffer;
+  smallWebp: Buffer | null;
+  width?: number;
+  height?: number;
+}> {
+  const sharpMod: any = await import('sharp').then((m: any) => m.default || m);
+  const meta = await sharpMod(input).metadata();
+  if (!meta?.format || !ALLOWED_SHARP_FORMATS.has(String(meta.format).toLowerCase())) {
+    throw new Error('Unsupported or invalid image payload');
   }
-}
 
-async function makeSmallWebp(input: Buffer): Promise<Buffer | null> {
+  const matteColor = isPoster ? '#000000' : '#090a0d';
+  const maxSide = isPoster ? 1000 : 1280;
+
+  const optimizedJpg = await sharpMod(input)
+    .resize({ width: maxSide, height: maxSide, fit: 'inside', withoutEnlargement: true })
+    .flatten({ background: matteColor })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+
+  let smallWebp: Buffer | null = null;
   try {
-    const mod = await import('sharp').then((m: any) => m.default || m);
-    return await mod(input)
+    smallWebp = await sharpMod(input)
       .resize({ width: 400, withoutEnlargement: true })
       .webp({ quality: 75 })
       .toBuffer();
-  } catch (err) {
-    console.warn('Small variant note:', err instanceof Error ? err.message : err);
-    return null;
-  }
-}
-
-async function readDimensions(input: Buffer): Promise<{ width: number; height: number } | null> {
-  try {
-    const sharpMod: any = await import('sharp').then((m: any) => m.default || m);
-    const meta = await sharpMod(input).metadata();
-    if (meta && meta.width && meta.height) return { width: meta.width, height: meta.height };
-    return null;
   } catch {
-    return null;
+    smallWebp = null;
   }
+
+  return {
+    optimizedJpg,
+    smallWebp,
+    width: meta.width,
+    height: meta.height,
+  };
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const rawItems: UploadItemPayload[] = Array.isArray(body.items) ? body.items : [body];
-    const items = rawItems.slice(0, MAX_BATCH_ITEMS);
+    const csrfError = verifyCsrfAndJson(req);
+    if (csrfError) return csrfError;
 
-    if (items.length === 0) {
+    const authResult = await requireAdmin(req);
+    if ('errorResponse' in authResult) return authResult.errorResponse;
+
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit({
+      key: `upload-thumb:${authResult.user.uid}`,
+      limit: 40,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.allowed) {
+      logSecurityEvent('rate_limit_exceeded', { endpoint: '/api/r2/upload-thumbnail', uid: authResult.user.uid, ip });
+      return rateLimitResponse(rl.retryAfterSeconds);
+    }
+
+    const rawBody = await req.json().catch(() => null);
+    if (!rawBody || typeof rawBody !== 'object') {
+      return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 });
+    }
+
+    const candidateItems = Array.isArray((rawBody as { items?: unknown }).items)
+      ? (rawBody as { items: unknown[] }).items.slice(0, MAX_BATCH_ITEMS)
+      : [rawBody];
+
+    if (candidateItems.length === 0) {
       return NextResponse.json({ error: 'No items to upload' }, { status: 400 });
+    }
+
+    const validatedItems: z.infer<typeof uploadItemSchema>[] = [];
+    for (const rawItem of candidateItems) {
+      const parsed = uploadItemSchema.safeParse(rawItem);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'One or more thumbnail payloads contain invalid fields.' },
+          { status: 400 }
+        );
+      }
+      validatedItems.push(parsed.data);
     }
 
     const r2Ready = isR2Configured();
     const r2Config = getR2Config();
-    const uploadedResults: any[] = [];
+    const uploadedResults: Record<string, unknown>[] = [];
     const itemsToPersist: ThumbnailItem[] = [];
+    const uploadedR2Keys: string[] = [];
     const warnings: string[] = [];
 
     const CONCURRENCY = 4;
-    for (let i = 0; i < items.length; i += CONCURRENCY) {
-      const chunk = items.slice(i, i + CONCURRENCY);
-      await Promise.all(chunk.map(async (item) => {
-        try {
-          const isPoster = item.kind === 'poster' || item.id?.startsWith('poster-') || item.niche === 'Cinema';
-          const vId = item.videoId || item.id?.replace(/^.*-/, '') || (isPoster ? 'poster' : 'thumb');
-          const cleanTitle = (item.title || (isPoster ? 'poster' : 'thumb'))
-            .replace(/[^a-zA-Z0-9_\-\s]/g, '')
-            .trim()
-            .replace(/\s+/g, '_')
-            .slice(0, 40) || (isPoster ? 'poster' : 'thumb');
-          const randSuffix = Math.random().toString(36).slice(2, 7);
-
-          const storagePath = isPoster
-            ? `posters/poster_${Date.now()}_${cleanTitle}_${randSuffix}.jpg`
-            : sanitizeFilename(item.title || 'Thumbnail', vId);
-
-          let finalPublicUrl = item.imageUrl;
-          let thumbSmallUrl: string | null = null;
-          let uploadSuccess = false;
-          let colors: string[] = [];
-          let colorFamilies: string[] = [];
-          let dimensions: { width: number; height: number } | null = null;
-
+    for (let i = 0; i < validatedItems.length; i += CONCURRENCY) {
+      const chunk = validatedItems.slice(i, i + CONCURRENCY);
+      await Promise.all(
+        chunk.map(async (item) => {
           try {
-            const imageResult = await fetchImageBuffer(item.imageUrl, item.videoId);
+            const isPoster = item.kind === 'poster' || Boolean(item.id?.startsWith('poster-')) || item.niche === 'Cinema';
+            const vId = item.videoId || item.id?.replace(/^.*-/, '') || (isPoster ? 'poster' : 'thumb');
+            const cleanTitle = (item.title || (isPoster ? 'poster' : 'thumb'))
+              .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+              .trim()
+              .replace(/\s+/g, '_')
+              .slice(0, 40) || (isPoster ? 'poster' : 'thumb');
+            const randSuffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
 
-            if (imageResult) {
-              const optimizedJpgBuffer = await optimizeBuffer(imageResult.buffer, isPoster);
+            const storagePath = isPoster
+              ? `posters/poster_${cleanTitle}_${randSuffix}.jpg`
+              : sanitizeFilename(item.title || 'Thumbnail', vId);
 
-              if (!isPoster) {
-                const profile = await extractColorProfile(imageResult.buffer);
-                colors = profile.colors;
-                colorFamilies = profile.families;
-              }
+            let finalPublicUrl = isSafeExternalHttpUrl(item.imageUrl) ? item.imageUrl : '';
+            let thumbSmallUrl: string | null = null;
+            let uploadSuccess = false;
+            let colors: string[] = [];
+            let colorFamilies: string[] = [];
+            let dimensions: { width: number; height: number } | null = null;
 
-              dimensions = await readDimensions(imageResult.buffer);
+            const rawBuffer = await fetchImageBuffer(item.imageUrl, item.videoId);
+            if (!rawBuffer) {
+              warnings.push(`Skipped "${item.title || vId}": image could not be fetched or exceeded 15MB limit.`);
+              return;
+            }
 
-              // Storage: Cloudflare R2
-              if (r2Ready) {
+            const decoded = await decodeAndOptimizeImage(rawBuffer, isPoster);
+            if (decoded.width && decoded.height) {
+              dimensions = { width: decoded.width, height: decoded.height };
+            }
+
+            if (!isPoster) {
+              const profile = await extractColorProfile(rawBuffer);
+              colors = profile.colors;
+              colorFamilies = profile.families;
+            }
+
+            if (r2Ready) {
+              const r2Result = await uploadToR2({
+                key: storagePath,
+                buffer: decoded.optimizedJpg,
+                contentType: 'image/jpeg',
+                cacheControl: 'public, max-age=31536000, immutable',
+              });
+              finalPublicUrl = r2Result.publicUrl;
+              uploadedR2Keys.push(r2Result.key);
+              uploadSuccess = true;
+
+              if (decoded.smallWebp) {
                 try {
-                  const r2Result = await uploadToR2({
-                    key: storagePath,
-                    buffer: optimizedJpgBuffer,
-                    contentType: 'image/jpeg',
+                  const smallPath = `small/${storagePath.replace(/\.[^/.]+$/, '')}.webp`;
+                  const r2SmallResult = await uploadToR2({
+                    key: smallPath,
+                    buffer: decoded.smallWebp,
+                    contentType: 'image/webp',
                     cacheControl: 'public, max-age=31536000, immutable',
                   });
-                  finalPublicUrl = r2Result.publicUrl;
-                  uploadSuccess = true;
-
-                  // Small WebP variant (400px wide)
-                  try {
-                    const small = await makeSmallWebp(imageResult.buffer);
-                    if (small) {
-                      const smallPath = `small/${storagePath.replace(/\.[^/.]+$/, '')}.webp`;
-                      const r2SmallResult = await uploadToR2({
-                        key: smallPath,
-                        buffer: small,
-                        contentType: 'image/webp',
-                        cacheControl: 'public, max-age=31536000, immutable',
-                      });
-                      thumbSmallUrl = r2SmallResult.publicUrl;
-                    }
-                  } catch (smallErr) {
-                    warnings.push(`R2 small variant for "${item.title || vId}": ${smallErr instanceof Error ? smallErr.message : String(smallErr)}`);
-                  }
-                } catch (r2Err) {
-                  warnings.push(`Cloudflare R2 upload for "${item.title || vId}": ${r2Err instanceof Error ? r2Err.message : String(r2Err)}`);
+                  thumbSmallUrl = r2SmallResult.publicUrl;
+                  uploadedR2Keys.push(r2SmallResult.key);
+                } catch {
+                  warnings.push(`Small preview upload failed for "${item.title || vId}".`);
                 }
               }
-            } else {
-              warnings.push(`Could not fetch image bytes for "${item.title || vId}" — keeping source URL.`);
+            } else if (!finalPublicUrl) {
+              warnings.push(`Cloud storage is not connected for uploaded file "${item.title || vId}".`);
+              return;
             }
-          } catch (err) {
-            warnings.push(`Storage upload error for "${item.title || vId}": ${err instanceof Error ? err.message : String(err)}`);
+
+            const assignedId = isPoster
+              ? (item.id && item.id.startsWith('poster-') ? item.id : `poster-${randSuffix}`)
+              : (item.videoId ? `thumb-yt-${item.videoId}` : (item.id || `thumb-${randSuffix}`));
+
+            const viewsValue = item.views || item.viewsEstimate || undefined;
+            const baseNote = isPoster ? 'Uploaded movie poster.' : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
+            const notes = withDimensions(baseNote, dimensions?.width, dimensions?.height);
+            const safeSource = item.sourceUrl && isSafeExternalHttpUrl(item.sourceUrl) ? item.sourceUrl : finalPublicUrl;
+
+            const record: ThumbnailItem = {
+              id: assignedId,
+              kind: isPoster ? 'poster' : 'thumbnail',
+              title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
+              creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
+              imageUrl: finalPublicUrl,
+              sourceUrl: safeSource,
+              niche: isPoster ? 'Cinema' : (item.niche || ''),
+              styles: (item.styles && item.styles.length > 0 ? item.styles : ['Face Close-up', 'High-Contrast Glow']) as ThumbnailItem['styles'],
+              tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : (item.niche ? [item.niche] : [])),
+              colors,
+              thumbSmallUrl: thumbSmallUrl || undefined,
+              width: dimensions?.width,
+              height: dimensions?.height,
+              viewsEstimate: viewsValue,
+              breakdownNotes: notes,
+              source: 'r2-storage',
+              createdAt: new Date().toISOString()
+            };
+
+            const cleanRecord = Object.fromEntries(
+              Object.entries(record).filter(([, value]) => value !== undefined)
+            ) as ThumbnailItem;
+
+            itemsToPersist.push(cleanRecord);
+
+            uploadedResults.push({
+              id: assignedId,
+              originalId: item.id,
+              kind: isPoster ? 'poster' : 'thumbnail',
+              videoId: item.videoId,
+              title: record.title,
+              creator: record.creator,
+              sourceUrl: record.sourceUrl,
+              niche: record.niche,
+              tags: record.tags,
+              views: viewsValue,
+              publishedTime: item.publishedTime,
+              source: 'r2-storage',
+              uploadedToBucket: uploadSuccess,
+              imageUrl: finalPublicUrl,
+              thumbSmallUrl,
+              colors,
+              colorFamilies,
+              width: dimensions?.width,
+              height: dimensions?.height,
+              dbSaved: true
+            });
+          } catch (itemErr) {
+            warnings.push(`Rejected "${item.title || 'item'}": ${itemErr instanceof Error ? itemErr.message : 'invalid image'}`);
           }
-
-          const assignedId = isPoster
-            ? (item.id && item.id.startsWith('poster-') ? item.id : `poster-${Date.now()}-${randSuffix}`)
-            : (item.id || (item.videoId ? `thumb-yt-${item.videoId}` : `thumb-r2-${vId}`));
-
-          const viewsValue = item.views || item.viewsEstimate || null;
-          const baseNote = isPoster ? 'Uploaded movie poster.' : (item.publishedTime ? `Published: ${item.publishedTime}` : '');
-          const notes = withDimensions(baseNote, dimensions?.width, dimensions?.height);
-
-          const record: ThumbnailItem = {
-            id: assignedId,
-            kind: isPoster ? 'poster' : 'thumbnail',
-            title: item.title || (isPoster ? 'Movie Poster' : 'Thumbnail'),
-            creator: item.creator || (isPoster ? 'Cinema' : 'YouTube Creator'),
-            imageUrl: finalPublicUrl,
-            sourceUrl: item.sourceUrl || finalPublicUrl,
-            niche: isPoster ? 'Cinema' : (item.niche || ''),
-            styles: (item.styles && item.styles.length > 0 ? item.styles : ['Face Close-up', 'High-Contrast Glow']) as any,
-            tags: item.tags && item.tags.length > 0 ? item.tags : (isPoster ? ['Movie Poster', 'Cinema'] : (item.niche ? [item.niche] : [])),
-            colors,
-            thumbSmallUrl: thumbSmallUrl || undefined,
-            width: dimensions?.width,
-            height: dimensions?.height,
-            viewsEstimate: viewsValue || undefined,
-            breakdownNotes: notes,
-            source: 'r2-storage' as const,
-            createdAt: new Date().toISOString()
-          };
-
-          const cleanRecord = Object.fromEntries(
-            Object.entries(record).filter(([, value]) => value !== undefined)
-          ) as ThumbnailItem;
-
-          itemsToPersist.push(cleanRecord);
-
-          // Also attempt syncing to Firestore in background without blocking
-          if (db) {
-            try {
-              const docRef = doc(db, 'thumbnails', assignedId);
-              setDoc(docRef, cleanRecord, { merge: true }).catch(() => {});
-            } catch {}
-          }
-
-          uploadedResults.push({
-            id: assignedId,
-            originalId: item.id,
-            kind: isPoster ? 'poster' : 'thumbnail',
-            videoId: item.videoId,
-            title: record.title,
-            creator: record.creator,
-            sourceUrl: record.sourceUrl,
-            niche: record.niche,
-            tags: record.tags,
-            views: item.views || item.viewsEstimate,
-            publishedTime: item.publishedTime,
-            source: 'r2-storage',
-            uploadedToBucket: uploadSuccess,
-            imageUrl: finalPublicUrl,
-            thumbSmallUrl,
-            colors,
-            colorFamilies,
-            width: dimensions?.width,
-            height: dimensions?.height,
-            dbSaved: true
-          });
-        } catch (itemErr) {
-          warnings.push(`Item failed: ${itemErr instanceof Error ? itemErr.message : String(itemErr)}`);
-        }
-      }));
+        })
+      );
     }
 
-    // Persist to server data/thumbnails.json
     if (itemsToPersist.length > 0) {
-      await saveGalleryItems(itemsToPersist);
+      const persisted = await saveGalleryItems(itemsToPersist);
+      if (!persisted) {
+        // Compensating rollback of orphaned R2 objects on catalog write failure
+        await Promise.all(uploadedR2Keys.map((k) => deleteFromR2(k).catch(() => false)));
+        logSecurityEvent('upload_catalog_rollback', {
+          uid: authResult.user.uid,
+          rolledBackKeys: uploadedR2Keys.length,
+        });
+        return NextResponse.json(
+          { error: 'Failed to persist catalog metadata. Uploaded objects were rolled back.' },
+          { status: 500 }
+        );
+      }
     }
+
     invalidateGalleryCache();
 
+    logSecurityEvent('thumbnails_uploaded', {
+      uid: authResult.user.uid,
+      count: itemsToPersist.length,
+      warningsCount: warnings.length,
+      ip,
+    });
+
     return NextResponse.json({
-      success: true,
+      success: itemsToPersist.length > 0,
       bucket: r2Ready ? r2Config.bucketName : 'local-storage',
       storageProvider: r2Ready ? 'cloudflare-r2' : 'server-storage',
       count: uploadedResults.length,
-      allDbSaved: true,
+      allDbSaved: itemsToPersist.length > 0,
       warnings: warnings.length > 0 ? warnings : undefined,
       items: uploadedResults
     });
-  } catch (err: any) {
-    console.error('Upload thumbnail handler error:', err);
-    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });
+  } catch (err: unknown) {
+    return safeErrorResponse(err, 'Failed to process thumbnail upload');
   }
 }

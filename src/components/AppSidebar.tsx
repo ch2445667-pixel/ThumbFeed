@@ -19,6 +19,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useAuth } from '../lib/authContext';
+import { deleteCurrentUserAccount } from '../lib/firebase';
 import { CollectionBoard } from '../lib/types';
 import { AppLogo } from './icons/AppLogo';
 import { sanitizeSafeImageSrc } from '../lib/urlSafety';
@@ -62,71 +63,69 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   isMobileOpen = false,
   onCloseMobile,
 }) => {
-  const { user, isAdmin, signIn, signOut } = useAuth();
+  const { user, isAdmin, signingIn, signIn, signOut, getIdToken, error: authError } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [modalCategoryInput, setModalCategoryInput] = useState('');
   
-  // Custom user profile state (editable pfp & name stored persistently in server + localStorage)
+  // Custom user profile state (editable pfp & name stored per signed-in user)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customPhoto, setCustomPhoto] = useState('');
   const [editNameInput, setEditNameInput] = useState('');
   const [editPhotoInput, setEditPhotoInput] = useState('');
   const [avatarLoadError, setAvatarLoadError] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   React.useEffect(() => {
     setMounted(true);
-    try {
-      const saved = localStorage.getItem('thumbfeed_custom_profile');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.name) setCustomName(parsed.name);
-        if (parsed.photoURL) setCustomPhoto(parsed.photoURL);
-      }
-    } catch {}
-    const loadProfile = () => {
-      fetch('/api/profile')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && (data.name || data.photoURL)) {
-            if (data.name) setCustomName(data.name);
-            if (data.photoURL) setCustomPhoto(data.photoURL);
-            try {
-              localStorage.setItem(
-                'thumbfeed_custom_profile',
-                JSON.stringify({ name: data.name || '', photoURL: data.photoURL || '' })
-              );
-            } catch {}
-          } else {
-            // If server is empty but client has a saved profile, persist it to server immediately
-            try {
-              const saved = localStorage.getItem('thumbfeed_custom_profile');
-              if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed.name || parsed.photoURL) {
-                  if (parsed.name) setCustomName(parsed.name);
-                  if (parsed.photoURL) setCustomPhoto(parsed.photoURL);
-                  fetch('/api/profile', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: parsed.name || '', photoURL: parsed.photoURL || '' }),
-                  }).catch(() => {});
-                }
-              }
-            } catch {}
-          }
-        })
-        .catch(() => {});
+  }, []);
+
+  React.useEffect(() => {
+    if (!user) {
+      setCustomName('');
+      setCustomPhoto('');
+      setIsEditProfileOpen(false);
+      try {
+        localStorage.removeItem('thumbfeed_custom_profile');
+      } catch {}
+      return;
+    }
+
+    let cancelled = false;
+    const loadProfile = async () => {
+      const token = await getIdToken();
+      if (!token || cancelled) return;
+      try {
+        const res = await fetch('/api/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        if (data && (data.name || data.photoURL)) {
+          setCustomName(data.name || '');
+          setCustomPhoto(data.photoURL || '');
+          try {
+            localStorage.setItem(
+              'thumbfeed_custom_profile',
+              JSON.stringify({ name: data.name || '', photoURL: data.photoURL || '' })
+            );
+          } catch {}
+        }
+      } catch {}
     };
 
     loadProfile();
-
     window.addEventListener('thumbfeed_r2_synced', loadProfile);
     return () => {
+      cancelled = true;
       window.removeEventListener('thumbfeed_r2_synced', loadProfile);
     };
-  }, []);
+  }, [user, getIdToken]);
 
   React.useEffect(() => {
     setAvatarLoadError(false);
@@ -135,16 +134,24 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   React.useEffect(() => {
     if (!isEditProfileOpen && !isCategoryModalOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !isDeletingAccount) {
         setIsEditProfileOpen(false);
         setIsCategoryModalOpen(false);
+        setShowDeleteConfirm(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEditProfileOpen, isCategoryModalOpen]);
+  }, [isEditProfileOpen, isCategoryModalOpen, isDeletingAccount]);
 
   const handleOpenEditProfile = () => {
+    if (!user) {
+      signIn();
+      return;
+    }
+    setProfileError(null);
+    setDeleteError(null);
+    setShowDeleteConfirm(false);
     setEditNameInput(customName || user?.displayName || 'User');
     setEditPhotoInput(customPhoto || user?.photoURL || '');
     setIsEditProfileOpen(true);
@@ -152,8 +159,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    setProfileError(null);
     const finalName = editNameInput.trim() || 'User';
     const finalPhoto = editPhotoInput.trim();
+    const token = await getIdToken();
+    if (!token) {
+      setProfileError('Please sign in again to save profile changes.');
+      return;
+    }
     setCustomName(finalName);
     setCustomPhoto(finalPhoto);
     try {
@@ -163,20 +177,65 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       );
     } catch {}
     try {
-      await fetch('/api/profile', {
+      const res = await fetch('/api/profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ name: finalName, photoURL: finalPhoto }),
       });
-    } catch (err) {
-      console.warn('Failed to save profile to server:', err);
+      if (!res.ok) {
+        setProfileError('Could not sync profile changes to the server.');
+        return;
+      }
+    } catch {
+      setProfileError('Network error saving profile.');
+      return;
     }
     setIsEditProfileOpen(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setDeleteError(null);
+    try {
+      await deleteCurrentUserAccount();
+      setCustomName('');
+      setCustomPhoto('');
+      setEditNameInput('');
+      setEditPhotoInput('');
+      try {
+        localStorage.removeItem('thumbfeed_custom_profile');
+      } catch {}
+      setShowDeleteConfirm(false);
+      setIsEditProfileOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      setDeleteError(
+        msg && msg.includes('reauthenticate')
+          ? 'Please complete Google confirmation to delete your account.'
+          : 'Could not delete account right now. Please try again.'
+      );
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/') || file.type === 'image/svg+xml') {
+      setProfileError('Please upload a PNG, JPG, or WebP image.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setProfileError('Avatar image must be under 2MB.');
+      e.target.value = '';
+      return;
+    }
+    setProfileError(null);
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
@@ -376,15 +435,17 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 <span className="text-[11px] font-medium tracking-wider text-white/40 uppercase">
                   Categories
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryModalOpen(true)}
-                  className="p-1 -mr-1 text-white/40 hover:text-white hover:bg-white/[0.05] rounded transition-colors cursor-pointer"
-                  title="Manage Categories"
-                  aria-label="Manage Categories"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                </button>
+                {isAdmin && onAddCategory && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(true)}
+                    className="p-1 -mr-1 text-white/40 hover:text-white hover:bg-white/[0.05] rounded transition-colors cursor-pointer"
+                    title="Manage Categories"
+                    aria-label="Manage Categories"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Scrollable Categories List */}
@@ -462,23 +523,23 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
         </div>
 
-        {/* Bottom Pinned Footer: User Profile with Settings */}
-        <div className="shrink-0 border-t border-white/[0.06] p-2 space-y-1">
-          {mounted && (() => {
-            const effectiveName = customName || user?.displayName || user?.email?.split('@')[0] || 'User';
-            const effectivePhoto = sanitizeSafeImageSrc(customPhoto || user?.photoURL || '');
+        {/* Bottom Pinned Footer: Auth & Profile */}
+        <div className="shrink-0 border-t border-white/[0.06] p-2">
+          {mounted && user ? (() => {
+            const effectiveName = customName || user.displayName || user.email?.split('@')[0] || 'User';
+            const effectivePhoto = sanitizeSafeImageSrc(customPhoto || user.photoURL || '');
 
             return (
               <div
-                className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors ${
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors ${
                   isCollapsed ? 'justify-center' : ''
                 }`}
               >
                 <button
                   type="button"
                   onClick={handleOpenEditProfile}
-                  className="relative group shrink-0"
-                  title="Click to edit avatar"
+                  className="relative group shrink-0 cursor-pointer"
+                  title="Edit profile"
                   aria-label="Edit profile avatar"
                 >
                   {effectivePhoto && !avatarLoadError ? (
@@ -504,7 +565,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                     type="button"
                     onClick={handleOpenEditProfile}
                     className="flex-1 min-w-0 text-left cursor-pointer"
-                    title="Click to edit name"
+                    title="Profile & Account Settings"
                   >
                     <div className="text-xs text-white truncate font-medium hover:text-white/80 transition-colors">
                       {effectiveName}
@@ -513,23 +574,53 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 )}
 
                 {!isCollapsed && (
-                  <button
-                    type="button"
-                    onClick={handleOpenEditProfile}
-                    className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
-                    title="Edit profile & photo"
-                    aria-label="Edit profile and photo"
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={handleOpenEditProfile}
+                      className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                      title="Account & Profile Settings"
+                      aria-label="Account and profile settings"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => signOut()}
+                      className="p-1 rounded-md text-white/40 hover:text-red-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                      title="Sign out"
+                      aria-label="Sign out"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 )}
               </div>
             );
-          })()}
+          })() : (
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => signIn()}
+                disabled={signingIn}
+                aria-label="Sign in with Google"
+                title="Sign in with Google"
+                className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-xs font-medium text-white transition-colors cursor-pointer disabled:opacity-50 ${
+                  isCollapsed ? 'justify-center px-1' : ''
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5 shrink-0 text-white/80" />
+                {!isCollapsed && <span>{signingIn ? 'Signing in...' : 'Sign in with Google'}</span>}
+              </button>
+              {authError && !isCollapsed && (
+                <p className="px-2 text-[10px] text-red-300 leading-snug">{authError}</p>
+              )}
+            </div>
+          )}
         </div>
       </aside>
 
-      {/* Edit Profile Modal */}
+      {/* Account & Settings Modal */}
       {isEditProfileOpen && (
         <div
           onClick={() => setIsEditProfileOpen(false)}
@@ -540,7 +631,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             className="w-full max-w-sm rounded-xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4 animate-in zoom-in-95"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white">Edit Profile</h3>
+              <h3 className="text-sm font-semibold text-white">Account &amp; Settings</h3>
               <button
                 type="button"
                 onClick={() => setIsEditProfileOpen(false)}
@@ -625,6 +716,12 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 />
               </div>
 
+              {profileError && (
+                <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  {profileError}
+                </p>
+              )}
+
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.06]">
                 <button
                   type="button"
@@ -641,6 +738,82 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 </button>
               </div>
             </form>
+
+            {/* About, Privacy & Terms inside signed-in Settings */}
+            <div className="pt-3 border-t border-white/[0.08] space-y-2">
+              <span className="text-[11px] font-medium text-white/50 block">
+                App Information &amp; Legal
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                <Link
+                  href="/about"
+                  onClick={() => setIsEditProfileOpen(false)}
+                  className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-center text-xs text-white/75 hover:text-white transition-colors"
+                >
+                  About
+                </Link>
+                <Link
+                  href="/privacy"
+                  onClick={() => setIsEditProfileOpen(false)}
+                  className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-center text-xs text-white/75 hover:text-white transition-colors"
+                >
+                  Privacy
+                </Link>
+                <Link
+                  href="/terms"
+                  onClick={() => setIsEditProfileOpen(false)}
+                  className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-center text-xs text-white/75 hover:text-white transition-colors"
+                >
+                  Terms
+                </Link>
+              </div>
+            </div>
+
+            {/* Account Deletion (12.3) */}
+            <div className="pt-3 border-t border-white/[0.08] space-y-2.5">
+              {!showDeleteConfirm ? (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-white/45">
+                    Remove your account &amp; saved boards
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-[11px] font-medium transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Delete account</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/25 space-y-2">
+                  <p className="text-[11px] text-red-200 leading-relaxed">
+                    This permanently deletes your Google-linked profile, saved boards, and preferences from ThumbFeed.
+                  </p>
+                  {deleteError && (
+                    <p className="text-[11px] text-red-300">{deleteError}</p>
+                  )}
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      disabled={isDeletingAccount}
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="px-2.5 py-1 rounded text-[11px] text-white/70 hover:text-white"
+                    >
+                      Keep account
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isDeletingAccount}
+                      onClick={handleDeleteAccount}
+                      className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-[11px] font-semibold cursor-pointer"
+                    >
+                      {isDeletingAccount ? 'Deleting...' : 'Permanently delete'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -681,7 +854,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 type="text"
                 value={modalCategoryInput}
                 onChange={(e) => setModalCategoryInput(e.target.value)}
-                placeholder="New category name (e.g. 3D Design, AI, Gaming)..."
+                placeholder="New category name (e.g. 3D Design, Gaming, Vlog)..."
                 className="flex-1 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder-white/30 focus:border-white/30 focus:outline-none"
               />
               <button

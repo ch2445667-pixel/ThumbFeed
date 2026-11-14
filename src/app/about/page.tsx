@@ -33,26 +33,27 @@ export default function AboutPage() {
 
       <Section title="What you can do here">
         <p>
-          Browse the gallery and filter by niche, visual style, colour and text
-          hooks. Open any thumbnail to inspect it up close, copy its dominant
-          colour codes, read the detected on-image text, and generate design
-          prompts for your own tools.
+          Browse the gallery and filter by niche, visual style, colour palette,
+          and channel metadata. Open any thumbnail to inspect it at full
+          resolution, compare layouts, and organise visual hooks for upcoming
+          uploads.
         </p>
       </Section>
 
-      <Section title="Collections">
+      <Section title="Collections &amp; cloud sync">
         <p>
-          Save references into personal collections to plan upcoming videos or to
-          keep a swipe file of styles you want to try. Collections live in your
-          browser and can be exported as JSON.
+          Sign in with Google to save references into personal boards that sync
+          automatically across your devices. Your boards and profile settings
+          stay in sync without manual exports.
         </p>
       </Section>
 
       <Section title="For contributors">
         <p>
-          A browser extension captures thumbnails while you browse YouTube, and an
-          admin hub can tag new uploads automatically. Every thumbnail shown here
-          is a reference for study. The artwork itself belongs to its original
+          Administrators can upload thumbnails directly, import high-resolution
+          assets from YouTube channels or Pinterest boards, and store everything
+          in Cloudflare R2 object storage. Every thumbnail shown here is a
+          reference for study; the artwork itself belongs to its original
           creators.
         </p>
       </Section>

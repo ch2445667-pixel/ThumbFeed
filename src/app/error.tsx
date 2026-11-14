@@ -29,8 +29,11 @@ export default function AppError({
       <div className="max-w-sm w-full rounded-2xl border border-white/10 bg-[#0f1117] p-6 text-center space-y-4 shadow-2xl">
         <h2 className="text-sm font-semibold text-white">Something went wrong</h2>
         <p className="text-xs text-white/55">
-          {error?.message || 'An unexpected client error occurred while rendering this view.'}
+          An unexpected error occurred while rendering this view. Please try again or reload the page.
         </p>
+        {error?.digest && (
+          <p className="text-[11px] font-mono text-white/35">Reference: {error.digest}</p>
+        )}
         <div className="flex items-center justify-center gap-2 pt-1">
           <button
             type="button"

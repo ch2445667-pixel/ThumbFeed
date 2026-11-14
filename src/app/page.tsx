@@ -21,6 +21,7 @@ import {
   toggleThumbnailInCollection,
   syncBoardsFromServer,
   syncBoardsToServer,
+  clearLocalUserCollections,
 } from '../lib/storage';
 import {
   getAllCategories,
@@ -48,7 +49,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 }
 
 export default function HomePage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, getIdToken, loading: authLoading } = useAuth();
   const invalidateGallery = useInvalidateGallery();
 
   // Navigation & View State
@@ -104,23 +105,14 @@ export default function HomePage() {
       if (storedCollapsed !== null) {
         setIsSidebarCollapsed(storedCollapsed === 'true');
       }
-      setCollections(getStoredCollections());
       setCategories(getAllCategories());
     } catch {}
-
-    // Synchronize boards and categories from Cloudflare R2 / server once on boot
-    syncBoardsFromServer().then((b) => {
-      if (Array.isArray(b)) setCollections(b);
-    }).catch(() => {});
 
     syncCategoriesFromServer().then((c) => {
       if (Array.isArray(c)) setCategories(c);
     }).catch(() => {});
 
     const handleR2Synced = () => {
-      syncBoardsFromServer().then((b) => {
-        if (Array.isArray(b)) setCollections(b);
-      }).catch(() => {});
       syncCategoriesFromServer().then((c) => {
         if (Array.isArray(c)) setCategories(c);
       }).catch(() => {});
@@ -132,6 +124,37 @@ export default function HomePage() {
       window.removeEventListener('thumbfeed_r2_synced', handleR2Synced);
     };
   }, []);
+
+  // Keep user boards strictly scoped to the signed-in account
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      clearLocalUserCollections();
+      setCollections([]);
+      setSelectedBoardId(null);
+      setActiveCollectionId('');
+      return;
+    }
+
+    setCollections(getStoredCollections());
+    syncBoardsFromServer()
+      .then((b) => {
+        if (Array.isArray(b)) setCollections(b);
+      })
+      .catch(() => {});
+
+    const handleR2SyncedBoards = () => {
+      syncBoardsFromServer()
+        .then((b) => {
+          if (Array.isArray(b)) setCollections(b);
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('thumbfeed_r2_synced', handleR2SyncedBoards);
+    return () => {
+      window.removeEventListener('thumbfeed_r2_synced', handleR2SyncedBoards);
+    };
+  }, [authLoading, user]);
 
   // Auto-dismiss transient toast notifications
   useEffect(() => {
@@ -375,9 +398,17 @@ export default function HomePage() {
     });
 
     try {
+      const token = await getIdToken();
+      if (!token) {
+        setToastMessage('Sign in as admin to sync edits to cloud');
+        return;
+      }
       const res = await fetch('/api/thumbnails/update', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           id: item.id,
           imageUrl: item.imageUrl,
@@ -399,8 +430,16 @@ export default function HomePage() {
 
   // Boards / Collections Handlers
   const handleCreateCollection = (name: string, desc: string) => {
+    if (!user) {
+      setToastMessage('Sign in with Google to create synced boards.');
+      return;
+    }
+    const newId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? `board-${crypto.randomUUID().slice(0, 8)}`
+        : `board-${Date.now()}`;
     const newBoard: CollectionBoard = {
-      id: `board-${Date.now()}`,
+      id: newId,
       name,
       description: desc,
       thumbnailIds: [],
@@ -491,12 +530,18 @@ export default function HomePage() {
         collections={collections}
         selectedBoardId={selectedBoardId}
         onSelectBoard={(boardId) => setSelectedBoardId(boardId)}
-        onOpenMoodboard={() => setIsMoodboardOpen(true)}
-        onOpenAdd={() => setIsAddOpen(true)}
+        onOpenMoodboard={() => {
+          if (!user) {
+            setToastMessage('Sign in with Google from the sidebar to create and sync boards.');
+            return;
+          }
+          setIsMoodboardOpen(true);
+        }}
+        onOpenAdd={isAdmin ? () => setIsAddOpen(true) : undefined}
         onShuffle={handleShuffle}
         categories={categories}
-        onAddCategory={handleAddCategory}
-        onRemoveCategory={handleRemoveCategory}
+        onAddCategory={isAdmin ? handleAddCategory : undefined}
+        onRemoveCategory={isAdmin ? handleRemoveCategory : undefined}
         totalThumbnailsCount={fullLibraryTotal}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
@@ -566,7 +611,7 @@ export default function HomePage() {
                   >
                     Clear Filters
                   </button>
-                ) : (
+                ) : isAdmin ? (
                   <button
                     type="button"
                     onClick={() => setIsAddOpen(true)}
@@ -575,7 +620,7 @@ export default function HomePage() {
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Add Thumbnails</span>
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           ) : (
@@ -589,7 +634,7 @@ export default function HomePage() {
                     index={index}
                     showCardInfo={showCardInfo}
                     onInspect={setSelectedItem}
-                    onDelete={setThumbnailToDelete}
+                    onDelete={isAdmin ? setThumbnailToDelete : undefined}
                     collections={collections}
                     onCollectionsChange={setCollections}
                   />
@@ -636,21 +681,23 @@ export default function HomePage() {
         onInspectItem={setSelectedItem}
       />
 
-      {/* Add Modal */}
-      <AddModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        onAddThumbnail={handleAddThumbnail}
-        onAddMultipleThumbnails={handleAddMultipleThumbnails}
-        collections={collections}
-      />
+      {/* Add Modal (Admin only) */}
+      {isAdmin && (
+        <AddModal
+          isOpen={isAddOpen}
+          onClose={() => setIsAddOpen(false)}
+          onAddThumbnail={handleAddThumbnail}
+          onAddMultipleThumbnails={handleAddMultipleThumbnails}
+          collections={collections}
+        />
+      )}
 
       {/* Thumbnail Inspection Modal */}
       <ThumbnailModal
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
-        onDelete={handleDeleteThumbnail}
-        onEditMetadata={handleEditMetadata}
+        onDelete={isAdmin ? handleDeleteThumbnail : undefined}
+        onEditMetadata={isAdmin ? handleEditMetadata : undefined}
       />
 
       {/* Delete Confirmation Modal */}

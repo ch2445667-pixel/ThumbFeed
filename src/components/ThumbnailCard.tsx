@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, Bookmark, Check, Plus, Folder, X } from 'lucide-react';
+import { Trash2, Bookmark, Check, Plus, Folder, X, ImageOff } from 'lucide-react';
 import { ThumbnailItem, CollectionBoard } from '../lib/types';
 import { getCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
 import { getStoredCollections, toggleThumbnailInCollection, saveCollection } from '../lib/storage';
+import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 interface ThumbnailCardProps {
   item: ThumbnailItem;
@@ -48,6 +49,8 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [localCollections, setLocalCollections] = useState<CollectionBoard[]>([]);
+  const [imgSrc, setImgSrc] = useState<string>(() => sanitizeSafeImageSrc(item.thumbSmallUrl || item.imageUrl) || '');
+  const [imgFailed, setImgFailed] = useState(false);
   const boardMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,7 +60,12 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
     }
   }, [propCollections]);
 
-  // Click outside to close board menu
+  useEffect(() => {
+    setImgSrc(sanitizeSafeImageSrc(item.thumbSmallUrl || item.imageUrl) || '');
+    setImgFailed(false);
+  }, [item.id, item.thumbSmallUrl, item.imageUrl]);
+
+  // Click outside or Escape to close board menu
   useEffect(() => {
     if (!isBoardMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -66,8 +74,18 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
         setIsCreatingBoard(false);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsBoardMenuOpen(false);
+        setIsCreatingBoard(false);
+      }
+    };
     window.addEventListener('mousedown', handleClickOutside);
-    return () => window.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isBoardMenuOpen]);
 
   const activeCollections = propCollections ?? localCollections;
@@ -137,11 +155,23 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   if (displayTime) metaParts.push(displayTime);
   const metaLine = metaParts.join('  •  ');
 
-  const gridSrc = item.thumbSmallUrl || item.imageUrl;
+  const fullSafeUrl = sanitizeSafeImageSrc(item.imageUrl);
 
   return (
     <div
+      id={`thumbnail-card-${item.id}`}
+      data-testid="thumbnail-card"
+      role="button"
+      tabIndex={0}
+      aria-label={`Inspect ${displayTitle || item.title || 'thumbnail'}`}
       onClick={() => onInspect(item)}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onInspect(item);
+        }
+      }}
       suppressHydrationWarning
       className={`group relative w-full cursor-pointer select-none rounded-[8px] border border-white/[0.08] bg-[#0c0d12] hover:bg-[#11131a] transition-all duration-200 ease-out hover:border-white/[0.20] hover:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.85)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] ${
         showCardInfo ? 'p-1.5 sm:p-2 flex flex-col' : 'overflow-hidden'
@@ -153,18 +183,33 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
           showCardInfo ? 'rounded-[5px]' : 'rounded-[7px]'
         }`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={gridSrc}
-          alt={displayTitle || item.title}
-          className="block h-full w-full object-cover object-center transition-transform duration-300 ease-out group-hover:scale-[1.02]"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          width={item.width ?? 1280}
-          height={item.height ?? 720}
-          loading={index < 8 ? 'eager' : 'lazy'}
-          decoding="async"
-          fetchPriority={index < 4 ? 'high' : 'auto'}
-        />
+        {!imgFailed && imgSrc ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={imgSrc}
+            alt={displayTitle || item.title}
+            referrerPolicy="no-referrer"
+            onError={() => {
+              if (fullSafeUrl && imgSrc !== fullSafeUrl) {
+                setImgSrc(fullSafeUrl);
+              } else {
+                setImgFailed(true);
+              }
+            }}
+            className="block h-full w-full object-cover object-center transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            width={item.width ?? 1280}
+            height={item.height ?? 720}
+            loading={index < 8 ? 'eager' : 'lazy'}
+            decoding="async"
+            fetchPriority={index < 4 ? 'high' : 'auto'}
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-[#090a0d] text-white/30">
+            <ImageOff className="h-5 w-5" />
+            <span className="text-[10px] font-medium text-white/35">Preview unavailable</span>
+          </div>
+        )}
 
         {/* Subtle hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
@@ -200,6 +245,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
                 <button
                   type="button"
                   onClick={() => setIsBoardMenuOpen(false)}
+                  aria-label="Close board menu"
                   className="p-0.5 rounded text-white/40 hover:text-white"
                 >
                   <X className="w-3 h-3" />
@@ -292,7 +338,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
             }}
             title="Delete thumbnail"
             aria-label="Delete thumbnail"
-            className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-md border border-white/10 bg-black/70 backdrop-blur-md text-white/70 opacity-0 transition-all duration-150 hover:bg-red-500 hover:text-white hover:border-transparent group-hover:opacity-100 active:scale-95 shadow-sm"
+            className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-md border border-white/10 bg-black/70 backdrop-blur-md text-white/70 opacity-0 transition-all duration-150 hover:bg-red-500 hover:text-white hover:border-transparent group-hover:opacity-100 focus-visible:opacity-100 active:scale-95 shadow-sm"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>

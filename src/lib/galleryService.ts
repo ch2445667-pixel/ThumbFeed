@@ -15,9 +15,13 @@ import {
   isR2Configured,
   R2_APP_DATA
 } from './r2';
+import { extractItemFingerprint, deduplicateThumbnailItems } from './thumbnailDedupe';
+
+export { extractItemFingerprint, deduplicateThumbnailItems };
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const THUMBNAILS_FILE = path.join(DATA_DIR, 'thumbnails.json');
+const DELETED_FILE = path.join(DATA_DIR, 'deleted.json');
 
 function ensureDataDir() {
   try {
@@ -54,6 +58,70 @@ function writeStoredFile(items: ThumbnailItem[]): boolean {
   }
 }
 
+function readLocalDeletedKeys(): string[] {
+  ensureDataDir();
+  try {
+    if (fs.existsSync(DELETED_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(DELETED_FILE, 'utf-8'));
+      if (Array.isArray(parsed)) return parsed.filter((x): x is string => typeof x === 'string');
+    }
+  } catch {}
+  return [];
+}
+
+function writeLocalDeletedKeys(keys: string[]): void {
+  ensureDataDir();
+  try {
+    const trimmed = keys.slice(-5000);
+    fs.writeFileSync(DELETED_FILE, JSON.stringify(trimmed, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Could not write deleted.json:', err);
+  }
+}
+
+async function getDeletedTombstoneSet(): Promise<Set<string>> {
+  const set = new Set<string>(readLocalDeletedKeys());
+  if (isR2Configured()) {
+    try {
+      const r2Deleted = await downloadJsonFromR2<string[]>(R2_APP_DATA.DELETED);
+      if (Array.isArray(r2Deleted)) {
+        for (const k of r2Deleted) {
+          if (typeof k === 'string' && k) set.add(k);
+        }
+      }
+    } catch {}
+  }
+  return set;
+}
+
+async function addDeletedTombstones(keys: string[]): Promise<void> {
+  const clean = keys.filter(Boolean);
+  if (clean.length === 0) return;
+  const set = await getDeletedTombstoneSet();
+  for (const k of clean) set.add(k);
+  const next = Array.from(set);
+  writeLocalDeletedKeys(next);
+  if (isR2Configured()) {
+    uploadJsonToR2(R2_APP_DATA.DELETED, next).catch(() => {});
+  }
+}
+
+async function removeDeletedTombstones(keys: string[]): Promise<void> {
+  const toRemove = new Set(keys.filter(Boolean));
+  if (toRemove.size === 0) return;
+  const set = await getDeletedTombstoneSet();
+  let changed = false;
+  for (const k of toRemove) {
+    if (set.delete(k)) changed = true;
+  }
+  if (!changed) return;
+  const next = Array.from(set);
+  writeLocalDeletedKeys(next);
+  if (isR2Configured()) {
+    uploadJsonToR2(R2_APP_DATA.DELETED, next).catch(() => {});
+  }
+}
+
 let cachedItems: ThumbnailItem[] | null = null;
 let lastCacheTime = 0;
 const CACHE_TTL_MS = 3 * 1000; // 3 seconds cache
@@ -63,113 +131,7 @@ export function invalidateGalleryCache() {
   lastCacheTime = 0;
 }
 
-/**
- * Robust fingerprint generator to catch duplicate items across YouTube IDs,
- * upload attempts, and raw file names.
- */
-export function extractItemFingerprint(item: Partial<ThumbnailItem>): string {
-  // 1. Check for 11-char YouTube ID in ID, sourceUrl, imageUrl, or breakdownNotes
-  const allText = `${item.id || ''} ${item.sourceUrl || ''} ${item.imageUrl || ''} ${item.breakdownNotes || ''}`;
-  const ytMatch = allText.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/|thumb-yt-)([a-zA-Z0-9_-]{11})/i) ||
-                  allText.match(/([a-zA-Z0-9_-]{11})_[a-z0-9]{4,6}\.(jpg|webp|png)/i);
-  if (ytMatch && ytMatch[1] && ytMatch[1].length === 11) {
-    return `yt:${ytMatch[1]}`;
-  }
 
-  // 2. Base filename without small/ prefix and without random 5-char upload suffix
-  const imgUrl = (item.imageUrl || '').split('?')[0];
-  const filename = decodeURIComponent(imgUrl.split('/').pop() || '');
-  if (filename) {
-    const cleanBase = filename
-      .toLowerCase()
-      .replace(/^small_/, '')
-      .replace(/\.(jpg|jpeg|png|webp|gif)$/, '')
-      .replace(/_[a-z0-9]{4,6}$/, '') // strip upload random suffix e.g. _6xwjz
-      .replace(/^thumb_\d+_/, '')
-      .replace(/^poster_\d+_/, '')
-      .trim();
-    if (cleanBase.length > 5) {
-      return `base:${cleanBase}`;
-    }
-  }
-
-  // 3. Normalized Title
-  if (item.title && item.title.trim().length > 3) {
-    const slug = item.title
-      .toLowerCase()
-      .replace(/^(small|r2)\s+/i, '')
-      .replace(/_[a-z0-9]{4,6}$/i, '')
-      .replace(/[^a-z0-9]+/g, ' ')
-      .trim();
-    if (slug.length > 5) {
-      return `title:${slug}`;
-    }
-  }
-
-  return `id:${item.id || imgUrl}`;
-}
-
-/**
- * Filter out ghost preview records and collapse duplicate uploads of the same
- * video or image into a single authoritative item.
- */
-export function deduplicateThumbnailItems(items: ThumbnailItem[]): ThumbnailItem[] {
-  // 1. Remove preview image files that were accidentally indexed
-  const nonPreviews = items.filter(it => {
-    if (!it || !it.imageUrl) return false;
-    const lowerUrl = it.imageUrl.toLowerCase();
-    const lowerId = (it.id || '').toLowerCase();
-    if (lowerUrl.includes('/media/small/') || lowerUrl.startsWith('small/') || lowerId.includes('small_')) {
-      return false;
-    }
-    return true;
-  });
-
-  // 2. Group by fingerprint
-  const groups = new Map<string, ThumbnailItem[]>();
-  for (const item of nonPreviews) {
-    const fp = extractItemFingerprint(item);
-    const existing = groups.get(fp) || [];
-    existing.push(item);
-    groups.set(fp, existing);
-  }
-
-  // 3. For each group, pick the highest-fidelity / richest record
-  const deduped: ThumbnailItem[] = [];
-  for (const group of groups.values()) {
-    if (group.length === 1) {
-      deduped.push(group[0]);
-      continue;
-    }
-
-    group.sort((a, b) => {
-      const aIsSynthetic = a.creator === 'Cloudflare R2' || a.id.startsWith('r2-');
-      const bIsSynthetic = b.creator === 'Cloudflare R2' || b.id.startsWith('r2-');
-      if (!aIsSynthetic && bIsSynthetic) return -1;
-      if (aIsSynthetic && !bIsSynthetic) return 1;
-
-      const aScore =
-        (a.viewsEstimate ? 3 : 0) +
-        (a.creator && a.creator !== 'Cloudflare R2' ? 2 : 0) +
-        (a.styles?.length || 0) +
-        (a.colors?.length || 0) +
-        (a.title.length > 15 ? 1 : 0);
-
-      const bScore =
-        (b.viewsEstimate ? 3 : 0) +
-        (b.creator && b.creator !== 'Cloudflare R2' ? 2 : 0) +
-        (b.styles?.length || 0) +
-        (b.colors?.length || 0) +
-        (b.title.length > 15 ? 1 : 0);
-
-      return bScore - aScore;
-    });
-
-    deduped.push(group[0]);
-  }
-
-  return deduped;
-}
 
 /**
  * Persist gallery items both locally and to Cloudflare R2 bucket.
@@ -179,6 +141,15 @@ export async function saveGalleryItems(itemsToSave: ThumbnailItem[]): Promise<bo
   const combined = deduplicateThumbnailItems([...itemsToSave, ...current]);
   const localOk = writeStoredFile(combined);
   invalidateGalleryCache();
+
+  // Clear tombstones if the user explicitly saves/re-uploads these items
+  const resurrectKeys: string[] = [];
+  for (const it of itemsToSave) {
+    if (it.id) resurrectKeys.push(it.id);
+    if (it.imageUrl) resurrectKeys.push(it.imageUrl);
+    resurrectKeys.push(extractItemFingerprint(it));
+  }
+  await removeDeletedTombstones(resurrectKeys).catch(() => {});
 
   // Primary Cloud Sync: Write to Cloudflare R2 bucket as _app_data/thumbnails.json
   if (isR2Configured()) {
@@ -190,6 +161,60 @@ export async function saveGalleryItems(itemsToSave: ThumbnailItem[]): Promise<bo
   }
 
   return localOk;
+}
+
+export async function updateGalleryItemTitle(
+  target: { id?: string; imageUrl?: string },
+  newTitle: string
+): Promise<ThumbnailItem | null> {
+  const cleanTitle = newTitle.trim().slice(0, 180);
+  if (!cleanTitle) return null;
+
+  const current = readStoredFile();
+  let updatedRecord: ThumbnailItem | null = null;
+  const next = current.map((it) => {
+    const matches =
+      (target.id && it.id === target.id) ||
+      (target.imageUrl && it.imageUrl === target.imageUrl);
+    if (matches) {
+      updatedRecord = { ...it, title: cleanTitle };
+      return updatedRecord;
+    }
+    return it;
+  });
+
+  if (!updatedRecord) {
+    // Also check live items from R2 if local cache missed it
+    const live = await getAllGalleryItems(true);
+    const syncedNext = live.map((it) => {
+      const matches =
+        (target.id && it.id === target.id) ||
+        (target.imageUrl && it.imageUrl === target.imageUrl);
+      if (matches) {
+        updatedRecord = { ...it, title: cleanTitle };
+        return updatedRecord;
+      }
+      return it;
+    });
+    if (!updatedRecord) return null;
+    writeStoredFile(syncedNext);
+    invalidateGalleryCache();
+    if (isR2Configured()) {
+      await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, syncedNext).catch(() => {});
+    }
+    return updatedRecord;
+  }
+
+  writeStoredFile(next);
+  invalidateGalleryCache();
+  if (isR2Configured()) {
+    try {
+      await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, next);
+    } catch (err) {
+      console.warn('Failed to sync updated title to Cloudflare R2:', err);
+    }
+  }
+  return updatedRecord;
 }
 
 /**
@@ -214,13 +239,13 @@ export async function deleteGalleryItem(
   const remainingItems: ThumbnailItem[] = [];
 
   for (const it of current) {
-    const isIdMatch = idToMatch && (it.id === idToMatch || it.id.includes(idToMatch));
-    const isUrlMatch = urlToMatch && (it.imageUrl === urlToMatch || it.sourceUrl === urlToMatch);
-    const isFpMatch = targetFp && extractItemFingerprint(it) === targetFp;
-    const isKeyMatch = targetR2Key && (
+    const isIdMatch = Boolean(idToMatch && it.id === idToMatch);
+    const isUrlMatch = Boolean(urlToMatch && (it.imageUrl === urlToMatch || it.sourceUrl === urlToMatch));
+    const isFpMatch = Boolean(targetFp && extractItemFingerprint(it) === targetFp);
+    const isKeyMatch = Boolean(targetR2Key && (
       extractR2KeyFromUrl(it.imageUrl) === targetR2Key ||
       (it.thumbSmallUrl && extractR2KeyFromUrl(it.thumbSmallUrl) === targetR2Key)
-    );
+    ));
 
     if (isIdMatch || isUrlMatch || isFpMatch || isKeyMatch) {
       matchedItems.push(it);
@@ -229,9 +254,23 @@ export async function deleteGalleryItem(
     }
   }
 
-  // Persist updated list locally
+  // Persist updated list locally & record tombstones so item stays gone
   const ok = writeStoredFile(remainingItems);
   invalidateGalleryCache();
+
+  const tombstoneKeys: string[] = [];
+  if (idToMatch) tombstoneKeys.push(idToMatch);
+  if (urlToMatch) tombstoneKeys.push(urlToMatch);
+  if (targetR2Key) tombstoneKeys.push(targetR2Key);
+  if (targetFp) tombstoneKeys.push(targetFp);
+  for (const m of matchedItems) {
+    if (m.id) tombstoneKeys.push(m.id);
+    if (m.imageUrl) tombstoneKeys.push(m.imageUrl);
+    tombstoneKeys.push(extractItemFingerprint(m));
+    const mk = extractR2KeyFromUrl(m.imageUrl);
+    if (mk) tombstoneKeys.push(mk);
+  }
+  await addDeletedTombstones(tombstoneKeys).catch(() => {});
 
   // Collect all R2 keys that need to be permanently deleted from the storage bucket
   const keysToDelete = new Set<string>();
@@ -341,16 +380,29 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
   }
 
   const itemsList: ThumbnailItem[] = [];
+  const tombstones = await getDeletedTombstoneSet();
+
+  const isTombstoned = (it: Partial<ThumbnailItem>, explicitKey?: string): boolean => {
+    if (tombstones.size === 0) return false;
+    if (it.id && tombstones.has(it.id)) return true;
+    if (it.imageUrl && tombstones.has(it.imageUrl)) return true;
+    if (explicitKey && tombstones.has(explicitKey)) return true;
+    const fp = extractItemFingerprint(it);
+    if (fp && tombstones.has(fp)) return true;
+    const rk = it.imageUrl ? extractR2KeyFromUrl(it.imageUrl) : null;
+    if (rk && tombstones.has(rk)) return true;
+    return false;
+  };
 
   // 1. Initial curated thumbnails (if any)
   for (const item of INITIAL_THUMBNAILS) {
-    itemsList.push(item);
+    if (!isTombstoned(item)) itemsList.push(item);
   }
 
   // 2. Local file thumbnails
   const localItems = readStoredFile();
   for (const item of localItems) {
-    itemsList.push(item);
+    if (!isTombstoned(item)) itemsList.push(item);
   }
 
   // 3. Centralized Cloudflare R2 Storage (authoritative across any app instance)
@@ -358,9 +410,9 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
     try {
       // Pull the centralized thumbnails catalog from Cloudflare R2
       const r2Items = await downloadJsonFromR2<ThumbnailItem[]>(R2_APP_DATA.THUMBNAILS);
-      if (Array.isArray(r2Items) && r2Items.length > 0) {
+      if (Array.isArray(r2Items)) {
         for (const item of r2Items) {
-          if (item && item.id && item.imageUrl) {
+          if (item && item.id && item.imageUrl && !isTombstoned(item)) {
             itemsList.push(item);
           }
         }
@@ -383,15 +435,17 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
         }
 
         for (const img of bucketImages) {
-          // Skip if key already matched
-          if (knownKeys.has(img.key)) continue;
+          // Skip if key already matched or tombstoned
+          if (knownKeys.has(img.key) || tombstones.has(img.key)) continue;
 
-          // Skip if this image shares a fingerprint with an already known item
+          // Skip if this image shares a fingerprint with an already known or deleted item
           const syntheticItem: Partial<ThumbnailItem> = {
             id: `r2-${img.key}`,
             imageUrl: getR2PublicUrl(img.key),
             title: img.key,
           };
+          if (isTombstoned(syntheticItem, img.key)) continue;
+
           const fp = extractItemFingerprint(syntheticItem);
           if (knownFingerprints.has(fp)) continue;
 
@@ -441,7 +495,7 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
         if (data && data.imageUrl) {
           const dims = parseDimensions(data.breakdownNotes || data.breakdown_notes || '');
           const id = data.id || docSnap.id;
-          itemsList.push({
+          const candidate: ThumbnailItem = {
             id,
             kind: data.kind || (data.niche === 'Cinema' ? 'poster' : 'thumbnail'),
             title: data.title || 'YouTube Thumbnail',
@@ -464,7 +518,10 @@ export async function getAllGalleryItems(forceRefresh = false): Promise<Thumbnai
             source: data.source || 'r2-storage',
             createdAt: data.createdAt || data.created_at || new Date().toISOString(),
             likesCount: Number(data.likesCount || data.likes_count || 0)
-          });
+          };
+          if (!isTombstoned(candidate)) {
+            itemsList.push(candidate);
+          }
         }
       });
     }

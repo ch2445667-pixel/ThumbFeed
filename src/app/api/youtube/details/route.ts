@@ -62,8 +62,9 @@ export async function POST(req: NextRequest) {
 
     await Promise.all(
       videoIds.map(async (vid) => {
+        if (typeof vid !== 'string') return;
         const cleanId = vid.trim();
-        if (!cleanId || cleanId.length !== 11) return;
+        if (!/^[a-zA-Z0-9_-]{11}$/.test(cleanId)) return;
 
         let title: string | undefined;
         let creator: string | undefined;
@@ -73,9 +74,10 @@ export async function POST(req: NextRequest) {
 
         try {
           // 1. Fetch official YouTube oEmbed for clean title and channel name
-          const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${cleanId}&format=json`;
+          const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${encodeURIComponent(cleanId)}&format=json`;
           const oembedRes = await fetch(oembedUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ThumbFeed/1.0)' },
+            signal: AbortSignal.timeout(8000),
             next: { revalidate: 86400 } // cache for 24 hours
           });
 
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
 
         try {
           // 2. Fetch video page HTML to extract viewCount, subs, and date
-          const watchUrl = `https://www.youtube.com/watch?v=${cleanId}`;
+          const watchUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(cleanId)}`;
           const pageRes = await fetch(watchUrl, {
             headers: {
               'User-Agent':
@@ -98,6 +100,7 @@ export async function POST(req: NextRequest) {
               'Accept-Language': 'en-US,en;q=0.9',
             },
             cache: 'no-store',
+            signal: AbortSignal.timeout(8000),
           });
 
           if (pageRes.ok) {

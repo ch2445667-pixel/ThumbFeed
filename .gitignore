@@ -34,3 +34,8 @@ env.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local runtime credentials & verification artifacts
+/data/r2-config.json
+/.playwright-cli/
+

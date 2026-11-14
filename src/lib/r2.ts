@@ -1,6 +1,12 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadBucketCommand, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
+import {
+  isSafeExternalHttpUrl,
+  isValidR2AccountId,
+  isValidR2BucketName,
+  sanitizeMediaKey,
+} from './urlSafety';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const R2_CONFIG_FILE = path.join(DATA_DIR, 'r2-config.json');
@@ -10,6 +16,7 @@ export const R2_APP_DATA = {
   BOARDS: '_app_data/boards.json',
   CATEGORIES: '_app_data/categories.json',
   PROFILE: '_app_data/user-profile.json',
+  DELETED: '_app_data/deleted.json',
 };
 
 export interface R2Config {
@@ -41,17 +48,30 @@ export function saveR2Config(newConfig: {
   publicUrlBase?: string;
 }): boolean {
   try {
+    const cleanAccountId = (newConfig.accountId || '').trim();
+    const cleanAccessKeyId = (newConfig.accessKeyId || '').trim();
+    const cleanSecretAccessKey = (newConfig.secretAccessKey || '').trim();
+    const cleanBucketName = (newConfig.bucketName || '').trim();
+    const cleanPublicUrlBase = (newConfig.publicUrlBase || '').trim().replace(/\/+$/, '');
+
+    if (!isValidR2AccountId(cleanAccountId) || !isValidR2BucketName(cleanBucketName)) {
+      return false;
+    }
+    if (cleanPublicUrlBase && !isSafeExternalHttpUrl(cleanPublicUrlBase)) {
+      return false;
+    }
+
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     const dataToSave = {
-      accountId: (newConfig.accountId || '').trim(),
-      accessKeyId: (newConfig.accessKeyId || '').trim(),
-      secretAccessKey: (newConfig.secretAccessKey || '').trim(),
-      bucketName: (newConfig.bucketName || '').trim(),
-      publicUrlBase: (newConfig.publicUrlBase || '').trim().replace(/\/+$/, ''),
+      accountId: cleanAccountId,
+      accessKeyId: cleanAccessKeyId,
+      secretAccessKey: cleanSecretAccessKey,
+      bucketName: cleanBucketName,
+      publicUrlBase: cleanPublicUrlBase,
     };
-    fs.writeFileSync(R2_CONFIG_FILE, JSON.stringify(dataToSave, null, 2), 'utf-8');
+    fs.writeFileSync(R2_CONFIG_FILE, JSON.stringify(dataToSave, null, 2), { encoding: 'utf-8', mode: 0o600 });
 
     // Also update runtime process.env
     process.env.R2_ACCOUNT_ID = dataToSave.accountId;
@@ -74,11 +94,18 @@ export function saveR2Config(newConfig: {
 export function getR2Config(): R2Config {
   const fileConfig = loadSavedFileConfig();
 
-  const accountId = process.env.R2_ACCOUNT_ID || fileConfig.accountId || '';
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID || fileConfig.accessKeyId || '';
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || fileConfig.secretAccessKey || '';
-  const bucketName = process.env.R2_BUCKET_NAME || fileConfig.bucketName || '';
-  const publicUrlBase = (process.env.R2_PUBLIC_URL || fileConfig.publicUrlBase || '').replace(/\/+$/, '');
+  const accountId = (process.env.R2_ACCOUNT_ID || fileConfig.accountId || '').trim();
+  const accessKeyId = (process.env.R2_ACCESS_KEY_ID || fileConfig.accessKeyId || '').trim();
+  const secretAccessKey = (process.env.R2_SECRET_ACCESS_KEY || fileConfig.secretAccessKey || '').trim();
+  const bucketName = (process.env.R2_BUCKET_NAME || fileConfig.bucketName || '').trim();
+  const publicUrlBase = (process.env.R2_PUBLIC_URL || fileConfig.publicUrlBase || '').trim().replace(/\/+$/, '');
+
+  const validConfig = Boolean(
+    isValidR2AccountId(accountId) &&
+    accessKeyId &&
+    secretAccessKey &&
+    isValidR2BucketName(bucketName)
+  );
 
   return {
     accountId,
@@ -86,7 +113,7 @@ export function getR2Config(): R2Config {
     secretAccessKey,
     bucketName,
     publicUrlBase,
-    isConfigured: Boolean(accountId && accessKeyId && secretAccessKey && bucketName),
+    isConfigured: validConfig,
   };
 }
 
@@ -101,7 +128,7 @@ export function getR2Client(): S3Client {
   const config = getR2Config();
   if (!config.isConfigured) {
     throw new Error(
-      'Cloudflare R2 storage is not configured. Missing R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, or R2_BUCKET_NAME in environment.'
+      'Cloudflare R2 storage is not configured or contains invalid identifiers.'
     );
   }
 
@@ -193,45 +220,40 @@ export function extractR2KeyFromUrl(url: string): string | null {
   if (!url || typeof url !== 'string') return null;
 
   const config = getR2Config();
+  let candidate: string | null = null;
 
   // 1. If publicUrlBase is configured and URL starts with it
   if (config.publicUrlBase && url.startsWith(config.publicUrlBase)) {
     const afterBase = url.slice(config.publicUrlBase.length).replace(/^\/+/, '');
-    return decodeURIComponent(afterBase.split('?')[0]);
+    candidate = afterBase.split('?')[0];
+  } else {
+    // 2. If it's the internal streaming route /api/media/...
+    const apiMediaMatch = url.match(/\/api\/media\/(.+)$/);
+    if (apiMediaMatch) {
+      candidate = apiMediaMatch[1].split('?')[0];
+    } else {
+      // 3. If it's a pub-*.r2.dev URL
+      const r2DevMatch = url.match(/^https?:\/\/[^\/]+\.r2\.dev\/(.+)$/);
+      if (r2DevMatch) {
+        candidate = r2DevMatch[1].split('?')[0];
+      } else {
+        // 4. If it's direct cloudflarestorage endpoint with bucket
+        const cloudflareStorageMatch = url.match(
+          /^https?:\/\/[^\/]+\.r2\.cloudflarestorage\.com\/[^\/]+\/(.+)$/
+        );
+        if (cloudflareStorageMatch) {
+          candidate = cloudflareStorageMatch[1].split('?')[0];
+        } else if (url.startsWith('posters/') || url.startsWith('small/') || url.startsWith('thumbnails/')) {
+          candidate = url.split('?')[0];
+        } else if (url.startsWith('thumb_') || url.startsWith('poster_') || url.includes('/thumb_') || url.includes('/poster_')) {
+          const lastPart = url.split('/').pop()?.split('?')[0];
+          if (lastPart) candidate = lastPart;
+        }
+      }
+    }
   }
 
-  // 2. If it's the internal streaming route /api/media/...
-  const apiMediaMatch = url.match(/\/api\/media\/(.+)$/);
-  if (apiMediaMatch) {
-    return decodeURIComponent(apiMediaMatch[1].split('?')[0]);
-  }
-
-  // 3. If it's a pub-*.r2.dev URL
-  const r2DevMatch = url.match(/^https?:\/\/[^\/]+\.r2\.dev\/(.+)$/);
-  if (r2DevMatch) {
-    return decodeURIComponent(r2DevMatch[1].split('?')[0]);
-  }
-
-  // 4. If it's direct cloudflarestorage endpoint with bucket
-  const cloudflareStorageMatch = url.match(
-    /^https?:\/\/[^\/]+\.r2\.cloudflarestorage\.com\/[^\/]+\/(.+)$/
-  );
-  if (cloudflareStorageMatch) {
-    return decodeURIComponent(cloudflareStorageMatch[1].split('?')[0]);
-  }
-
-  // 5. If it's a relative path starting with thumbnails/, posters/, or small/
-  if (url.startsWith('posters/') || url.startsWith('small/') || url.startsWith('thumbnails/')) {
-    return decodeURIComponent(url.split('?')[0]);
-  }
-
-  // 6. If it's a sanitized filename like thumb_*.jpg or poster_*.jpg
-  if (url.startsWith('thumb_') || url.startsWith('poster_') || url.includes('/thumb_') || url.includes('/poster_')) {
-    const lastPart = url.split('/').pop()?.split('?')[0];
-    if (lastPart) return decodeURIComponent(lastPart);
-  }
-
-  return null;
+  return candidate ? sanitizeMediaKey(candidate) : null;
 }
 
 export async function testR2Connection(customConfig?: {
@@ -242,19 +264,22 @@ export async function testR2Connection(customConfig?: {
 }): Promise<{ ok: boolean; message?: string }> {
   const config = customConfig
     ? {
-        ...customConfig,
+        accountId: (customConfig.accountId || '').trim(),
+        accessKeyId: (customConfig.accessKeyId || '').trim(),
+        secretAccessKey: (customConfig.secretAccessKey || '').trim(),
+        bucketName: (customConfig.bucketName || '').trim(),
         publicUrlBase: '',
         isConfigured: Boolean(
-          customConfig.accountId &&
+          isValidR2AccountId(customConfig.accountId || '') &&
           customConfig.accessKeyId &&
           customConfig.secretAccessKey &&
-          customConfig.bucketName
+          isValidR2BucketName(customConfig.bucketName || '')
         )
       }
     : getR2Config();
 
   if (!config.isConfigured) {
-    return { ok: false, message: 'Cloudflare R2 credentials are incomplete.' };
+    return { ok: false, message: 'Cloudflare R2 credentials are incomplete or contain invalid Account ID / Bucket Name format.' };
   }
 
   try {

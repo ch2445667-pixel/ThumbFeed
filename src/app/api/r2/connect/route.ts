@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { testR2Connection, saveR2Config, getR2Config } from '../../../../lib/r2';
+import { testR2Connection, saveR2Config } from '../../../../lib/r2';
+import {
+  isSafeExternalHttpUrl,
+  isValidR2AccountId,
+  isValidR2BucketName,
+} from '../../../../lib/urlSafety';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,12 +14,42 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl } = body;
 
-    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
+    if (
+      typeof accountId !== 'string' ||
+      typeof accessKeyId !== 'string' ||
+      typeof secretAccessKey !== 'string' ||
+      typeof bucketName !== 'string' ||
+      !accountId.trim() ||
+      !accessKeyId.trim() ||
+      !secretAccessKey.trim() ||
+      !bucketName.trim()
+    ) {
       return NextResponse.json(
         {
           success: false,
           error: 'Missing required fields: accountId, accessKeyId, secretAccessKey, and bucketName are all required.',
         },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidR2AccountId(accountId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Cloudflare Account ID format.' },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidR2BucketName(bucketName)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Cloudflare R2 Bucket Name format.' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof publicUrl === 'string' && publicUrl.trim() && !isSafeExternalHttpUrl(publicUrl)) {
+      return NextResponse.json(
+        { success: false, error: 'Public URL must be a valid external http(s) URL.' },
         { status: 400 }
       );
     }

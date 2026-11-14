@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getR2Client, isR2Configured, getR2Config } from '../../../../lib/r2';
+import { sanitizeMediaKey } from '../../../../lib/urlSafety';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,13 +11,14 @@ export async function GET(
   { params }: { params: { key: string[] } }
 ) {
   if (!isR2Configured()) {
-    return new NextResponse('Cloudflare R2 is not configured. Please set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_BUCKET_NAME.', { status: 503 });
+    return new NextResponse('Cloudflare R2 is not configured.', { status: 503 });
   }
 
   const keySegments = params.key;
-  const keyPath = Array.isArray(keySegments) ? keySegments.join('/') : keySegments;
+  const rawKeyPath = Array.isArray(keySegments) ? keySegments.join('/') : keySegments;
+  const keyPath = sanitizeMediaKey(rawKeyPath);
   if (!keyPath) {
-    return new NextResponse('Missing object key', { status: 400 });
+    return new NextResponse('Invalid or forbidden media key', { status: 403 });
   }
 
   try {
@@ -39,8 +41,12 @@ export async function GET(
       : (obj.Body as any);
 
     const headers = new Headers();
-    if (obj.ContentType) headers.set('Content-Type', obj.ContentType);
+    const contentType = obj.ContentType && obj.ContentType.startsWith('image/')
+      ? obj.ContentType
+      : 'application/octet-stream';
+    headers.set('Content-Type', contentType);
     if (obj.ContentLength) headers.set('Content-Length', String(obj.ContentLength));
+    headers.set('X-Content-Type-Options', 'nosniff');
     headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
     return new NextResponse(webStream, {

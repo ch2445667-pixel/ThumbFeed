@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { extractExactPalette } from '../../../lib/colorExtract';
+import { isSafeExternalHttpUrl } from '../../../lib/urlSafety';
+
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB cap
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { imageUrl, videoTitle } = body;
 
-    if (!imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') {
       return NextResponse.json({ error: 'Image URL is required' }, { status: 400 });
     }
 
@@ -15,17 +18,32 @@ export async function POST(req: NextRequest) {
     let base64Data = '';
     let mimeType = 'image/jpeg';
 
-    if (imageUrl.startsWith('data:')) {
-      mimeType = imageUrl.split(';')[0].replace('data:', '') || 'image/jpeg';
-      base64Data = imageUrl.split(',')[1];
+    if (imageUrl.startsWith('data:image/')) {
+      const match = imageUrl.match(/^data:(image\/(?:png|jpeg|jpg|webp|gif));base64,([A-Za-z0-9+/=]+)$/i);
+      if (!match || match[2].length > MAX_IMAGE_BYTES * 1.4) {
+        return NextResponse.json({ error: 'Invalid or oversized data image payload' }, { status: 400 });
+      }
+      mimeType = match[1];
+      base64Data = match[2];
       imageBuffer = Buffer.from(base64Data, 'base64');
-    } else if (imageUrl.startsWith('http')) {
-      const imgRes = await fetch(imageUrl);
+    } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      if (!isSafeExternalHttpUrl(imageUrl)) {
+        return NextResponse.json({ error: 'Forbidden or invalid external image URL' }, { status: 400 });
+      }
+      const imgRes = await fetch(imageUrl, {
+        redirect: 'follow',
+        signal: AbortSignal.timeout(8000),
+      });
       if (imgRes.ok) {
+        if (imgRes.url && !isSafeExternalHttpUrl(imgRes.url)) {
+          return NextResponse.json({ error: 'Redirect target is not permitted' }, { status: 400 });
+        }
         const arrayBuf = await imgRes.arrayBuffer();
-        imageBuffer = Buffer.from(arrayBuf);
-        base64Data = imageBuffer.toString('base64');
-        mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
+        if (arrayBuf.byteLength <= MAX_IMAGE_BYTES) {
+          imageBuffer = Buffer.from(arrayBuf);
+          base64Data = imageBuffer.toString('base64');
+          mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
+        }
       }
     }
 
@@ -52,7 +70,7 @@ Return STRICT JSON only with this schema:
 }`;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
+          model: 'gemini-2.5-flash',
           contents: [
             {
               inlineData: {

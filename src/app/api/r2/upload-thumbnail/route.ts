@@ -6,9 +6,13 @@ import { db } from '../../../../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { saveGalleryItems, invalidateGalleryCache } from '../../../../lib/galleryService';
 import { ThumbnailItem } from '../../../../lib/types';
+import { isSafeExternalHttpUrl } from '../../../../lib/urlSafety';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const MAX_UPLOAD_IMAGE_BYTES = 15 * 1024 * 1024; // 15MB cap
+const MAX_BATCH_ITEMS = 100;
 
 interface UploadItemPayload {
   id?: string;
@@ -33,38 +37,50 @@ function sanitizeFilename(title: string, videoId: string): string {
     .replace(/\s+/g, '_')
     .slice(0, 40);
 
+  const cleanVid = (videoId || 'thumb').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) || 'thumb';
   const randSuffix = Math.random().toString(36).slice(2, 7);
   if (cleanTitle) {
-    return `${cleanTitle}_${videoId}_${randSuffix}.jpg`;
+    return `${cleanTitle}_${cleanVid}_${randSuffix}.jpg`;
   }
-  return `thumb_${videoId}_${randSuffix}.jpg`;
+  return `thumb_${cleanVid}_${randSuffix}.jpg`;
 }
 
 async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ buffer: Buffer; contentType: string } | null> {
   if (imageUrl.startsWith('data:image/')) {
-    const matches = imageUrl.match(/^data:(image\/[a-zA-Z0-9\+\-\.]+);base64,(.+)$/);
-    if (matches) {
+    const matches = imageUrl.match(/^data:(image\/(?:png|jpeg|jpg|webp|gif));base64,([A-Za-z0-9+/=]+)$/i);
+    if (matches && matches[2].length <= MAX_UPLOAD_IMAGE_BYTES * 1.4) {
       const contentType = matches[1];
       const buffer = Buffer.from(matches[2], 'base64');
-      return { buffer, contentType };
+      if (buffer.length <= MAX_UPLOAD_IMAGE_BYTES) {
+        return { buffer, contentType };
+      }
     }
+    return null;
   }
 
-  const urlsToTry = [imageUrl];
-  if (videoId) {
-    urlsToTry.push(`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`);
-    urlsToTry.push(`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`);
+  const urlsToTry: string[] = [];
+  if (isSafeExternalHttpUrl(imageUrl)) {
+    urlsToTry.push(imageUrl);
+  }
+  const cleanVid = videoId?.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (cleanVid && cleanVid.length === 11) {
+    urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/maxresdefault.jpg`);
+    urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/hqdefault.jpg`);
   }
 
   for (const url of urlsToTry) {
     try {
       const res = await fetch(url, {
+        redirect: 'follow',
+        signal: AbortSignal.timeout(12000),
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
       if (res.ok) {
+        if (res.url && !isSafeExternalHttpUrl(res.url)) continue;
         const arrayBuffer = await res.arrayBuffer();
+        if (arrayBuffer.byteLength > MAX_UPLOAD_IMAGE_BYTES) continue;
         const buffer = Buffer.from(arrayBuffer);
         if (buffer.length > 2000 || url.includes('hqdefault')) {
           const contentType = res.headers.get('content-type') || 'image/jpeg';
@@ -82,7 +98,7 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
 async function optimizeBuffer(input: Buffer, isPoster: boolean): Promise<Buffer> {
   try {
     const mod = await import('sharp').then((m: any) => m.default || m);
-    const matteColor = isPoster ? '#000000' : '#401D1A';
+    const matteColor = isPoster ? '#000000' : '#090a0d';
     const maxSide = isPoster ? 1000 : 1280;
     return await mod(input)
       .resize({ width: maxSide, height: maxSide, fit: 'inside', withoutEnlargement: true })
@@ -122,7 +138,8 @@ async function readDimensions(input: Buffer): Promise<{ width: number; height: n
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const items: UploadItemPayload[] = Array.isArray(body.items) ? body.items : [body];
+    const rawItems: UploadItemPayload[] = Array.isArray(body.items) ? body.items : [body];
+    const items = rawItems.slice(0, MAX_BATCH_ITEMS);
 
     if (items.length === 0) {
       return NextResponse.json({ error: 'No items to upload' }, { status: 400 });

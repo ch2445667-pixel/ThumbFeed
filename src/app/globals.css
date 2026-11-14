@@ -1,13 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-@import url('https://fonts.cdnfonts.com/css/google-sans');
-@import url('https://fonts.cdnfonts.com/css/cal-sans');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 .font-logo {
-  font-family: 'Cal Sans', 'Google Sans', sans-serif;
+  font-family: var(--font-brand), var(--font-geist-sans), system-ui, sans-serif;
 }
 
 /* ==========================================================================
@@ -83,10 +79,10 @@
   --duration-normal: 220ms;
   --duration-slow: 320ms;
 
-  /* Shape - exact 14px consistent */
-  --r-sm: 14px;
-  --r-md: 14px;
-  --r-lg: 14px;
+  /* Shape - crisp stepped radius scale */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 10px;
   --r-xl: 14px;
 
   /* Elevation, tinted to the espresso hue. Never pure black on cream. */
@@ -147,7 +143,7 @@
 body {
   color: var(--ink);
   background: var(--canvas);
-  font-family: 'Google Sans', 'Product Sans', 'Plus Jakarta Sans', var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
     system-ui, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -480,6 +476,65 @@ input[type='range'].custom-slider::-webkit-slider-thumb:hover {
 }
 .animate-fade-blur {
   animation: smoothFadeIn var(--duration-normal) var(--ease-fluid) forwards;
+}
+
+@keyframes tfFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tfZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tfSlideBottom {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tfSlideTop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in.fade-in {
+  animation: tfFadeIn 160ms var(--ease-fluid) both;
+}
+
+.animate-in.zoom-in-95 {
+  animation: tfZoomIn 180ms var(--ease-fluid) both;
+}
+
+.animate-in.slide-in-from-bottom-2 {
+  animation: tfSlideBottom 180ms var(--ease-fluid) both;
+}
+
+.animate-in.slide-in-from-top-2,
+.animate-in.slide-in-from-top-1 {
+  animation: tfSlideTop 160ms var(--ease-fluid) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

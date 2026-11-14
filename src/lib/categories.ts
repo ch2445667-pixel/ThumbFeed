@@ -36,7 +36,7 @@ export function getAllCategories(): string[] {
       return DEFAULT_CATEGORIES;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       return parsed.filter(item => typeof item === 'string' && item.trim().length > 0);
     }
     return DEFAULT_CATEGORIES;
@@ -65,7 +65,7 @@ export async function syncCategoriesFromServer(): Promise<string[]> {
     const res = await fetch('/api/categories');
     if (res.ok) {
       const serverCats = await res.json();
-      if (Array.isArray(serverCats) && serverCats.length > 0) {
+      if (Array.isArray(serverCats)) {
         localStorage.setItem(ACTIVE_CATEGORIES_KEY, JSON.stringify(serverCats));
         window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: serverCats }));
         return serverCats;

@@ -26,6 +26,7 @@ import {
   subscribeCategories
 } from '../lib/categories';
 import { extractDedupeKeys, addThumbnailToBoard } from '../lib/storage';
+import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 // Real official Pinterest logo SVG in clean white/currentColor style
 const RealPinterestIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -652,12 +653,25 @@ export const AddModal: React.FC<AddModalProps> = ({
     return subscribeCategories(update);
   }, []);
 
-  // Reset modal state on open/close
+  // Escape key dismissal (paused while nested R2 modal is open)
+  useEffect(() => {
+    if (!isOpen || isR2ModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isR2ModalOpen, onClose]);
+
+  // Reset modal state on open/close without re-running on tab change
   useEffect(() => {
     if (isOpen) {
       setMediaKind(initialMediaKind);
-      if (initialMediaKind === 'poster' && activeTab === 'youtube') {
-        setActiveTab('upload');
+      if (initialMediaKind === 'poster') {
+        setActiveTab(prev => (prev === 'youtube' ? 'upload' : prev));
       }
     } else {
       setQueuedImages([]);
@@ -670,20 +684,21 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadCategories([]);
       setYoutubeCategories([]);
       setPinterestCategories([]);
+      setSelectedBoardId('');
       setMediaKind(initialMediaKind);
       setActiveTab('upload');
       setIsUploadingToCloud(false);
       setUploadStatusText('');
       setCloudError('');
     }
-  }, [isOpen, initialMediaKind, activeTab]);
+  }, [isOpen, initialMediaKind]);
 
   // Process a File or Blob into a QueuedImageItem
   const processImageFile = useCallback(async (file: File | Blob, customName?: string): Promise<QueuedImageItem | null> => {
     try {
       const isPoster = mediaKind === 'poster';
-      // Portraits keep a black matte; thumbnails keep the brand matte.
-      const jpgDataUrl = await convertToJpg(file, 0.9, 1920, isPoster ? '#000000' : '#401D1A');
+      // Portraits keep a black matte; thumbnails keep the obsidian matte.
+      const jpgDataUrl = await convertToJpg(file, 0.9, 1920, isPoster ? '#000000' : '#090a0d');
       const rawName = (file instanceof File && file.name) ? file.name : (customName || `${unitWord} ${Date.now().toString().slice(-4)}`);
       const cleanTitle = rawName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
       const chosenCategories = [...uploadCategories];
@@ -770,26 +785,27 @@ export const AddModal: React.FC<AddModalProps> = ({
 
     // Check if plain text clipboard has an image URL
     const text = e.clipboardData?.getData('text')?.trim();
-    if (text && (text.startsWith('http://') || text.startsWith('https://') || text.startsWith('data:image/'))) {
-      if (text.match(/\.(jpeg|jpg|png|webp|gif)/i) || text.includes('i.pinimg.com') || text.includes('ytimg.com')) {
+    const safeUrl = text ? sanitizeSafeImageSrc(text) : '';
+    if (safeUrl) {
+      if (safeUrl.match(/\.(jpeg|jpg|png|webp|gif)/i) || safeUrl.includes('i.pinimg.com') || safeUrl.includes('ytimg.com')) {
         e.preventDefault();
         setIsProcessingFiles(true);
         try {
-          const res = await fetch(text);
+          const res = await fetch(safeUrl);
           const blob = await res.blob();
           const processed = await processImageFile(blob, `Pasted ${unitWord} ${queuedImages.length + 1}`);
           if (processed) {
             setQueuedImages(prev => [...prev, processed]);
           }
         } catch {
-          // fallback dataUrl
+          // fallback dataUrl (already sanitized via sanitizeSafeImageSrc)
           const chosenCategories = [...uploadCategories];
           const isPoster = mediaKind === 'poster';
           setQueuedImages(prev => [
             ...prev,
             {
               id: `${isPoster ? 'poster' : 'img'}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-              dataUrl: text,
+              dataUrl: safeUrl,
               title: `Pasted ${unitWord} ${prev.length + 1}`,
               creator: isPoster ? 'Cinema' : 'You',
               niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
@@ -850,22 +866,21 @@ export const AddModal: React.FC<AddModalProps> = ({
       if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.readText) {
         try {
           const text = (await navigator.clipboard.readText()).trim();
-          if (text) {
-            if (text.startsWith('http://') || text.startsWith('https://') || text.startsWith('data:image/')) {
-              try {
-                const res = await fetch(text);
-                const blob = await res.blob();
-                const processed = await processImageFile(blob, `Pasted ${unitWord} ${queuedImages.length + 1}`);
-                if (processed) {
-                  setQueuedImages(prev => [...prev, processed]);
-                  setPasteNotice({ text: 'Pasted image URL added to queue!' });
-                  setTimeout(() => setPasteNotice(null), 3500);
-                  setIsProcessingFiles(false);
-                  return;
-                }
-              } catch (fetchErr) {
-                console.warn('Clipboard image URL fetch failed:', fetchErr);
+          const safeClipboardUrl = text ? sanitizeSafeImageSrc(text) : '';
+          if (safeClipboardUrl) {
+            try {
+              const res = await fetch(safeClipboardUrl);
+              const blob = await res.blob();
+              const processed = await processImageFile(blob, `Pasted ${unitWord} ${queuedImages.length + 1}`);
+              if (processed) {
+                setQueuedImages(prev => [...prev, processed]);
+                setPasteNotice({ text: 'Pasted image URL added to queue!' });
+                setTimeout(() => setPasteNotice(null), 3500);
+                setIsProcessingFiles(false);
+                return;
               }
+            } catch (fetchErr) {
+              console.warn('Clipboard image URL fetch failed:', fetchErr);
             }
           }
         } catch (textErr) {
@@ -1511,7 +1526,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             <span className="hidden sm:inline">
               {r2Configured ? 'R2 Storage' : 'Connect R2'}
             </span>
-            <span className={`w-1.5 h-1.5 rounded-full ${r2Configured ? 'bg-emerald-400' : 'bg-orange-400 animate-pulse'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${r2Configured ? 'bg-emerald-400' : 'bg-orange-400'}`} />
           </button>
 
           <div className="inline-flex gap-0.5 p-1 bg-[#151518]/90 rounded-[14px] border border-white/[0.08] shadow-sm">
@@ -1589,6 +1604,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             type="button"
             id="add-modal-close-btn"
             onClick={onClose}
+            aria-label="Close add modal"
             className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[11px] flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
             title="Close"
           >
@@ -1754,8 +1770,9 @@ export const AddModal: React.FC<AddModalProps> = ({
                         <div className="w-24 sm:w-28 aspect-video rounded-lg overflow-hidden bg-stage shrink-0 relative border border-line">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={img.dataUrl}
+                            src={sanitizeSafeImageSrc(img.dataUrl)}
                             alt={img.title}
+                            referrerPolicy="no-referrer"
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -1998,7 +2015,12 @@ export const AddModal: React.FC<AddModalProps> = ({
 
                         <div className="w-24 sm:w-28 aspect-video rounded-[10px] overflow-hidden bg-black shrink-0 relative border border-white/10">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                          <img
+                            src={sanitizeSafeImageSrc(item.imageUrl)}
+                            alt={item.title}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover"
+                          />
                         </div>
 
                         <div className="flex-1 min-w-0 space-y-1.5">
@@ -2203,7 +2225,12 @@ export const AddModal: React.FC<AddModalProps> = ({
 
                         <div className="w-24 sm:w-28 aspect-video rounded-[10px] overflow-hidden bg-black shrink-0 relative border border-white/10">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                          <img
+                            src={sanitizeSafeImageSrc(item.imageUrl)}
+                            alt={item.title}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover"
+                          />
                         </div>
 
                         <div className="flex-1 min-w-0 space-y-1.5">

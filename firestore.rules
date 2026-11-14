@@ -1,21 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User Profiles
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Thumbnails - Anyone can read and contribute thumbnails to the gallery
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && (
+          request.auth.token.email == 'canonwater2025@gmail.com' ||
+          request.auth.token.email == 'shivashiva66407@gmail.com'
+        );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && !id.matches('.*[/\\\\].*');
+    }
+
+    // User Profiles: strict PII isolation — only owner or verified admin can read/write
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId)
+        && isValidId(userId)
+        && request.resource.data.keys().hasAll(['id', 'email'])
+        && request.resource.data.id == userId
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320;
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // Thumbnails: public gallery read; writes require authentication + valid schema
     match /thumbnails/{thumbnailId} {
       allow read: if true;
-      allow write: if true;
+      allow create, update: if isSignedIn()
+        && isValidId(thumbnailId)
+        && request.resource.data.keys().hasAll(['id', 'title', 'imageUrl'])
+        && request.resource.data.id is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 300
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() <= 2048;
+      allow delete: if isSignedIn();
     }
 
-    // Collections & Boards
+    // Collections & Boards: authenticated access with strict schema validation
     match /collections/{collectionId} {
-      allow read, write: if true;
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && isValidId(collectionId)
+        && request.resource.data.keys().hasAll(['id', 'name', 'thumbnailIds'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.thumbnailIds is list
+        && request.resource.data.thumbnailIds.size() <= 2000;
+      allow delete: if isSignedIn();
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

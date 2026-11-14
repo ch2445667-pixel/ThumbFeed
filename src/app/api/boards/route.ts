@@ -36,6 +36,25 @@ function writeLocalBoards(boards: CollectionBoard[]): void {
   }
 }
 
+function sanitizeBoards(input: unknown): CollectionBoard[] {
+  if (!Array.isArray(input)) return [];
+  const clean: CollectionBoard[] = [];
+  for (const raw of input.slice(0, 200)) {
+    if (!raw || typeof raw !== 'object') continue;
+    const obj = raw as Record<string, unknown>;
+    const id = typeof obj.id === 'string' ? obj.id.trim().slice(0, 100) : '';
+    const name = typeof obj.name === 'string' ? obj.name.trim().slice(0, 120) : '';
+    if (!id || !name) continue;
+    const description = typeof obj.description === 'string' ? obj.description.trim().slice(0, 500) : undefined;
+    const thumbnailIds = Array.isArray(obj.thumbnailIds)
+      ? Array.from(new Set(obj.thumbnailIds.filter((x): x is string => typeof x === 'string' && x.trim().length > 0).map(x => x.trim().slice(0, 160)))).slice(0, 2000)
+      : [];
+    const createdAt = typeof obj.createdAt === 'string' ? obj.createdAt.slice(0, 64) : new Date().toISOString();
+    clean.push({ id, name, ...(description ? { description } : {}), thumbnailIds, createdAt });
+  }
+  return clean;
+}
+
 export async function GET() {
   try {
     let boards = readLocalBoards();
@@ -44,15 +63,11 @@ export async function GET() {
     if (isR2Configured()) {
       try {
         const r2Boards = await downloadJsonFromR2<CollectionBoard[]>(R2_APP_DATA.BOARDS);
-        if (Array.isArray(r2Boards) && r2Boards.length > 0) {
-          // Merge with local boards if any exist
-          const map = new Map<string, CollectionBoard>();
-          for (const b of boards) map.set(b.id, b);
-          for (const b of r2Boards) map.set(b.id, b);
-          boards = Array.from(map.values());
+        if (Array.isArray(r2Boards)) {
+          boards = sanitizeBoards(r2Boards);
           writeLocalBoards(boards);
         } else if (boards.length > 0) {
-          // If local has boards but R2 does not yet, upload to R2
+          // Only upload local boards to R2 when _app_data/boards.json does not exist yet
           await uploadJsonToR2(R2_APP_DATA.BOARDS, boards).catch(() => {});
         }
       } catch (err) {
@@ -70,11 +85,17 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const boards: CollectionBoard[] = Array.isArray(body)
+    const rawBoards = Array.isArray(body)
       ? body
-      : Array.isArray(body.boards)
+      : Array.isArray(body?.boards)
         ? body.boards
-        : [];
+        : null;
+
+    if (!rawBoards) {
+      return NextResponse.json({ success: false, error: 'Boards array is required' }, { status: 400 });
+    }
+
+    const boards = sanitizeBoards(rawBoards);
 
     // 1. Write to local file
     writeLocalBoards(boards);

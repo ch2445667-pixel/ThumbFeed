@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Check, X as XIcon, Trash2, Download } from 'lucide-react';
+import { Pencil, Check, X as XIcon, Trash2, Download, ImageOff } from 'lucide-react';
 import { ThumbnailItem } from '../lib/types';
 import { getCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
+import { sanitizeSafeHref, sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 interface ThumbnailModalProps {
   item: ThumbnailItem | null;
@@ -60,12 +61,14 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   const [draftTitle, setDraftTitle] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<'jpg' | 'png'>('jpg');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   // Reset transient state whenever a new item is selected or closed
   useEffect(() => {
     setIsConfirmingDelete(false);
     setIsEditingTitle(false);
     setDraftTitle('');
+    setImgFailed(false);
   }, [item]);
 
   // Close on Escape key
@@ -133,7 +136,8 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   };
 
   const handleDownload = async (format: 'jpg' | 'png' = downloadFormat) => {
-    if (!item?.imageUrl) return;
+    const safeImg = sanitizeSafeImageSrc(item?.imageUrl);
+    if (!safeImg) return;
     setIsDownloading(true);
     try {
       const cleanName = (displayTitle || 'thumbnail')
@@ -143,7 +147,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
         .slice(0, 50);
       const filename = `${cleanName || 'thumbnail'}.${format}`;
 
-      const res = await fetch(item.imageUrl);
+      const res = await fetch(safeImg);
       const blob = await res.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -154,11 +158,20 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
       window.URL.revokeObjectURL(blobUrl);
       document.body.removeChild(link);
     } catch {
-      window.open(item.imageUrl, '_blank');
+      const link = document.createElement('a');
+      link.href = safeImg;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } finally {
       setIsDownloading(false);
     }
   };
+
+  const safeModalImg = sanitizeSafeImageSrc(item.imageUrl);
+  const safeSourceHref = sanitizeSafeHref(item.sourceUrl);
 
   return (
     <AnimatePresence>
@@ -194,15 +207,21 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
               item.kind === 'poster' ? 'max-h-[75vh] flex items-center justify-center py-1' : 'aspect-video'
             }`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={item.imageUrl}
-              alt={displayTitle}
-              className={`w-full h-full ${item.kind === 'poster' ? 'object-contain max-h-[72vh]' : 'object-cover'}`}
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-              }}
-            />
+            {!imgFailed && safeModalImg ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={safeModalImg}
+                alt={displayTitle}
+                referrerPolicy="no-referrer"
+                className={`w-full h-full ${item.kind === 'poster' ? 'object-contain max-h-[72vh]' : 'object-cover'}`}
+                onError={() => setImgFailed(true)}
+              />
+            ) : (
+              <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 text-white/35">
+                <ImageOff className="h-7 w-7" />
+                <span className="text-xs">Image preview unavailable</span>
+              </div>
+            )}
           </div>
 
           {/* Right: Side Content Panel (.side) */}
@@ -219,6 +238,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                       setIsEditingTitle(true);
                     }}
                     title="Edit title"
+                    aria-label="Edit title"
                     className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -229,6 +249,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                     type="button"
                     onClick={() => setIsConfirmingDelete(true)}
                     title="Delete thumbnail"
+                    aria-label="Delete thumbnail"
                     className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -366,9 +387,9 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
               </div>
 
               {/* Watch on YouTube Ghost Button (.ghost) */}
-              {item.sourceUrl ? (
+              {safeSourceHref ? (
                 <a
-                  href={item.sourceUrl}
+                  href={safeSourceHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 p-3 rounded-[12px] border border-white/[0.14] font-medium text-[12.5px] text-[#8b8b93] hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"

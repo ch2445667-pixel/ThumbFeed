@@ -46,7 +46,7 @@ export async function performFullR2Sync() {
   let categoriesCount = 0;
   try {
     const r2Cats = await downloadJsonFromR2<string[]>(R2_APP_DATA.CATEGORIES);
-    if (Array.isArray(r2Cats) && r2Cats.length > 0) {
+    if (Array.isArray(r2Cats)) {
       const catsPath = path.join(DATA_DIR, 'categories.json');
       fs.writeFileSync(catsPath, JSON.stringify(r2Cats, null, 2), 'utf-8');
       categoriesCount = r2Cats.length;

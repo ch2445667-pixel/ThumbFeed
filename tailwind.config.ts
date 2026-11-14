@@ -55,20 +55,20 @@ const config: Config = {
         brand: "var(--brand)",
       },
       fontFamily: {
-        sans: ["'Google Sans'", "'Product Sans'", "'Plus Jakarta Sans'", "var(--font-geist-sans)", "system-ui", "sans-serif"],
-        logo: ["'Cal Sans'", "sans-serif"],
+        sans: ["var(--font-geist-sans)", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+        logo: ["var(--font-brand)", "var(--font-geist-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
       },
-      // Uniform 14px corner radius across the entire app
+      // Crisp stepped radius scale matching obsidian design tokens
       borderRadius: {
         none: "0",
-        sm: "14px",
-        DEFAULT: "14px",
-        md: "14px",
-        lg: "14px",
+        sm: "6px",
+        DEFAULT: "8px",
+        md: "8px",
+        lg: "10px",
         xl: "14px",
-        "2xl": "14px",
-        "3xl": "14px",
+        "2xl": "16px",
+        "3xl": "20px",
         full: "9999px",
       },
       boxShadow: {

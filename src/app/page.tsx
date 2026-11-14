@@ -20,6 +20,7 @@ import {
   deleteCollection,
   toggleThumbnailInCollection,
   syncBoardsFromServer,
+  syncBoardsToServer,
 } from '../lib/storage';
 import {
   getAllCategories,
@@ -29,6 +30,7 @@ import {
   syncCategoriesFromServer,
 } from '../lib/categories';
 import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE } from '../lib/useGallery';
+import { extractItemFingerprint } from '../lib/thumbnailDedupe';
 import { useQueryClient } from '@tanstack/react-query';
 import { Compass, Sparkles, X, Plus } from 'lucide-react';
 
@@ -106,19 +108,19 @@ export default function HomePage() {
 
     // Synchronize boards and categories from Cloudflare R2 / server once on boot
     syncBoardsFromServer().then((b) => {
-      if (b && b.length > 0) setCollections(b);
+      if (Array.isArray(b)) setCollections(b);
     }).catch(() => {});
 
     syncCategoriesFromServer().then((c) => {
-      if (c && c.length > 0) setCategories(c);
+      if (Array.isArray(c)) setCategories(c);
     }).catch(() => {});
 
     const handleR2Synced = () => {
       syncBoardsFromServer().then((b) => {
-        if (b && b.length > 0) setCollections(b);
+        if (Array.isArray(b)) setCollections(b);
       }).catch(() => {});
       syncCategoriesFromServer().then((c) => {
-        if (c && c.length > 0) setCategories(c);
+        if (Array.isArray(c)) setCategories(c);
       }).catch(() => {});
       invalidateRef.current();
     };
@@ -128,6 +130,13 @@ export default function HomePage() {
       window.removeEventListener('thumbfeed_r2_synced', handleR2Synced);
     };
   }, []);
+
+  // Auto-dismiss transient toast notifications
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 3500);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
 
   // Subscribe to category updates
   useEffect(() => {
@@ -206,17 +215,7 @@ export default function HomePage() {
 
     for (const item of raw) {
       if (!item || !item.id) continue;
-      const allText = `${item.id} ${item.sourceUrl || ''} ${item.imageUrl || ''} ${item.breakdownNotes || ''}`;
-      const ytMatch = allText.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/|thumb-yt-)([a-zA-Z0-9_-]{11})/i) ||
-                      allText.match(/([a-zA-Z0-9_-]{11})_[a-z0-9]{4,6}\.(jpg|webp|png)/i);
-      const ytKey = ytMatch && ytMatch[1] ? `yt:${ytMatch[1]}` : null;
-
-      const imgFilename = (item.imageUrl || '').split('/').pop()?.split('?')[0] || '';
-      const baseKey = imgFilename
-        ? `base:${decodeURIComponent(imgFilename).toLowerCase().replace(/^small_/, '').replace(/\.(jpg|jpeg|png|webp)$/, '').replace(/_[a-z0-9]{4,6}$/, '')}`
-        : null;
-
-      const fp = ytKey || baseKey || item.id;
+      const fp = extractItemFingerprint(item);
 
       if (!seenIds.has(item.id) && !seenFingerprints.has(fp)) {
         seenIds.add(item.id);
@@ -227,6 +226,7 @@ export default function HomePage() {
     return deduped;
   }, [gallery.data]);
   const galleryTotal = gallery.data?.pages[0]?.total ?? 0;
+  const fullLibraryTotal = facetsQuery.data?.total ?? galleryTotal;
 
   const categoryCounts = useMemo(
     () => facetsQuery.data?.nicheCounts ?? { All: 0 },
@@ -299,12 +299,21 @@ export default function HomePage() {
       };
     });
 
-    // 3. Remove from any boards
+    // 3. Remove from any boards and persist cleaned boards to server/R2
     setCollections(prev => {
-      return prev.map(b => ({
-        ...b,
-        thumbnailIds: b.thumbnailIds.filter(id => id !== item.id),
-      }));
+      let changed = false;
+      const cleaned = prev.map(b => {
+        if (!b.thumbnailIds.includes(item.id)) return b;
+        changed = true;
+        return {
+          ...b,
+          thumbnailIds: b.thumbnailIds.filter(id => id !== item.id),
+        };
+      });
+      if (changed) {
+        syncBoardsToServer(cleaned);
+      }
+      return cleaned;
     });
 
     setToastMessage('Thumbnail deleted');
@@ -318,11 +327,38 @@ export default function HomePage() {
     }
   };
 
-  const handleEditTitle = (item: ThumbnailItem, newTitle: string) => {
-    const updated = { ...item, title: newTitle };
+  const handleEditTitle = async (item: ThumbnailItem, newTitle: string) => {
+    const cleanTitle = newTitle.trim();
+    if (!cleanTitle) return;
+    const updated = { ...item, title: cleanTitle };
     updateStoredThumbnail(updated);
     setSelectedItem(updated);
-    invalidateGallery();
+
+    // Optimistically update React Query gallery cache immediately
+    queryClient.setQueriesData({ queryKey: ['gallery'] }, (old: any) => {
+      if (!old || !old.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((p: any) => ({
+          ...p,
+          items: (p.items || []).map((it: ThumbnailItem) =>
+            it.id === item.id || it.imageUrl === item.imageUrl ? { ...it, title: cleanTitle } : it
+          ),
+        })),
+      };
+    });
+
+    try {
+      await fetch('/api/thumbnails/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, imageUrl: item.imageUrl, title: cleanTitle }),
+      });
+      setToastMessage('Title updated');
+      invalidateGallery();
+    } catch (e) {
+      console.warn('Failed to persist title update:', e);
+    }
   };
 
   // Boards / Collections Handlers
@@ -399,7 +435,7 @@ export default function HomePage() {
         categories={categories}
         onAddCategory={handleAddCategory}
         onRemoveCategory={handleRemoveCategory}
-        totalThumbnailsCount={galleryTotal}
+        totalThumbnailsCount={fullLibraryTotal}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
@@ -585,12 +621,17 @@ export default function HomePage() {
 
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-[#151821] border border-white/15 text-white text-xs shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-2">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-[#151821] border border-white/15 text-white text-xs shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-2"
+        >
           <span>{toastMessage}</span>
           <button
             type="button"
             onClick={() => setToastMessage(null)}
-            className="text-white/40 hover:text-white"
+            aria-label="Dismiss notification"
+            className="text-white/40 hover:text-white transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>

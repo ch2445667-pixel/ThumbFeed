@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ImageOff } from 'lucide-react';
 import { IconTrash, IconClose } from './icons/AppIcons';
 import { ThumbnailItem } from '../lib/types';
+import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 interface DeleteConfirmModalProps {
   item: ThumbnailItem | null;
@@ -18,7 +20,27 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   onClose,
   onConfirm
 }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [item?.id, item?.imageUrl]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !item) return null;
+
+  const safeImgSrc = sanitizeSafeImageSrc(item.imageUrl);
 
   // Synchronous: the caller removes the tile from state and closes every
   // modal at once, while the database work continues in the background.
@@ -77,16 +99,19 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
 
           {/* Thumbnail preview snippet */}
           <div className="flex items-center gap-3 p-2.5 rounded-[12px] bg-white/[0.04] border border-white/10">
-            <div className="w-20 aspect-video rounded-[8px] overflow-hidden bg-black/40 shrink-0 border border-white/5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                }}
-              />
+            <div className="w-20 aspect-video rounded-[8px] overflow-hidden bg-black/40 shrink-0 border border-white/5 flex items-center justify-center">
+              {safeImgSrc && !imgFailed ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={safeImgSrc}
+                  alt={item.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                  onError={() => setImgFailed(true)}
+                />
+              ) : (
+                <ImageOff className="w-4 h-4 text-white/30" />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-white truncate">

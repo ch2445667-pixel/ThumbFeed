@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { downloadJsonFromR2, uploadJsonToR2, isR2Configured, R2_APP_DATA } from '@/lib/r2';
+import { sanitizeSafeImageSrc } from '@/lib/urlSafety';
+
+const MAX_PROFILE_PHOTO_CHARS = 2 * 1024 * 1024; // 2MB cap for data URLs
 
 interface UserProfile {
   name: string;
@@ -70,9 +73,27 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const rawName = typeof body?.name === 'string' ? body.name.trim().slice(0, 80) : '';
+    const rawPhoto = typeof body?.photoURL === 'string' ? body.photoURL.trim() : '';
+
+    if (rawPhoto.length > MAX_PROFILE_PHOTO_CHARS) {
+      return NextResponse.json(
+        { success: false, error: 'Profile image is too large (max 2MB).' },
+        { status: 400 }
+      );
+    }
+
+    const safePhoto = rawPhoto ? sanitizeSafeImageSrc(rawPhoto) : '';
+    if (rawPhoto && !safePhoto) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid profile image URL or format.' },
+        { status: 400 }
+      );
+    }
+
     const profile: UserProfile = {
-      name: typeof body.name === 'string' ? body.name.trim() : '',
-      photoURL: typeof body.photoURL === 'string' ? body.photoURL.trim() : '',
+      name: rawName,
+      photoURL: safePhoto || '',
       updatedAt: new Date().toISOString(),
     };
 

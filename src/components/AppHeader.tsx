@@ -60,16 +60,16 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 h-14 bg-[#090a0d]/85 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between px-4 sm:px-6 transition-colors select-none">
+    <header className="sticky top-0 z-30 h-14 bg-[#090a0d]/85 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between gap-2 px-3 sm:px-6 transition-colors select-none">
       
       {/* Left: Mobile menu button only */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {onToggleSidebar && (
           <button
             type="button"
             onClick={onToggleSidebar}
             aria-label="Toggle sidebar"
-            className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors md:hidden"
+            className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors md:hidden"
           >
             <Menu className="w-4 h-4" />
           </button>
@@ -77,8 +77,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       </div>
 
       {/* Center: Search Capsule */}
-      <div className="flex-1 max-w-md mx-3 sm:mx-6">
-        <div className="relative flex items-center h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:border-white/[0.14] focus-within:border-white/[0.22] focus-within:bg-white/[0.05] transition-all px-3">
+      <div className="flex-1 min-w-0 max-w-md sm:mx-4">
+        <div className="relative flex items-center h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:border-white/[0.14] focus-within:border-white/[0.22] focus-within:bg-white/[0.05] transition-all px-2.5 sm:px-3">
           <Search className="w-3.5 h-3.5 text-white/40 shrink-0 mr-2" />
           <input
             ref={searchInputRef}
@@ -88,7 +88,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Search topics, creators, hooks..."
             spellCheck={false}
-            className="w-full bg-transparent text-xs text-white placeholder:text-white/35 outline-none"
+            className="w-full min-w-0 bg-transparent text-xs text-white placeholder:text-white/35 outline-none"
           />
 
           {query ? (
@@ -96,23 +96,23 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               type="button"
               onClick={() => onQueryChange('')}
               aria-label="Clear search"
-              className="p-1 rounded text-white/40 hover:text-white transition-colors"
+              className="p-1 rounded text-white/40 hover:text-white transition-colors shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-white/40 shrink-0">
               <span className="text-[9px]">⌘</span>K
             </kbd>
           )}
         </div>
       </div>
 
-      {/* Right: Actions (+ / - Zoom Stepper, Expanding Detail/Gallery Toggle) */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Right: Actions (+ / - Zoom Stepper, Shuffle, Expanding Detail/Gallery Toggle) */}
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         
-        {/* Sleek Zoom In / Zoom Out Slider with 14px radius */}
-        <div className="flex items-center gap-1.5 sm:gap-2 rounded-[14px] border border-white/[0.08] bg-white/[0.03] px-2.5 h-9 select-none">
+        {/* Sleek Zoom In / Zoom Out Slider with 14px radius (multi-column grids apply sm+ only) */}
+        <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 rounded-[14px] border border-white/[0.08] bg-white/[0.03] px-2.5 h-9 select-none">
           <button
             type="button"
             onClick={handleZoomOut}

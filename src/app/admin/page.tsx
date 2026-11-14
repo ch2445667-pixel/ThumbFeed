@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, UploadCloud, Youtube, Link as LinkIcon, Check, Plus, Trash2, Eye, Palette, Tag, Cloud, RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react';
 import { ThumbnailItem, NicheCategory, VisualStyle } from '../../lib/types';
-import { getStoredThumbnails, saveStoredThumbnail } from '../../lib/storage';
+import { getStoredThumbnails, saveStoredThumbnail, deleteStoredThumbnailPermanently } from '../../lib/storage';
+import { sanitizeSafeImageSrc } from '../../lib/urlSafety';
 import { useAuth, ADMIN_EMAIL } from '../../lib/authContext';
 
 const NICHES: NicheCategory[] = [
@@ -52,6 +53,7 @@ export default function AdminPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSavingToR2, setIsSavingToR2] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Form State for new thumbnail
   const [previewImage, setPreviewImage] = useState('');
@@ -244,12 +246,15 @@ export default function AdminPage() {
     setOcrText('');
   };
 
-  const handleDeleteThumbnail = (id: string) => {
+  const handleDeleteThumbnail = async (item: ThumbnailItem) => {
     if (!isAdmin) return;
-    if (!confirm('Are you sure you want to remove this thumbnail?')) return;
-    const updated = thumbnails.filter(t => t.id !== id);
-    setThumbnails(updated);
-    localStorage.setItem('thumbvault_thumbnails', JSON.stringify(updated));
+    if (pendingDeleteId !== item.id) {
+      setPendingDeleteId(item.id);
+      return;
+    }
+    setPendingDeleteId(null);
+    setThumbnails(prev => prev.filter(t => t.id !== item.id));
+    await deleteStoredThumbnailPermanently({ id: item.id, imageUrl: item.imageUrl });
   };
 
   if (!loading && !isAdmin) {
@@ -458,9 +463,14 @@ export default function AdminPage() {
             {previewImage && (
               <div className="bg-[#FFFFFF] dark:bg-[#401D1A] p-4 rounded-2xl border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 shadow-md space-y-2">
                 <span className="text-xs font-semibold text-[#401D1A]/70 dark:text-[#E4E0D3]/70">Thumbnail Preview:</span>
-                <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-[#401D1A] border border-[#401D1A]/20 dark:border-[#E4E0D3]/20">
+                <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-[#090a0d] border border-[#401D1A]/20 dark:border-[#E4E0D3]/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={sanitizeSafeImageSrc(previewImage)}
+                    alt="Preview"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
             )}
@@ -618,9 +628,14 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {thumbnails.map(item => (
               <div key={item.id} className="p-3 rounded-xl bg-[#E4E0D3]/20 dark:bg-[#401D1A] border border-[#401D1A]/15 dark:border-[#E4E0D3]/20 flex flex-col justify-between gap-2">
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-[#401D1A]">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-[#090a0d]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                  <img
+                    src={sanitizeSafeImageSrc(item.imageUrl)}
+                    alt={item.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div>
                   <h4 className="text-xs font-semibold text-[#401D1A] dark:text-[#FFFFFF] truncate">{item.title}</h4>
@@ -628,13 +643,31 @@ export default function AdminPage() {
                 </div>
                 <div className="flex items-center justify-between pt-1 border-t border-[#401D1A]/10 dark:border-[#E4E0D3]/15">
                   <span className="text-[10px] text-[#401D1A]/60 dark:text-[#E4E0D3]/60">{item.creator || 'Creator'}</span>
-                  <button
-                    onClick={() => handleDeleteThumbnail(item.id)}
-                    className="text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF] p-1 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {pendingDeleteId === item.id && (
+                      <button
+                        type="button"
+                        onClick={() => setPendingDeleteId(null)}
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#401D1A]/10 dark:bg-white/10 hover:opacity-80 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteThumbnail(item)}
+                      className={`p-1 transition-colors cursor-pointer rounded flex items-center gap-1 text-[10px] font-semibold ${
+                        pendingDeleteId === item.id
+                          ? 'bg-red-600 text-white px-2 py-0.5'
+                          : 'text-[#401D1A]/60 hover:text-[#401D1A] dark:text-[#E4E0D3]/60 dark:hover:text-[#FFFFFF]'
+                      }`}
+                      title={pendingDeleteId === item.id ? 'Confirm permanent delete' : 'Delete thumbnail'}
+                      aria-label={pendingDeleteId === item.id ? `Confirm delete ${item.title}` : `Delete ${item.title}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      {pendingDeleteId === item.id && <span>Confirm</span>}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

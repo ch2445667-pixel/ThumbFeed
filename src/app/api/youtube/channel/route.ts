@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NicheCategory } from '@/lib/types';
 import { GoogleGenAI } from '@google/genai';
+import { isSafeYouTubeUrl } from '@/lib/urlSafety';
 
 interface ExtractedChannelVideo {
   id: string;
@@ -351,6 +352,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (!isSafeYouTubeUrl(targetUrl)) {
+      return NextResponse.json(
+        { success: false, error: 'Only valid YouTube channel URLs or handles are supported.' },
+        { status: 400 }
+      );
+    }
+
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -366,9 +374,10 @@ export async function POST(req: NextRequest) {
     try {
       const res = await fetch(targetUrl, {
         headers,
-        cache: 'no-store'
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
       });
-      if (res.ok) {
+      if (res.ok && (!res.url || isSafeYouTubeUrl(res.url))) {
         html = await res.text();
       }
     } catch (e) {
@@ -403,7 +412,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Extract INNERTUBE_API_KEY & client version
-      const apiKeyMatch = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
+      const apiKeyMatch = html.match(/"INNERTUBE_API_KEY":"([a-zA-Z0-9_-]{20,80})"/);
       if (apiKeyMatch && apiKeyMatch[1]) {
         innertubeApiKey = apiKeyMatch[1];
       }
@@ -443,9 +452,10 @@ export async function POST(req: NextRequest) {
       ) {
         paginationAttempts++;
         try {
-          const browseUrl = `https://www.youtube.com/youtubei/v1/browse?key=${innertubeApiKey}`;
+          const browseUrl = `https://www.youtube.com/youtubei/v1/browse?key=${encodeURIComponent(innertubeApiKey)}`;
           const browseRes = await fetch(browseUrl, {
             method: 'POST',
+            signal: AbortSignal.timeout(10000),
             headers: {
               'Content-Type': 'application/json',
               'User-Agent': headers['User-Agent'],
@@ -530,7 +540,7 @@ export async function POST(req: NextRequest) {
 Return a strict JSON array of objects with keys: "videoId" (exact 11-char YouTube ID), "title", "creator", "niche".`;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
+          model: 'gemini-2.5-flash',
           contents: prompt,
           config: {
             responseMimeType: 'application/json',

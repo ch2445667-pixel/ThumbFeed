@@ -36,13 +36,29 @@ function ensureDataDir() {
   }
 }
 
+function sanitizeCategories(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  const seen = new Set<string>();
+  const clean: string[] = [];
+  for (const item of input.slice(0, 120)) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim().slice(0, 60);
+    if (!trimmed) continue;
+    const lower = trimmed.toLowerCase();
+    if (lower === 'all' || seen.has(lower)) continue;
+    seen.add(lower);
+    clean.push(trimmed);
+  }
+  return clean;
+}
+
 function readLocalCategories(): string[] {
   try {
     ensureDataDir();
     if (fs.existsSync(CATEGORIES_FILE_PATH)) {
       const content = fs.readFileSync(CATEGORIES_FILE_PATH, 'utf-8');
       const parsed = JSON.parse(content);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return sanitizeCategories(parsed);
     }
   } catch (err) {
     console.warn('Could not read local categories.json:', err);
@@ -67,8 +83,8 @@ export async function GET() {
     if (isR2Configured()) {
       try {
         const r2Categories = await downloadJsonFromR2<string[]>(R2_APP_DATA.CATEGORIES);
-        if (Array.isArray(r2Categories) && r2Categories.length > 0) {
-          categories = r2Categories;
+        if (Array.isArray(r2Categories)) {
+          categories = sanitizeCategories(r2Categories);
           writeLocalCategories(categories);
         } else if (categories.length > 0) {
           // Sync default/local categories up to R2
@@ -89,15 +105,17 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const categories: string[] = Array.isArray(body)
+    const raw = Array.isArray(body)
       ? body
-      : Array.isArray(body.categories)
+      : Array.isArray(body?.categories)
         ? body.categories
-        : [];
+        : null;
 
-    if (categories.length === 0) {
-      return NextResponse.json({ success: false, error: 'Empty categories array' }, { status: 400 });
+    if (!raw) {
+      return NextResponse.json({ success: false, error: 'Categories array is required' }, { status: 400 });
     }
+
+    const categories = sanitizeCategories(raw);
 
     // 1. Write to local file
     writeLocalCategories(categories);

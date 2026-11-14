@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isSafePinterestUrl } from '../../../../lib/urlSafety';
 
 interface ExtractedPin {
   id: string;
@@ -35,9 +36,13 @@ function classifyPinterestNiche(title: string): { niche: string; tags: string[] 
 }
 
 async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null> {
+  if (!isSafePinterestUrl(targetUrl)) {
+    return null;
+  }
   try {
     const res = await fetch(targetUrl, {
       redirect: 'follow',
+      signal: AbortSignal.timeout(10000),
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -45,6 +50,7 @@ async function extractSinglePin(targetUrl: string): Promise<ExtractedPin | null>
     });
 
     if (!res.ok) return null;
+    if (res.url && !isSafePinterestUrl(res.url)) return null;
     const html = await res.text();
     const finalUrl = res.url || targetUrl;
 
@@ -130,7 +136,13 @@ export async function POST(req: NextRequest) {
       candidates.push(url);
     }
 
-    const uniqueCleanUrls = Array.from(new Set(candidates.map(cleanPinterestUrl))).filter(u => u.length > 10);
+    const uniqueCleanUrls = Array.from(
+      new Set(
+        candidates
+          .filter((c): c is string => typeof c === 'string')
+          .map(cleanPinterestUrl)
+      )
+    ).filter((u) => u.length > 10 && isSafePinterestUrl(u));
 
     if (uniqueCleanUrls.length === 0) {
       return NextResponse.json({ error: 'No valid Pinterest URLs found' }, { status: 400 });

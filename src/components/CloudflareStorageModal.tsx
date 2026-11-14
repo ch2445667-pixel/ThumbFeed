@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Cloud, CheckCircle2, AlertCircle, X, Loader2, ExternalLink, ShieldCheck } from 'lucide-react';
 
 interface CloudflareStorageModalProps {
@@ -25,6 +25,25 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
   const [currentStatus, setCurrentStatus] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Fetch current status on open
   useEffect(() => {
@@ -95,7 +114,8 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
       if (onConnected) onConnected();
 
       // Automatically close after brief success display
-      setTimeout(() => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = setTimeout(() => {
         onClose();
       }, 1600);
     } catch (err: any) {
@@ -108,7 +128,12 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-blur">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-blur"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="relative w-full max-w-lg rounded-2xl bg-[#0F1117] border border-white/10 p-6 shadow-2xl text-white">
         
         {/* Header */}
@@ -125,7 +150,8 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close Cloudflare R2 settings"
+            className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -264,7 +290,7 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold shadow-md active:scale-[0.98] transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white hover:bg-white/90 text-black font-semibold shadow-md active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -274,7 +300,7 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
                 ) : (
                   <>
                     <Cloud className="w-3.5 h-3.5" />
-                    <span>Test & Connect R2</span>
+                    <span>Test &amp; Connect R2</span>
                   </>
                 )}
               </button>

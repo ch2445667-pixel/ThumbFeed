@@ -33,6 +33,21 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "title", "imageUrl"]
+    },
+    "CollectionBoard": {
+      "title": "CollectionBoard",
+      "description": "User-curated inspiration board of thumbnails",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnailIds": {
+          "type": "array"
+        },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "thumbnailIds"]
     }
   },
   "firestore": {
@@ -43,6 +58,10 @@
     "/thumbnails/{thumbnailId}": {
       "schema": "Thumbnail",
       "description": "Public or user-contributed thumbnails collection"
+    },
+    "/collections/{collectionId}": {
+      "schema": "CollectionBoard",
+      "description": "Saved inspiration boards"
     }
   }
 }

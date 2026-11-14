@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Bookmark, Trash2, Plus, ExternalLink, Download, FolderPlus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Bookmark, Trash2, Download, FolderPlus } from 'lucide-react';
 import { ThumbnailItem, CollectionBoard } from '../lib/types';
+import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 interface MoodboardDrawerProps {
   isOpen: boolean;
@@ -33,11 +34,20 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
   const [newBoardName, setNewBoardName] = useState('');
   const [newBoardDesc, setNewBoardDesc] = useState('');
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const activeCollection = collections.find(c => c.id === activeCollectionId) || collections[0];
-  const itemsInActive = savedThumbnails.filter(t => 
-    activeCollection ? activeCollection.thumbnailIds.includes(t.id) : true
+  const itemsInActive = savedThumbnails.filter(t =>
+    activeCollection ? activeCollection.thumbnailIds.includes(t.id) : false
   );
 
   const handleCreateBoard = (e: React.FormEvent) => {
@@ -87,7 +97,9 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
             </div>
 
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Close Moodboards"
               className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
             >
               <X className="w-4 h-4" />
@@ -99,8 +111,9 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono font-medium text-white/40 uppercase tracking-wider">Active Board</span>
               <button
+                type="button"
                 onClick={() => setShowNewBoardInput(!showNewBoardInput)}
-                className="flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                className="flex items-center gap-1 text-xs font-medium text-white/80 hover:text-white transition-colors"
               >
                 <FolderPlus className="w-3.5 h-3.5" />
                 <span>+ New Board</span>
@@ -195,34 +208,42 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
                 </p>
               </div>
             ) : (
-              itemsInActive.map(item => (
+              itemsInActive.map(item => {
+                const safeSrc = sanitizeSafeImageSrc(item.thumbSmallUrl || item.imageUrl);
+                return (
                 <div
                   key={item.id}
                   className="flex gap-3 p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.04] transition-all group"
                 >
-                  <div
+                  <button
+                    type="button"
                     onClick={() => onInspectItem(item)}
-                    className="relative w-24 aspect-video rounded-md overflow-hidden bg-black/50 cursor-pointer flex-shrink-0"
+                    aria-label={`Inspect ${item.title}`}
+                    className="relative w-24 aspect-video rounded-md overflow-hidden bg-black/50 cursor-pointer flex-shrink-0 text-left"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                      }}
-                    />
-                  </div>
+                    {safeSrc && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={safeSrc}
+                        alt={item.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
+                  </button>
 
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
-                      <h4
+                      <button
+                        type="button"
                         onClick={() => onInspectItem(item)}
-                        className="text-xs font-medium text-white/90 hover:text-white cursor-pointer truncate"
+                        className="w-full text-left text-xs font-medium text-white/90 hover:text-white cursor-pointer truncate block"
                       >
                         {item.title}
-                      </h4>
+                      </button>
                       <p className="text-[10px] text-white/45 mt-0.5">{item.niche}</p>
                     </div>
 
@@ -230,7 +251,9 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
                       <span className="text-[10px] text-white/40 truncate">{item.creator || 'Creator'}</span>
 
                       <button
+                        type="button"
                         onClick={() => onRemoveItem(item.id)}
+                        aria-label={`Remove ${item.title} from board`}
                         className="text-white/40 hover:text-red-400 p-1 transition-colors"
                         title="Remove from board"
                       >
@@ -239,7 +262,8 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 

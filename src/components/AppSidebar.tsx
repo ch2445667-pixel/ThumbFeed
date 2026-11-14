@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../lib/authContext';
 import { CollectionBoard } from '../lib/types';
 import { AppLogo } from './icons/AppLogo';
+import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 interface AppSidebarProps {
   isCollapsed: boolean;
@@ -94,6 +95,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   });
   const [editNameInput, setEditNameInput] = useState('');
   const [editPhotoInput, setEditPhotoInput] = useState('');
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -139,6 +141,22 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       window.removeEventListener('thumbfeed_r2_synced', loadProfile);
     };
   }, []);
+
+  React.useEffect(() => {
+    setAvatarLoadError(false);
+  }, [customPhoto, user?.photoURL]);
+
+  React.useEffect(() => {
+    if (!isEditProfileOpen && !isCategoryModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsEditProfileOpen(false);
+        setIsCategoryModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditProfileOpen, isCategoryModalOpen]);
 
   const handleOpenEditProfile = () => {
     setEditNameInput(customName || user?.displayName || 'User');
@@ -270,7 +288,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   <Compass className="w-4 h-4 shrink-0 text-white/80" />
                   {!isCollapsed && <span className="flex-1 text-left">Explore</span>}
                   {!isCollapsed && totalThumbnailsCount > 0 && (
-                    <span className="text-[10px] font-mono text-white/40">
+                    <span className="text-[10px] font-mono tabular-nums text-white/40">
                       {totalThumbnailsCount}
                     </span>
                   )}
@@ -353,7 +371,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                         >
                           <Folder className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70 shrink-0" />
                           <span className="truncate flex-1 text-left">{board.name}</span>
-                          <span className="text-[10px] font-mono text-white/30">
+                          <span className="text-[10px] font-mono tabular-nums text-white/30">
                             {board.thumbnailIds?.length || 0}
                           </span>
                         </button>
@@ -384,7 +402,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               </div>
 
               {/* Scrollable Categories List */}
-              <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-1 categories-scroll">
+              <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-1 pb-3 categories-scroll">
                 {/* 'All' Category */}
                 <button
                   type="button"
@@ -400,7 +418,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 >
                   <span className="truncate flex-1 text-left">All</span>
                   {totalThumbnailsCount > 0 && (
-                    <span className="text-[10px] font-mono text-white/30">
+                    <span className="text-[10px] font-mono tabular-nums text-white/30">
                       {totalThumbnailsCount}
                     </span>
                   )}
@@ -428,7 +446,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                       >
                         <span className="truncate flex-1 text-left">{category}</span>
                         {count > 0 && (
-                          <span className="text-[10px] font-mono text-white/30 group-hover/item:text-white/50">
+                          <span className="text-[10px] font-mono tabular-nums text-white/30 group-hover/item:text-white/50">
                             {count}
                           </span>
                         )}
@@ -442,8 +460,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                             e.stopPropagation();
                             onRemoveCategory(category);
                           }}
-                          className="opacity-0 group-hover/item:opacity-100 p-1 mr-1 text-white/30 hover:text-red-400 rounded transition-opacity"
+                          className="opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 p-1 mr-1 text-white/30 hover:text-red-400 rounded transition-opacity"
                           title={`Delete ${category}`}
+                          aria-label={`Delete ${category}`}
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -461,7 +480,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         <div className="shrink-0 border-t border-white/[0.06] p-2 space-y-1">
           {mounted && (() => {
             const effectiveName = customName || user?.displayName || user?.email?.split('@')[0] || 'User';
-            const effectivePhoto = customPhoto || user?.photoURL || '';
+            const effectivePhoto = sanitizeSafeImageSrc(customPhoto || user?.photoURL || '');
 
             return (
               <div
@@ -474,15 +493,18 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   onClick={handleOpenEditProfile}
                   className="relative group shrink-0"
                   title="Click to edit avatar"
+                  aria-label="Edit profile avatar"
                 >
-                  {effectivePhoto ? (
+                  {effectivePhoto && !avatarLoadError ? (
                     <img
                       src={effectivePhoto}
                       alt={effectiveName}
+                      referrerPolicy="no-referrer"
+                      onError={() => setAvatarLoadError(true)}
                       className="w-7 h-7 rounded-full object-cover ring-1 ring-white/20 group-hover:ring-white/50 transition-all"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[11px] font-bold ring-1 ring-white/20 group-hover:ring-white/50 transition-all">
+                    <div className="w-7 h-7 rounded-full bg-white/[0.12] flex items-center justify-center text-white text-[11px] font-bold ring-1 ring-white/20 group-hover:ring-white/50 transition-all">
                       {effectiveName[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
@@ -492,15 +514,16 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 </button>
 
                 {!isCollapsed && (
-                  <div
+                  <button
+                    type="button"
                     onClick={handleOpenEditProfile}
-                    className="flex-1 min-w-0 cursor-pointer"
+                    className="flex-1 min-w-0 text-left cursor-pointer"
                     title="Click to edit name"
                   >
                     <div className="text-xs text-white truncate font-medium hover:text-white/80 transition-colors">
                       {effectiveName}
                     </div>
-                  </div>
+                  </button>
                 )}
 
                 {!isCollapsed && (
@@ -509,6 +532,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                     onClick={handleOpenEditProfile}
                     className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
                     title="Edit profile & photo"
+                    aria-label="Edit profile and photo"
                   >
                     <Settings className="w-3.5 h-3.5" />
                   </button>
@@ -521,16 +545,20 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
       {/* Edit Profile Modal */}
       {isEditProfileOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+        <div
+          onClick={() => setIsEditProfileOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+        >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4"
+            className="w-full max-w-sm rounded-xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4 animate-in zoom-in-95"
           >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Edit Profile</h3>
               <button
                 type="button"
                 onClick={() => setIsEditProfileOpen(false)}
+                aria-label="Close Edit Profile modal"
                 className="p-1 text-white/40 hover:text-white rounded"
               >
                 <X className="w-4 h-4" />
@@ -541,10 +569,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               {/* Avatar Preview & Upload */}
               <div className="flex items-center gap-3">
                 <div className="relative w-14 h-14 rounded-full overflow-hidden bg-white/[0.06] border border-white/10 shrink-0 flex items-center justify-center">
-                  {editPhotoInput ? (
+                  {sanitizeSafeImageSrc(editPhotoInput) ? (
                     <img
-                      src={editPhotoInput}
+                      src={sanitizeSafeImageSrc(editPhotoInput)}
                       alt="Avatar Preview"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -604,6 +633,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   value={editNameInput}
                   onChange={(e) => setEditNameInput(e.target.value)}
                   placeholder="Your Name"
+                  maxLength={80}
                   required
                   className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder-white/30 focus:border-white/25 focus:outline-none"
                 />
@@ -631,10 +661,13 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
       {/* Category Management Modal (Add and Remove any category) */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+        <div
+          onClick={() => setIsCategoryModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+        >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4 animate-in zoom-in-95"
           >
             <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <div className="flex items-center gap-2.5">
@@ -649,6 +682,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsCategoryModalOpen(false)}
+                aria-label="Close Manage Categories modal"
                 className="p-1 text-white/40 hover:text-white rounded transition-colors"
               >
                 <X className="w-4 h-4" />

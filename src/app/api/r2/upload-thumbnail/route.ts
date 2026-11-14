@@ -59,14 +59,17 @@ async function fetchImageBuffer(imageUrl: string, videoId?: string): Promise<{ b
   }
 
   const urlsToTry: string[] = [];
+  const pushUrl = (u: string) => {
+    if (u && !urlsToTry.includes(u)) urlsToTry.push(u);
+  };
   if (isSafeExternalHttpUrl(imageUrl)) {
-    urlsToTry.push(imageUrl);
+    pushUrl(imageUrl);
   }
   const cleanVid = videoId?.replace(/[^a-zA-Z0-9_-]/g, '');
   if (cleanVid && cleanVid.length === 11) {
-    urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/maxresdefault.jpg`);
-    urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/sddefault.jpg`);
-    urlsToTry.push(`https://i.ytimg.com/vi/${cleanVid}/hqdefault.jpg`);
+    pushUrl(`https://i.ytimg.com/vi/${cleanVid}/maxresdefault.jpg`);
+    pushUrl(`https://i.ytimg.com/vi/${cleanVid}/sddefault.jpg`);
+    pushUrl(`https://i.ytimg.com/vi/${cleanVid}/hqdefault.jpg`);
   }
 
   for (const url of urlsToTry) {

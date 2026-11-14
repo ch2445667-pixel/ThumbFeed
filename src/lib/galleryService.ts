@@ -138,7 +138,15 @@ export function invalidateGalleryCache() {
  * Persist gallery items both locally and to Cloudflare R2 bucket.
  */
 export async function saveGalleryItems(itemsToSave: ThumbnailItem[]): Promise<boolean> {
-  const current = readStoredFile();
+  let current = readStoredFile();
+  if (current.length === 0 && isR2Configured()) {
+    try {
+      const r2Existing = await downloadJsonFromR2<ThumbnailItem[]>(R2_APP_DATA.THUMBNAILS);
+      if (Array.isArray(r2Existing) && r2Existing.length > 0) {
+        current = r2Existing;
+      }
+    } catch {}
+  }
   const combined = deduplicateThumbnailItems([...itemsToSave, ...current]);
   const localOk = writeStoredFile(combined);
   invalidateGalleryCache();

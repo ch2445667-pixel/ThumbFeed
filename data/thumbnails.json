@@ -31,7 +31,7 @@
   {
     "id": "r2-v2_The_Most_Valuable_Agency_Offers_Train_8cph1_6xwjz_jpg",
     "title": "The Most Valuable Agency Offers Train",
-    "creator": "Cloudflare R2",
+    "creator": "Jordan White",
     "imageUrl": "/api/media/v2_The_Most_Valuable_Agency_Offers_Train_8cph1_6xwjz.jpg",
     "sourceUrl": "/api/media/v2_The_Most_Valuable_Agency_Offers_Train_8cph1_6xwjz.jpg",
     "niche": "Business",
@@ -44,6 +44,36 @@
     ],
     "source": "r2-storage",
     "createdAt": "2026-11-11T10:46:43.237Z",
-    "likesCount": 42
+    "likesCount": 42,
+    "viewsEstimate": "423K"
+  },
+  {
+    "id": "thumb-yt-Jk8BKHe7h3k",
+    "kind": "thumbnail",
+    "title": "The Art of Making ANY Boring Business Look Premium on Social Media",
+    "creator": "Tuan Le",
+    "imageUrl": "/api/media/The_Art_of_Making_ANY_Boring_Business_Lo_Jk8BKHe7h3k_yxuyi.jpg",
+    "sourceUrl": "https://www.youtube.com/watch?v=Jk8BKHe7h3k",
+    "niche": "Business",
+    "styles": [
+      "Face Close-up",
+      "High-Contrast Glow"
+    ],
+    "tags": [
+      "Business"
+    ],
+    "colors": [
+      "#493529",
+      "#F9FAFA",
+      "#D8D8D6",
+      "#171717"
+    ],
+    "thumbSmallUrl": "/api/media/small/The_Art_of_Making_ANY_Boring_Business_Lo_Jk8BKHe7h3k_yxuyi.webp",
+    "width": 1280,
+    "height": 720,
+    "viewsEstimate": "28 thousand views",
+    "breakdownNotes": "Published: 4d ago | 1280x720",
+    "source": "r2-storage",
+    "createdAt": "2026-11-14T10:55:03.008Z"
   }
 ]

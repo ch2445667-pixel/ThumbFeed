@@ -69,6 +69,20 @@ export function markThumbnailPermanentlyDeleted(keys: string[]): void {
   }
 }
 
+export function unmarkThumbnailPermanentlyDeleted(keys: string[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getPermanentlyDeletedKeys();
+    let changed = false;
+    keys.forEach(k => {
+      if (k && current.delete(k)) changed = true;
+    });
+    if (changed) {
+      localStorage.setItem(DELETED_KEYS_KEY, JSON.stringify(Array.from(current)));
+    }
+  } catch {}
+}
+
 export const DEFAULT_COLLECTIONS: CollectionBoard[] = [];
 
 // Map lookup by ID, imageUrl, and filename for enriched metadata
@@ -175,26 +189,64 @@ export function normalizeItemNiche(item: ThumbnailItem): ThumbnailItem {
   };
 }
 
-export function extractDedupeKeys(item: { id?: string; imageUrl?: string; sourceUrl?: string; title?: string }): string[] {
+const GENERIC_THUMBNAIL_BASES = new Set([
+  'maxresdefault',
+  'sddefault',
+  'hqdefault',
+  'mqdefault',
+  'default',
+  'hq720',
+  'vi_webp',
+  'oar2',
+  'thumbnail',
+  'thumb',
+  'image',
+  'poster',
+]);
+
+export function extractDedupeKeys(item: {
+  id?: string;
+  videoId?: string;
+  imageUrl?: string;
+  sourceUrl?: string;
+  url?: string;
+  title?: string;
+}): string[] {
   const keys: string[] = [];
   if (item.id) keys.push(item.id);
+  if (item.videoId && /^[a-zA-Z0-9_-]{11}$/.test(item.videoId)) {
+    keys.push(item.videoId);
+    keys.push(`yt:${item.videoId}`);
+  }
   if (item.imageUrl) {
     keys.push(item.imageUrl);
     const filename = decodeURIComponent(item.imageUrl.split('/').pop()?.split('?')[0] || '');
     if (filename) {
-      keys.push(filename);
-      const cleanBase = filename.toLowerCase().replace(/^small_/, '').replace(/\.(jpg|jpeg|png|webp)$/, '').replace(/(?:_[a-z0-9]{4,6})+$/, '');
-      if (cleanBase.length > 5) keys.push(cleanBase);
+      const cleanBase = filename
+        .toLowerCase()
+        .replace(/^small_/, '')
+        .replace(/\.(jpg|jpeg|png|webp|gif|avif)$/, '')
+        .replace(/(?:_[a-z0-9]{4,6})+$/, '');
+      if (!GENERIC_THUMBNAIL_BASES.has(cleanBase)) {
+        keys.push(filename);
+        if (cleanBase.length > 5) keys.push(cleanBase);
+      }
     }
-    const ytMatch = item.imageUrl.match(/(?:\/vi\/|thumb-yt-)([a-zA-Z0-9_-]{11})/) ||
-                    item.imageUrl.split('?')[0].match(/(?:^|\/|_)([A-Za-z0-9-]{11})(?:_[a-z0-9]{4,6})+\.(?:jpg|webp|png)$/i);
+    const ytMatch =
+      item.imageUrl.match(/(?:\/vi\/|\/vi_webp\/|thumb-yt-|ch-yt-|yt-ch-|yt-vid-)([a-zA-Z0-9_-]{11})/) ||
+      item.imageUrl.split('?')[0].match(/(?:^|\/|_)([A-Za-z0-9-]{11})(?:_[a-z0-9]{4,6})+\.(?:jpg|webp|png)$/i);
     if (ytMatch && ytMatch[1] && ytMatch[1].length === 11 && /(?=.*[a-z])(?=.*[A-Z0-9-])/.test(ytMatch[1])) {
       keys.push(ytMatch[1]);
+      keys.push(`yt:${ytMatch[1]}`);
     }
   }
-  if (item.sourceUrl) {
-    const ytMatch = item.sourceUrl.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/)([a-zA-Z0-9_-]{11})/);
-    if (ytMatch && ytMatch[1]) keys.push(ytMatch[1]);
+  const linkUrl = item.sourceUrl || item.url;
+  if (linkUrl) {
+    const ytMatch = linkUrl.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/|\/shorts\/|\/live\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+      keys.push(ytMatch[1]);
+      keys.push(`yt:${ytMatch[1]}`);
+    }
   }
   return keys;
 }
@@ -417,6 +469,12 @@ export function saveStoredThumbnails(newItems: ThumbnailItem[]): ThumbnailItem[]
   if (typeof window === 'undefined') return newItems;
   if (!newItems || newItems.length === 0) return getStoredThumbnails();
 
+  const resurrectKeys: string[] = [];
+  newItems.forEach(item => {
+    resurrectKeys.push(...extractDedupeKeys(item));
+  });
+  unmarkThumbnailPermanentlyDeleted(resurrectKeys);
+
   saveUserImportedThumbnails(newItems);
 
   const list = getStoredThumbnails();
@@ -570,12 +628,16 @@ export function deleteCollection(collectionId: string): CollectionBoard[] {
   return list;
 }
 
-export function addThumbnailToBoard(collectionId: string, thumbId: string): CollectionBoard[] {
+export function addThumbnailsToBoard(collectionId: string, thumbIds: string[]): CollectionBoard[] {
+  const uniqueIds = Array.from(new Set(thumbIds.filter(Boolean)));
+  if (uniqueIds.length === 0) return getStoredCollections();
   const collections = getStoredCollections();
   const updated = collections.map(c => {
     if (c.id === collectionId) {
-      if (!c.thumbnailIds.includes(thumbId)) {
-        return { ...c, thumbnailIds: [...c.thumbnailIds, thumbId] };
+      const existing = new Set(c.thumbnailIds || []);
+      const toAdd = uniqueIds.filter(id => !existing.has(id));
+      if (toAdd.length > 0) {
+        return { ...c, thumbnailIds: [...(c.thumbnailIds || []), ...toAdd] };
       }
     }
     return c;
@@ -585,6 +647,10 @@ export function addThumbnailToBoard(collectionId: string, thumbId: string): Coll
   } catch {}
   syncBoardsToServer(updated);
   return updated;
+}
+
+export function addThumbnailToBoard(collectionId: string, thumbId: string): CollectionBoard[] {
+  return addThumbnailsToBoard(collectionId, [thumbId]);
 }
 
 export function saveCollection(collection: CollectionBoard): CollectionBoard[] {

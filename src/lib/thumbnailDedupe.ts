@@ -4,10 +4,25 @@ import { ThumbnailItem } from './types';
  * Robust fingerprint generator to catch duplicate items across YouTube IDs,
  * repeated upload attempts (multiple random suffixes), and raw file names.
  */
+const GENERIC_THUMBNAIL_BASES = new Set([
+  'maxresdefault',
+  'sddefault',
+  'hqdefault',
+  'mqdefault',
+  'default',
+  'hq720',
+  'vi_webp',
+  'oar2',
+  'thumbnail',
+  'thumb',
+  'image',
+  'poster',
+]);
+
 export function extractItemFingerprint(item: Partial<ThumbnailItem>): string {
   // 1. Check for 11-char YouTube ID in ID, sourceUrl, imageUrl, or breakdownNotes
   const allText = `${item.id || ''} ${item.sourceUrl || ''} ${item.imageUrl || ''} ${item.breakdownNotes || ''}`;
-  const explicitYtMatch = allText.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/|thumb-yt-|yt-vid-|yt-ch-)([a-zA-Z0-9_-]{11})/i);
+  const explicitYtMatch = allText.match(/(?:v=|youtu\.be\/|embed\/|\/vi\/|\/vi_webp\/|\/shorts\/|\/live\/|thumb-yt-|yt-vid-|yt-ch-|ch-yt-)([a-zA-Z0-9_-]{11})/i);
   if (explicitYtMatch && explicitYtMatch[1] && explicitYtMatch[1].length === 11) {
     return `yt:${explicitYtMatch[1]}`;
   }
@@ -32,7 +47,7 @@ export function extractItemFingerprint(item: Partial<ThumbnailItem>): string {
       .replace(/^thumb_\d+_/, '')
       .replace(/^poster_\d+_/, '')
       .trim();
-    if (cleanBase.length > 5) {
+    if (cleanBase.length > 5 && !GENERIC_THUMBNAIL_BASES.has(cleanBase)) {
       return `base:${cleanBase}`;
     }
   }

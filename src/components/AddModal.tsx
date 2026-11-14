@@ -25,7 +25,7 @@ import {
   addCustomCategory,
   subscribeCategories
 } from '../lib/categories';
-import { extractDedupeKeys, addThumbnailToBoard } from '../lib/storage';
+import { extractDedupeKeys, addThumbnailsToBoard } from '../lib/storage';
 import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 // Real official Pinterest logo SVG in clean white/currentColor style
@@ -1146,7 +1146,7 @@ export const AddModal: React.FC<AddModalProps> = ({
 
     if (finalItems.length > 0) {
       if (selectedBoardId) {
-        finalItems.forEach(item => addThumbnailToBoard(selectedBoardId, item.id));
+        addThumbnailsToBoard(selectedBoardId, finalItems.map(item => item.id));
       }
       if (onAddMultipleThumbnails) {
         onAddMultipleThumbnails(finalItems);
@@ -1269,17 +1269,21 @@ export const AddModal: React.FC<AddModalProps> = ({
         const mapped: BatchExtractedItem[] = [];
 
         videoList.forEach((it: any, idx: number) => {
-          const vId = it.videoId || `${idx}`;
+          const resolvedVid =
+            (typeof it.videoId === 'string' && it.videoId.trim()) ||
+            extractSingleYoutubeId(it.sourceUrl || it.imageUrl || it.id || '') ||
+            undefined;
+          const vId = resolvedVid || `${idx}`;
           if (seenVideoIds.has(vId)) return;
           seenVideoIds.add(vId);
 
           mapped.push({
             id: `yt-ch-${vId}`,
-            videoId: it.videoId,
-            url: it.sourceUrl || `https://www.youtube.com/watch?v=${it.videoId}`,
+            videoId: resolvedVid,
+            url: it.sourceUrl || (resolvedVid ? `https://www.youtube.com/watch?v=${resolvedVid}` : ''),
             title: it.title || 'YouTube Thumbnail',
             creator: it.creator || data.channel?.name || 'Creator',
-            imageUrl: it.imageUrl || getYoutubeJpgUrl(it.videoId),
+            imageUrl: it.imageUrl || (resolvedVid ? getYoutubeJpgUrl(resolvedVid) : ''),
             niche: (chosenCategories[0] || '') as NicheCategory,
             tags: [...chosenCategories],
             views: it.views || '',
@@ -1358,7 +1362,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     const uniqueItems: BatchExtractedItem[] = [];
     selected.forEach(it => {
       const keys = extractDedupeKeys(it);
-      if (!keys.some(k => seenBatchKeys.has(k))) {
+      if (keys.length === 0 || !keys.some(k => seenBatchKeys.has(k))) {
         keys.forEach(k => seenBatchKeys.add(k));
         uniqueItems.push(it);
       }
@@ -1367,7 +1371,8 @@ export const AddModal: React.FC<AddModalProps> = ({
     setIsUploadingToCloud(true);
     setCloudError('');
     const isPoster = mediaKind === 'poster';
-    setUploadStatusText(`Saving ${uniqueItems.length} ${isPoster ? 'posters' : 'thumbnails'} to cloud...`);
+    const unitLabel = isPoster ? 'posters' : 'thumbnails';
+    setUploadStatusText(`Uploading 0/${uniqueItems.length} ${unitLabel}...`);
 
     let finalThumbnails: ThumbnailItem[] = uniqueItems.map((item, idx) => {
       const chosenCategories = item.tags || [];
@@ -1417,80 +1422,98 @@ export const AddModal: React.FC<AddModalProps> = ({
         };
       });
 
-      const res = await fetch('/api/r2/upload-thumbnail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: uploadPayload })
+      const map = new Map<string, string>();
+      const smallMap = new Map<string, string | undefined>();
+      const dimsMap = new Map<string, { width?: number; height?: number }>();
+      const colorMap = new Map<string, string[]>();
+      let allBucketUploaded = true;
+      let firstWarning = '';
+      let firstError = '';
+
+      const CHUNK_SIZE = 12;
+      for (let start = 0; start < uploadPayload.length; start += CHUNK_SIZE) {
+        const chunk = uploadPayload.slice(start, start + CHUNK_SIZE);
+        const end = Math.min(start + chunk.length, uploadPayload.length);
+        setUploadStatusText(`Uploading ${end}/${uploadPayload.length} ${unitLabel}...`);
+
+        const res = await fetch('/api/r2/upload-thumbnail', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: chunk })
+        });
+
+        if (res.ok) {
+          const resData = await res.json();
+          if (resData.items && Array.isArray(resData.items)) {
+            resData.items.forEach((it: any) => {
+              const key1 = it.originalId;
+              const key2 = it.id;
+              const key3 = it.videoId;
+              if (it.imageUrl) {
+                if (key1) map.set(key1, it.imageUrl);
+                if (key2) map.set(key2, it.imageUrl);
+                if (key3) map.set(key3, it.imageUrl);
+              }
+              if (it.thumbSmallUrl) {
+                if (key1) smallMap.set(key1, it.thumbSmallUrl);
+                if (key2) smallMap.set(key2, it.thumbSmallUrl);
+                if (key3) smallMap.set(key3, it.thumbSmallUrl);
+              }
+              if (it.width || it.height) {
+                const d = { width: it.width, height: it.height };
+                if (key1) dimsMap.set(key1, d);
+                if (key2) dimsMap.set(key2, d);
+                if (key3) dimsMap.set(key3, d);
+              }
+              if (Array.isArray(it.colors)) {
+                if (key1) colorMap.set(key1, it.colors);
+                if (key2) colorMap.set(key2, it.colors);
+                if (key3) colorMap.set(key3, it.colors);
+              }
+              if (it.uploadedToBucket === false) allBucketUploaded = false;
+            });
+          }
+          if (!firstWarning && Array.isArray(resData.warnings) && resData.warnings[0]) {
+            firstWarning = resData.warnings[0];
+          }
+        } else {
+          const errData = await res.json().catch(() => null);
+          if (!firstError) {
+            firstError = errData?.error || 'Upload request failed. Please check your network and try again.';
+          }
+        }
+      }
+
+      finalThumbnails = finalThumbnails.map((item, idx) => {
+        const vId = uniqueItems[idx]?.videoId;
+        const origId = uploadPayload[idx]?.id;
+        const r2Url = (vId ? map.get(vId) : null) || map.get(origId) || map.get(item.id) || item.imageUrl;
+        const smallUrl = (vId ? smallMap.get(vId) : null) || smallMap.get(origId) || smallMap.get(item.id);
+        const dims = (vId ? dimsMap.get(vId) : null) || dimsMap.get(origId) || dimsMap.get(item.id);
+        return {
+          ...item,
+          imageUrl: r2Url,
+          thumbSmallUrl: smallUrl,
+          width: dims?.width ?? item.width,
+          height: dims?.height ?? item.height,
+          colors: (vId ? colorMap.get(vId) : null) ?? colorMap.get(origId) ?? colorMap.get(item.id) ?? [],
+          viewsEstimate: uniqueItems[idx]?.views || item.viewsEstimate,
+          publishedTime: uniqueItems[idx]?.publishedTime || item.publishedTime
+        };
       });
 
-      if (res.ok) {
-        const resData = await res.json();
-        let allBucketUploaded = true;
-        if (resData.items && Array.isArray(resData.items)) {
-          const map = new Map<string, string>();
-          const smallMap = new Map<string, string | undefined>();
-          const dimsMap = new Map<string, { width?: number; height?: number }>();
-          const colorMap = new Map<string, string[]>();
-          resData.items.forEach((it: any) => {
-            const key1 = it.originalId;
-            const key2 = it.id;
-            const key3 = it.videoId;
-            if (it.imageUrl) {
-              if (key1) map.set(key1, it.imageUrl);
-              if (key2) map.set(key2, it.imageUrl);
-              if (key3) map.set(key3, it.imageUrl);
-            }
-            if (it.thumbSmallUrl) {
-              if (key1) smallMap.set(key1, it.thumbSmallUrl);
-              if (key2) smallMap.set(key2, it.thumbSmallUrl);
-              if (key3) smallMap.set(key3, it.thumbSmallUrl);
-            }
-            if (it.width || it.height) {
-              const d = { width: it.width, height: it.height };
-              if (key1) dimsMap.set(key1, d);
-              if (key2) dimsMap.set(key2, d);
-              if (key3) dimsMap.set(key3, d);
-            }
-            if (Array.isArray(it.colors)) {
-              if (key1) colorMap.set(key1, it.colors);
-              if (key2) colorMap.set(key2, it.colors);
-              if (key3) colorMap.set(key3, it.colors);
-            }
-            if (it.uploadedToBucket === false) allBucketUploaded = false;
-          });
-
-          finalThumbnails = finalThumbnails.map((item, idx) => {
-            const vId = uniqueItems[idx]?.videoId;
-            const origId = uploadPayload[idx]?.id;
-            const r2Url = (vId ? map.get(vId) : null) || map.get(origId) || map.get(item.id) || item.imageUrl;
-            const smallUrl = (vId ? smallMap.get(vId) : null) || smallMap.get(origId) || smallMap.get(item.id);
-            const dims = (vId ? dimsMap.get(vId) : null) || dimsMap.get(origId) || dimsMap.get(item.id);
-            return {
-              ...item,
-              imageUrl: r2Url,
-              thumbSmallUrl: smallUrl,
-              width: dims?.width ?? item.width,
-              height: dims?.height ?? item.height,
-              colors: (vId ? colorMap.get(vId) : null) ?? colorMap.get(origId) ?? colorMap.get(item.id) ?? [],
-              viewsEstimate: uniqueItems[idx]?.views || item.viewsEstimate,
-              publishedTime: uniqueItems[idx]?.publishedTime || item.publishedTime
-            };
-          });
-        }
-        if (r2Configured && !allBucketUploaded) {
-          syncFailed = true;
-          setCloudError(
-            (Array.isArray(resData.warnings) && resData.warnings[0]) ||
-              'One or more thumbnails could not be uploaded to Cloudflare R2.'
-          );
-        } else {
-          syncFailed = false;
-          setCloudError('');
-        }
-      } else {
-        const errData = await res.json().catch(() => null);
-        setCloudError(errData?.error || 'Upload request failed. Please check your network and try again.');
+      if (firstError) {
+        setCloudError(firstError);
         syncFailed = true;
+      } else if (r2Configured && !allBucketUploaded) {
+        syncFailed = true;
+        setCloudError(
+          firstWarning ||
+            'One or more thumbnails could not be uploaded to Cloudflare R2.'
+        );
+      } else {
+        syncFailed = false;
+        setCloudError('');
       }
     } catch (err) {
       console.warn('Batch upload notice:', err);
@@ -1502,7 +1525,7 @@ export const AddModal: React.FC<AddModalProps> = ({
     }
 
     if (selectedBoardId) {
-      finalThumbnails.forEach(t => addThumbnailToBoard(selectedBoardId, t.id));
+      addThumbnailsToBoard(selectedBoardId, finalThumbnails.map(t => t.id));
     }
     if (onAddMultipleThumbnails) {
       onAddMultipleThumbnails(finalThumbnails);
@@ -2099,7 +2122,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       {isUploadingToCloud ? (
                         <>
                           <IconSpinner className="w-4 h-4 animate-spin" />
-                          <span>Saving...</span>
+                          <span>{uploadStatusText || 'Saving...'}</span>
                         </>
                       ) : (
                         <>
@@ -2308,7 +2331,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                       {isUploadingToCloud ? (
                         <>
                           <IconSpinner className="w-4 h-4 animate-spin" />
-                          <span>Saving...</span>
+                          <span>{uploadStatusText || 'Saving...'}</span>
                         </>
                       ) : (
                         <>

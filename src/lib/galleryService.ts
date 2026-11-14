@@ -16,6 +16,7 @@ import {
   R2_APP_DATA
 } from './r2';
 import { extractItemFingerprint, deduplicateThumbnailItems } from './thumbnailDedupe';
+import { formatShortViews } from './formatViews';
 
 export { extractItemFingerprint, deduplicateThumbnailItems };
 
@@ -163,12 +164,34 @@ export async function saveGalleryItems(itemsToSave: ThumbnailItem[]): Promise<bo
   return localOk;
 }
 
-export async function updateGalleryItemTitle(
+export async function updateGalleryItemMetadata(
   target: { id?: string; imageUrl?: string },
-  newTitle: string
+  updates: { title?: string; creator?: string; viewsEstimate?: string }
 ): Promise<ThumbnailItem | null> {
-  const cleanTitle = newTitle.trim().slice(0, 180);
-  if (!cleanTitle) return null;
+  const cleanTitle =
+    typeof updates.title === 'string' ? updates.title.trim().slice(0, 180) : undefined;
+  const cleanCreator =
+    typeof updates.creator === 'string' ? updates.creator.trim().slice(0, 100) : undefined;
+  let cleanViews: string | undefined;
+  if (typeof updates.viewsEstimate === 'string') {
+    const raw = updates.viewsEstimate.trim();
+    cleanViews = raw ? formatShortViews(raw) || raw.slice(0, 32) : '';
+  }
+
+  if (cleanTitle === undefined && cleanCreator === undefined && cleanViews === undefined) {
+    return null;
+  }
+  if (cleanTitle !== undefined && !cleanTitle) {
+    return null;
+  }
+
+  const applyPatch = (it: ThumbnailItem): ThumbnailItem => {
+    const nextItem: ThumbnailItem = { ...it };
+    if (cleanTitle !== undefined) nextItem.title = cleanTitle;
+    if (cleanCreator !== undefined) nextItem.creator = cleanCreator || undefined;
+    if (cleanViews !== undefined) nextItem.viewsEstimate = cleanViews || undefined;
+    return nextItem;
+  };
 
   const current = readStoredFile();
   let updatedRecord: ThumbnailItem | null = null;
@@ -177,7 +200,7 @@ export async function updateGalleryItemTitle(
       (target.id && it.id === target.id) ||
       (target.imageUrl && it.imageUrl === target.imageUrl);
     if (matches) {
-      updatedRecord = { ...it, title: cleanTitle };
+      updatedRecord = applyPatch(it);
       return updatedRecord;
     }
     return it;
@@ -191,7 +214,7 @@ export async function updateGalleryItemTitle(
         (target.id && it.id === target.id) ||
         (target.imageUrl && it.imageUrl === target.imageUrl);
       if (matches) {
-        updatedRecord = { ...it, title: cleanTitle };
+        updatedRecord = applyPatch(it);
         return updatedRecord;
       }
       return it;
@@ -211,10 +234,17 @@ export async function updateGalleryItemTitle(
     try {
       await uploadJsonToR2(R2_APP_DATA.THUMBNAILS, next);
     } catch (err) {
-      console.warn('Failed to sync updated title to Cloudflare R2:', err);
+      console.warn('Failed to sync updated metadata to Cloudflare R2:', err);
     }
   }
   return updatedRecord;
+}
+
+export async function updateGalleryItemTitle(
+  target: { id?: string; imageUrl?: string },
+  newTitle: string
+): Promise<ThumbnailItem | null> {
+  return updateGalleryItemMetadata(target, { title: newTitle });
 }
 
 /**

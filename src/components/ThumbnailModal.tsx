@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pencil, Check, X as XIcon, Trash2, Download, ImageOff } from 'lucide-react';
 import { ThumbnailItem } from '../lib/types';
-import { getCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
+import { getCachedYouTubeDetail, resolveThumbnailDisplayMeta } from '../lib/youtubeMetadataCache';
+import { formatShortViews } from '../lib/formatViews';
 import { sanitizeSafeHref, sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 interface ThumbnailModalProps {
@@ -12,23 +13,10 @@ interface ThumbnailModalProps {
   onClose: () => void;
   onDelete?: (item: ThumbnailItem) => void;
   onEditTitle?: (item: ThumbnailItem, title: string) => void;
-}
-
-// Format views: 2488161 -> "2.5M", 48200 -> "48.2K", 950 -> "950"
-function formatShortViews(raw?: string): string {
-  if (!raw) return '';
-  const clean = raw.replace(/views?/i, '').replace(/,/g, '').trim();
-  const num = parseFloat(clean);
-  if (isNaN(num)) return raw.replace(/views?/i, '').trim();
-  if (clean.includes('M') || clean.includes('K') || clean.includes('B')) {
-    return clean;
-  }
-  const f = (v: number, s: string) =>
-    (Math.round(v * 10) / 10).toString().replace(/\.0$/, '') + s;
-  if (num >= 1e9) return f(num / 1e9, 'B');
-  if (num >= 1e6) return f(num / 1e6, 'M');
-  if (num >= 1e3) return f(num / 1e3, 'K');
-  return String(num);
+  onEditMetadata?: (
+    item: ThumbnailItem,
+    updates: { title: string; creator: string; viewsEstimate: string }
+  ) => void;
 }
 
 // Relative time formatter
@@ -54,11 +42,14 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   item,
   onClose,
   onDelete,
-  onEditTitle
+  onEditTitle,
+  onEditMetadata,
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [draftTitle, setDraftTitle] = useState('');
+  const [draftCreator, setDraftCreator] = useState('');
+  const [draftViews, setDraftViews] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<'jpg' | 'png'>('jpg');
   const [isDownloading, setIsDownloading] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
@@ -66,8 +57,10 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   // Reset transient state whenever a new item is selected or closed
   useEffect(() => {
     setIsConfirmingDelete(false);
-    setIsEditingTitle(false);
+    setIsEditingDetails(false);
     setDraftTitle('');
+    setDraftCreator('');
+    setDraftViews('');
     setImgFailed(false);
   }, [item]);
 
@@ -75,8 +68,8 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isEditingTitle) {
-          setIsEditingTitle(false);
+        if (isEditingDetails) {
+          setIsEditingDetails(false);
         } else if (isConfirmingDelete) {
           setIsConfirmingDelete(false);
         } else {
@@ -86,34 +79,19 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, isConfirmingDelete, isEditingTitle]);
+  }, [onClose, isConfirmingDelete, isEditingDetails]);
 
   if (!item) return null;
 
   const cachedYT = getCachedYouTubeDetail(item);
-  const rawCreator = cachedYT?.creator || item.creator || '';
-  const isTanzeeOrUnknown =
-    !rawCreator ||
-    rawCreator.trim() === '' ||
-    rawCreator.toLowerCase().includes('tanzee') ||
-    rawCreator.trim() === 'YouTube Creator' ||
-    rawCreator.trim() === 'Curated' ||
-    rawCreator.trim() === 'Unknown';
-  const displayCreator = isTanzeeOrUnknown ? 'Creator' : rawCreator.trim();
-
-  const rawTitle = cachedYT?.title || item.title || '';
+  const resolved = resolveThumbnailDisplayMeta(item, cachedYT);
+  const displayCreator = resolved.creator || 'Creator';
   const displayTitle =
-    rawTitle && rawTitle !== 'YouTube Thumbnail' && rawTitle !== 'Untitled Thumbnail'
-      ? rawTitle.replace(/^https?:\/\/(?:www\.)?youtube\.com\/[^\s]+\s*/i, '').trim()
-      : displayCreator
-        ? `${displayCreator} Thumbnail`
-        : 'Thumbnail Preview';
+    resolved.title ||
+    (resolved.creator ? `${resolved.creator} Thumbnail` : 'Thumbnail Preview');
 
-  const rawViews = cachedYT?.views || item.viewsEstimate || '';
-  const shortViews = formatShortViews(rawViews);
-
-  const displayTime =
-    cachedYT?.publishedTime || item.publishedTime || formatTimeAgo(item.createdAt);
+  const shortViews = formatShortViews(resolved.views);
+  const displayTime = resolved.publishedTime || formatTimeAgo(item.createdAt);
 
   const isYouTube = Boolean(
     item.sourceUrl &&
@@ -126,14 +104,36 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
     onClose();
   };
 
-  const handleSaveTitle = () => {
-    if (!item || !onEditTitle) return;
-    const next = draftTitle.trim();
-    if (next && next !== item.title) {
-      onEditTitle(item, next);
-    }
-    setIsEditingTitle(false);
+  const canEdit = Boolean(onEditMetadata || onEditTitle);
+
+  const handleStartEdit = () => {
+    setDraftTitle(resolved.title || item.title || '');
+    setDraftCreator(resolved.creator || '');
+    setDraftViews(shortViews || resolved.views || '');
+    setIsEditingDetails(true);
   };
+
+  const handleSaveDetails = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!item) return;
+    const nextTitle = draftTitle.trim() || item.title;
+    const nextCreator = draftCreator.trim();
+    const rawViews = draftViews.trim();
+    const nextViews = rawViews ? formatShortViews(rawViews) || rawViews : '';
+
+    if (onEditMetadata) {
+      onEditMetadata(item, {
+        title: nextTitle,
+        creator: nextCreator,
+        viewsEstimate: nextViews,
+      });
+    } else if (onEditTitle && nextTitle && nextTitle !== item.title) {
+      onEditTitle(item, nextTitle);
+    }
+    setIsEditingDetails(false);
+  };
+
+  const previewFormattedViews = formatShortViews(draftViews);
 
   const handleDownload = async (format: 'jpg' | 'png' = downloadFormat) => {
     const safeImg = sanitizeSafeImageSrc(item?.imageUrl);
@@ -228,18 +228,15 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
           <div className="flex flex-col py-2 px-1 md:py-2 md:pr-3 md:pl-0 min-w-0 h-full">
             {/* Top Bar: Actions & Close Button (.top) */}
             <div className="flex items-center justify-between">
-              {/* Optional delete / title edit actions for creators */}
+              {/* Optional delete / details edit actions for creators */}
               <div className="flex items-center gap-1">
-                {onEditTitle && !isEditingTitle && (
+                {canEdit && !isEditingDetails && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setDraftTitle(item.title);
-                      setIsEditingTitle(true);
-                    }}
-                    title="Edit title"
-                    aria-label="Edit title"
-                    className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    onClick={handleStartEdit}
+                    title="Edit details"
+                    aria-label="Edit details"
+                    className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
@@ -250,7 +247,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                     onClick={() => setIsConfirmingDelete(true)}
                     title="Delete thumbnail"
                     aria-label="Delete thumbnail"
-                    className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -294,68 +291,110 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
               </div>
             )}
 
-            {/* Title Section (.t) */}
-            {isEditingTitle ? (
-              <div className="my-5 space-y-2">
-                <input
-                  type="text"
-                  value={draftTitle}
-                  autoFocus
-                  onChange={(e) => setDraftTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveTitle();
-                  }}
-                  maxLength={160}
-                  className="w-full rounded-[10px] border border-white/20 bg-white/[0.05] p-2 text-sm font-semibold text-white outline-none focus:border-white/40"
-                />
-                <div className="flex items-center gap-2">
+            {/* Metadata Display or Inline Edit Form */}
+            {isEditingDetails ? (
+              <form onSubmit={handleSaveDetails} className="my-4 space-y-2.5">
+                <div className="space-y-1">
+                  <label htmlFor="modal-edit-title" className="block text-[11px] font-medium text-white/50">
+                    Video Title
+                  </label>
+                  <input
+                    id="modal-edit-title"
+                    type="text"
+                    value={draftTitle}
+                    autoFocus
+                    required
+                    onChange={(e) => setDraftTitle(e.target.value)}
+                    placeholder="Video title"
+                    maxLength={180}
+                    className="w-full rounded-[10px] border border-white/20 bg-white/[0.05] px-2.5 py-1.5 text-xs font-medium text-white placeholder:text-white/30 outline-none focus:border-white/40"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label htmlFor="modal-edit-creator" className="block text-[11px] font-medium text-white/50">
+                    Channel Name
+                  </label>
+                  <input
+                    id="modal-edit-creator"
+                    type="text"
+                    value={draftCreator}
+                    onChange={(e) => setDraftCreator(e.target.value)}
+                    placeholder="Channel name"
+                    maxLength={100}
+                    className="w-full rounded-[10px] border border-white/20 bg-white/[0.05] px-2.5 py-1.5 text-xs font-medium text-white placeholder:text-white/30 outline-none focus:border-white/40"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="modal-edit-views" className="block text-[11px] font-medium text-white/50">
+                      Views
+                    </label>
+                    {previewFormattedViews && (
+                      <span className="text-[11px] font-mono tabular-nums text-white/45">
+                        {previewFormattedViews} views
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    id="modal-edit-views"
+                    type="text"
+                    value={draftViews}
+                    onChange={(e) => setDraftViews(e.target.value)}
+                    placeholder="e.g. 2.5M or 2500000"
+                    maxLength={32}
+                    className="w-full rounded-[10px] border border-white/20 bg-white/[0.05] px-2.5 py-1.5 text-xs font-medium text-white placeholder:text-white/30 outline-none focus:border-white/40 tabular-nums"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
                   <button
-                    type="button"
-                    onClick={handleSaveTitle}
-                    className="flex items-center gap-1 px-3 py-1 rounded-[8px] bg-white text-black text-xs font-semibold"
+                    type="submit"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-white text-black hover:bg-white/90 text-xs font-semibold cursor-pointer transition-colors"
                   >
                     <Check className="w-3 h-3" /> Save
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsEditingTitle(false)}
-                    className="px-2.5 py-1 rounded-[8px] text-white/50 hover:text-white text-xs"
+                    onClick={() => setIsEditingDetails(false)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] text-white/55 hover:text-white hover:bg-white/[0.06] text-xs cursor-pointer transition-colors"
                   >
-                    <XIcon className="w-3 h-3" />
+                    <XIcon className="w-3 h-3" /> Cancel
                   </button>
                 </div>
-              </div>
+              </form>
             ) : (
-              <h2 className="text-[18px] sm:text-[19px] font-semibold text-[#ededef] tracking-[-0.025em] leading-[1.3] my-6 sm:my-7 break-words">
-                {displayTitle}
-              </h2>
-            )}
+              <>
+                <h2 className="text-[18px] sm:text-[19px] font-semibold text-[#ededef] tracking-[-0.025em] leading-[1.3] my-6 sm:my-7 break-words">
+                  {displayTitle}
+                </h2>
 
-            {/* Channel + Views (.who) - channel icon removed as requested */}
-            <div className="space-y-0.5">
-              <b className="block font-medium text-[13.5px] text-white leading-tight">
-                {displayCreator}
-              </b>
-              {(shortViews || displayTime) && (
-                <small className="block text-[12px] text-[#5a5a62] leading-snug">
-                  {shortViews ? (
-                    <>
-                      <em className="not-italic text-[#8b8b93] font-medium">{shortViews}</em> views
-                    </>
-                  ) : null}
-                  {shortViews && displayTime ? ' · ' : ''}
-                  {displayTime && <span>{displayTime}</span>}
-                </small>
-              )}
-            </div>
+                {/* Channel + Views (.who) */}
+                <div className="space-y-0.5">
+                  <b className="block font-medium text-[13.5px] text-white leading-tight">
+                    {displayCreator}
+                  </b>
+                  {(shortViews || displayTime) && (
+                    <small className="block text-[12px] text-[#5a5a62] leading-snug">
+                      {shortViews ? (
+                        <>
+                          <em className="not-italic text-[#8b8b93] font-medium tabular-nums">{shortViews}</em> views
+                        </>
+                      ) : null}
+                      {shortViews && displayTime ? ' · ' : ''}
+                      {displayTime && <span>{displayTime}</span>}
+                    </small>
+                  )}
+                </div>
 
-            {/* Category badge (subtle) */}
-            {item.niche && item.niche !== 'All' && (
-              <div className="mt-3">
-                <span className="inline-block px-2 py-0.5 rounded-[6px] bg-white/[0.05] border border-white/[0.08] text-[11px] font-medium text-white/70">
-                  {item.niche}
-                </span>
-              </div>
+                {/* Category label (clean unboxed text) */}
+                {item.niche && item.niche !== 'All' && (
+                  <div className="mt-3 text-[11px] font-medium text-white/50">
+                    {item.niche}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Bottom Actions Container (.btns) */}

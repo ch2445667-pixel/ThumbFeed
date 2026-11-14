@@ -15,6 +15,8 @@ interface AppHeaderProps {
   onQueryChange: (q: string) => void;
   resultCount: number;
   selectedNiche?: string;
+  hasActiveContext?: boolean;
+  onClearContext?: () => void;
   columns: number;
   onColumnsChange: (cols: number) => void;
   showCardInfo: boolean;
@@ -28,7 +30,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   query,
   onQueryChange,
   resultCount,
-  selectedNiche = 'All',
+  selectedNiche = 'Explore',
+  hasActiveContext = false,
+  onClearContext,
   columns,
   onColumnsChange,
   showCardInfo,
@@ -62,16 +66,36 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 h-14 bg-[#090a0d]/85 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between gap-2 px-3 sm:px-6 transition-colors select-none">
       
-      {/* Left: Mobile menu button only */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Left: Mobile menu button + Active View Label (Explore / Board Name / Filter Name) */}
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 max-w-[116px] sm:max-w-[240px] md:max-w-[280px] shrink-0">
         {onToggleSidebar && (
           <button
             type="button"
             onClick={onToggleSidebar}
             aria-label="Toggle sidebar"
-            className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors md:hidden"
+            className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors md:hidden shrink-0"
           >
             <Menu className="w-4 h-4" />
+          </button>
+        )}
+
+        <h1
+          data-testid="topbar-view-title"
+          title={selectedNiche}
+          className="text-[13px] sm:text-sm font-semibold tracking-tight text-white truncate whitespace-nowrap"
+        >
+          {selectedNiche}
+        </h1>
+
+        {hasActiveContext && onClearContext && (
+          <button
+            type="button"
+            onClick={onClearContext}
+            aria-label="Back to Explore"
+            title="Back to Explore"
+            className="hidden sm:inline-flex p-1 rounded text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>

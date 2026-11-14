@@ -207,3 +207,85 @@ export function getCachedYouTubeDetail(
     creator: normalizeCreatorName(found.creator),
   };
 }
+
+export function updateCachedYouTubeDetail(
+  item: ThumbnailItem,
+  updates: { title?: string; creator?: string; views?: string }
+): void {
+  if (typeof window === 'undefined') return;
+  loadFromStorage();
+  const vid =
+    extractYoutubeVideoId(item.sourceUrl || '') ||
+    extractYoutubeVideoId(item.imageUrl || '') ||
+    extractYoutubeVideoId(item.id || '');
+  if (!vid) return;
+
+  const existing = memoryCache.get(vid);
+  memoryCache.set(vid, {
+    videoId: vid,
+    title: updates.title !== undefined ? updates.title : existing?.title,
+    creator:
+      updates.creator !== undefined
+        ? normalizeCreatorName(updates.creator)
+        : existing?.creator,
+    views: updates.views !== undefined ? updates.views : existing?.views,
+    subscribers: existing?.subscribers,
+    publishedTime: existing?.publishedTime,
+    cachedAt: Date.now(),
+  });
+  saveToStorage();
+}
+
+export function isPlaceholderCreator(name?: string): boolean {
+  if (!name || !name.trim()) return true;
+  const lower = name.trim().toLowerCase();
+  return (
+    lower.includes('tanzee') ||
+    lower === 'youtube creator' ||
+    lower === 'curated' ||
+    lower === 'unknown' ||
+    lower === 'creator' ||
+    lower === 'cloudflare r2'
+  );
+}
+
+export function isPlaceholderTitle(title?: string): boolean {
+  if (!title || !title.trim()) return true;
+  const lower = title.trim().toLowerCase();
+  return (
+    lower === 'youtube thumbnail' ||
+    lower === 'untitled thumbnail' ||
+    lower === 'thumbnail preview' ||
+    lower === 'imported r2 thumbnail' ||
+    lower === 'thumbnail' ||
+    lower === 'movie poster'
+  );
+}
+
+export function resolveThumbnailDisplayMeta(
+  item: ThumbnailItem,
+  cachedYT: ReturnType<typeof getCachedYouTubeDetail> | null
+): { title: string; creator: string; views: string; publishedTime: string } {
+  const itemCreator = !isPlaceholderCreator(item.creator) ? item.creator!.trim() : '';
+  const cachedCreator =
+    cachedYT?.creator && !isPlaceholderCreator(cachedYT.creator)
+      ? cachedYT.creator.trim()
+      : '';
+  const creator = itemCreator || cachedCreator;
+
+  const cleanRawTitle = (raw: string) =>
+    raw.replace(/^https?:\/\/(?:www\.)?youtube\.com\/[^\s]+\s*/i, '').trim();
+
+  const itemTitle = !isPlaceholderTitle(item.title) ? cleanRawTitle(item.title) : '';
+  const cachedTitle =
+    cachedYT?.title && !isPlaceholderTitle(cachedYT.title)
+      ? cleanRawTitle(cachedYT.title)
+      : '';
+  const title = itemTitle || cachedTitle;
+
+  const views = (item.viewsEstimate ?? '').trim() || (cachedYT?.views ?? '').trim();
+  const publishedTime = cachedYT?.publishedTime || item.publishedTime || '';
+
+  return { title, creator, views, publishedTime };
+}
+

@@ -31,6 +31,8 @@ import {
 } from '../lib/categories';
 import { useGallery, useGalleryFacets, useInvalidateGallery, GALLERY_PAGE_SIZE } from '../lib/useGallery';
 import { extractItemFingerprint } from '../lib/thumbnailDedupe';
+import { formatShortViews } from '../lib/formatViews';
+import { updateCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
 import { useQueryClient } from '@tanstack/react-query';
 import { Compass, Sparkles, X, Plus } from 'lucide-react';
 
@@ -327,10 +329,27 @@ export default function HomePage() {
     }
   };
 
-  const handleEditTitle = async (item: ThumbnailItem, newTitle: string) => {
-    const cleanTitle = newTitle.trim();
-    if (!cleanTitle) return;
-    const updated = { ...item, title: cleanTitle };
+  const handleEditMetadata = async (
+    item: ThumbnailItem,
+    updates: { title: string; creator: string; viewsEstimate: string }
+  ) => {
+    const cleanTitle = updates.title.trim().slice(0, 180) || item.title;
+    const cleanCreator = updates.creator.trim().slice(0, 100);
+    const rawViews = updates.viewsEstimate.trim();
+    const cleanViews = rawViews ? formatShortViews(rawViews) || rawViews.slice(0, 32) : '';
+
+    const updated: ThumbnailItem = {
+      ...item,
+      title: cleanTitle,
+      creator: cleanCreator || undefined,
+      viewsEstimate: cleanViews || undefined,
+    };
+
+    updateCachedYouTubeDetail(updated, {
+      title: cleanTitle,
+      creator: cleanCreator,
+      views: cleanViews,
+    });
     updateStoredThumbnail(updated);
     setSelectedItem(updated);
 
@@ -342,22 +361,39 @@ export default function HomePage() {
         pages: old.pages.map((p: any) => ({
           ...p,
           items: (p.items || []).map((it: ThumbnailItem) =>
-            it.id === item.id || it.imageUrl === item.imageUrl ? { ...it, title: cleanTitle } : it
+            it.id === item.id || it.imageUrl === item.imageUrl
+              ? {
+                  ...it,
+                  title: cleanTitle,
+                  creator: cleanCreator || undefined,
+                  viewsEstimate: cleanViews || undefined,
+                }
+              : it
           ),
         })),
       };
     });
 
     try {
-      await fetch('/api/thumbnails/update', {
+      const res = await fetch('/api/thumbnails/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: item.id, imageUrl: item.imageUrl, title: cleanTitle }),
+        body: JSON.stringify({
+          id: item.id,
+          imageUrl: item.imageUrl,
+          title: cleanTitle,
+          creator: cleanCreator,
+          viewsEstimate: cleanViews,
+        }),
       });
-      setToastMessage('Title updated');
+      if (res.ok) {
+        setToastMessage('Details updated');
+      } else {
+        setToastMessage('Updated locally (server sync failed)');
+      }
       invalidateGallery();
     } catch (e) {
-      console.warn('Failed to persist title update:', e);
+      console.warn('Failed to persist metadata update:', e);
     }
   };
 
@@ -407,11 +443,37 @@ export default function HomePage() {
   };
 
   const activeBoardObj = selectedBoardId ? collections.find(c => c.id === selectedBoardId) : null;
+  const activeFilterNames: string[] = [];
+  if (filters.selectedNiche && filters.selectedNiche !== 'All') {
+    activeFilterNames.push(filters.selectedNiche);
+  }
+  if (filters.selectedStyles.length > 0) {
+    activeFilterNames.push(...filters.selectedStyles);
+  }
+  if (filters.selectedColors.length > 0) {
+    activeFilterNames.push(...filters.selectedColors);
+  }
+  if (filters.selectedEmotion) {
+    activeFilterNames.push(filters.selectedEmotion);
+  }
+
+  const hasActiveContext = Boolean(activeBoardObj || activeFilterNames.length > 0);
   const currentViewTitle = activeBoardObj
     ? activeBoardObj.name
-    : filters.selectedNiche !== 'All'
-      ? filters.selectedNiche
-      : 'All Feed';
+    : activeFilterNames.length > 0
+      ? activeFilterNames.join(' · ')
+      : 'Explore';
+
+  const handleClearContext = useCallback(() => {
+    setSelectedBoardId(null);
+    setFilters(prev => ({
+      ...prev,
+      selectedNiche: 'All',
+      selectedStyles: [],
+      selectedColors: [],
+      selectedEmotion: null,
+    }));
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#090a0d] text-white flex select-none overflow-x-hidden">
@@ -452,6 +514,8 @@ export default function HomePage() {
           onQueryChange={(q) => setFilters(prev => ({ ...prev, searchQuery: q }))}
           resultCount={displayedTotal}
           selectedNiche={currentViewTitle}
+          hasActiveContext={hasActiveContext}
+          onClearContext={handleClearContext}
           columns={columns}
           onColumnsChange={handleColumnsChange}
           showCardInfo={showCardInfo}
@@ -469,28 +533,6 @@ export default function HomePage() {
 
         {/* Gallery Feed Stage */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5">
-          
-          {/* Active Board Banner if filtering by a board */}
-          {activeBoardObj && (
-            <div className="mb-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <span>{activeBoardObj.name}</span>
-                  <span className="text-xs font-mono text-white/40">({displayedItems.length} items)</span>
-                </h2>
-                {activeBoardObj.description && (
-                  <p className="text-xs text-white/50 mt-0.5">{activeBoardObj.description}</p>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedBoardId(null)}
-                className="text-xs text-white/50 hover:text-white px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors"
-              >
-                Back to All Feed
-              </button>
-            </div>
-          )}
 
           {/* Empty State */}
           {displayedItems.length === 0 && !gallery.isLoading ? (
@@ -608,7 +650,7 @@ export default function HomePage() {
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
         onDelete={handleDeleteThumbnail}
-        onEditTitle={handleEditTitle}
+        onEditMetadata={handleEditMetadata}
       />
 
       {/* Delete Confirmation Modal */}

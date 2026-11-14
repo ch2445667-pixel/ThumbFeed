@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Trash2, Bookmark, Check, Plus, Folder, X, ImageOff } from 'lucide-react';
 import { ThumbnailItem, CollectionBoard } from '../lib/types';
-import { getCachedYouTubeDetail } from '../lib/youtubeMetadataCache';
+import { getCachedYouTubeDetail, resolveThumbnailDisplayMeta } from '../lib/youtubeMetadataCache';
+import { formatShortViews } from '../lib/formatViews';
 import { getStoredCollections, toggleThumbnailInCollection, saveCollection } from '../lib/storage';
 import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
@@ -46,12 +47,14 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
 }) => {
   const [mounted, setMounted] = useState(false);
   const [isBoardMenuOpen, setIsBoardMenuOpen] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [localCollections, setLocalCollections] = useState<CollectionBoard[]>([]);
   const [imgSrc, setImgSrc] = useState<string>(() => sanitizeSafeImageSrc(item.thumbSmallUrl || item.imageUrl) || '');
   const [imgFailed, setImgFailed] = useState(false);
   const boardMenuRef = useRef<HTMLDivElement>(null);
+  const savedTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -59,6 +62,14 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
       setLocalCollections(getStoredCollections());
     }
   }, [propCollections]);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current !== null) {
+        window.clearTimeout(savedTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setImgSrc(sanitizeSafeImageSrc(item.thumbSmallUrl || item.imageUrl) || '');
@@ -91,11 +102,26 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
   const activeCollections = propCollections ?? localCollections;
   const isSavedInAnyBoard = activeCollections.some((b) => b.thumbnailIds.includes(item.id));
 
+  const triggerSavedFeedback = () => {
+    if (savedTimerRef.current !== null) {
+      window.clearTimeout(savedTimerRef.current);
+    }
+    setJustSaved(true);
+    savedTimerRef.current = window.setTimeout(() => {
+      setJustSaved(false);
+      savedTimerRef.current = null;
+    }, 2500);
+  };
+
   const handleToggleBoard = (boardId: string) => {
+    const wasInBoard = activeCollections.find((b) => b.id === boardId)?.thumbnailIds.includes(item.id);
     const updated = toggleThumbnailInCollection(boardId, item.id);
     setLocalCollections(updated);
     if (onCollectionsChange) {
       onCollectionsChange(updated);
+    }
+    if (!wasInBoard) {
+      triggerSavedFeedback();
     }
   };
 
@@ -115,38 +141,20 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
     }
     setNewBoardName('');
     setIsCreatingBoard(false);
+    triggerSavedFeedback();
   };
 
   const cachedYT = mounted ? getCachedYouTubeDetail(item) : null;
+  const resolved = resolveThumbnailDisplayMeta(item, cachedYT);
 
-  const rawCreator = cachedYT?.creator || item.creator || '';
-  const isTanzeeOrUnknown =
-    !rawCreator ||
-    rawCreator.trim() === '' ||
-    rawCreator.toLowerCase().includes('tanzee') ||
-    rawCreator.trim() === 'YouTube Creator' ||
-    rawCreator.trim() === 'Curated' ||
-    rawCreator.trim() === 'Unknown';
-
-  const displayCreator = isTanzeeOrUnknown ? '' : rawCreator.trim();
-
-  const rawTitle = cachedYT?.title || item.title || '';
+  const displayCreator = resolved.creator;
   const displayTitle =
-    rawTitle && rawTitle !== 'YouTube Thumbnail' && rawTitle !== 'Untitled Thumbnail'
-      ? rawTitle.replace(/^https?:\/\/(?:www\.)?youtube\.com\/[^\s]+\s*/i, '').trim()
-      : displayCreator
-        ? `${displayCreator} Thumbnail`
-        : '';
+    resolved.title || (displayCreator ? `${displayCreator} Thumbnail` : '');
 
-  let displayViews = cachedYT?.views || item.viewsEstimate || '';
-  if (displayViews && !displayViews.toLowerCase().includes('view')) {
-    displayViews = `${displayViews} views`;
-  }
+  const shortViews = formatShortViews(resolved.views);
+  const displayViews = shortViews ? `${shortViews} views` : '';
 
-  const displayTime =
-    cachedYT?.publishedTime ||
-    item.publishedTime ||
-    formatTimeAgo(item.createdAt);
+  const displayTime = resolved.publishedTime || formatTimeAgo(item.createdAt);
 
   // Metadata line matching Image 2 reference: "Channel • 16.4K views • 3mo ago"
   const metaParts: string[] = [];
@@ -224,14 +232,14 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
             }}
             title={isSavedInAnyBoard ? 'Saved in Board' : 'Save to Board'}
             aria-label="Save to Board"
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-medium transition-all duration-150 backdrop-blur-md shadow-md cursor-pointer ${
-              isSavedInAnyBoard || isBoardMenuOpen
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-medium transition-all duration-200 backdrop-blur-md shadow-md cursor-pointer ${
+              justSaved || isBoardMenuOpen
                 ? 'border-white/20 bg-black/85 text-white opacity-100'
-                : 'border-white/10 bg-black/70 text-white/80 opacity-0 group-hover:opacity-100 hover:bg-black/90 hover:text-white active:scale-95'
+                : 'border-white/10 bg-black/70 text-white/80 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-black/90 hover:text-white active:scale-95'
             }`}
           >
             <Bookmark className={`h-3 w-3 ${isSavedInAnyBoard ? 'fill-white text-white' : ''}`} />
-            <span>{isSavedInAnyBoard ? 'Saved' : 'Board'}</span>
+            <span>{justSaved ? 'Saved' : 'Board'}</span>
           </button>
 
           {/* Board Dropdown Menu */}

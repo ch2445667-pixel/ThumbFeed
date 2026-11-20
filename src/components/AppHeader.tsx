@@ -7,7 +7,7 @@ import {
   ZoomIn,
   ZoomOut,
   Shuffle,
-  Menu
+  Menu,
 } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -29,7 +29,6 @@ interface AppHeaderProps {
 export const AppHeader: React.FC<AppHeaderProps> = ({
   query,
   onQueryChange,
-  resultCount,
   selectedNiche = 'Explore',
   hasActiveContext = false,
   onClearContext,
@@ -38,7 +37,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   showCardInfo,
   onToggleCardInfo,
   onShuffle,
-  isSidebarCollapsed = false,
   onToggleSidebar,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -64,16 +62,16 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 h-14 bg-[#090a0d]/85 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between gap-2 px-3 sm:px-6 transition-colors select-none">
-      
-      {/* Left: Mobile menu button + Active View Label (Explore / Board Name / Filter Name) */}
+    <header className="sticky top-0 z-30 h-14 glass-header md:rounded-t-[20px] flex items-center justify-between gap-2 px-3 sm:px-6 transition-colors select-none">
+
+      {/* Left: Mobile menu button + Active View Label */}
       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 max-w-[116px] sm:max-w-[240px] md:max-w-[280px] shrink-0">
         {onToggleSidebar && (
           <button
             type="button"
             onClick={onToggleSidebar}
             aria-label="Toggle sidebar"
-            className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors md:hidden shrink-0"
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/[0.10] transition-colors md:hidden shrink-0 cursor-pointer"
           >
             <Menu className="w-4 h-4" />
           </button>
@@ -82,7 +80,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <h1
           data-testid="topbar-view-title"
           title={selectedNiche}
-          className="text-[13px] sm:text-sm font-semibold tracking-tight text-white truncate whitespace-nowrap"
+          className="text-[13px] sm:text-sm font-semibold tracking-tight text-white truncate whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
         >
           {selectedNiche}
         </h1>
@@ -93,26 +91,29 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             onClick={onClearContext}
             aria-label="Back to Explore"
             title="Back to Explore"
-            className="hidden sm:inline-flex p-1 rounded text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0 cursor-pointer"
+            className="hidden sm:inline-flex p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.10] transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
 
-      {/* Center: Search Capsule */}
+      {/* Center: Recessed Liquid Glass Search Input */}
       <div className="flex-1 min-w-0 max-w-md sm:mx-4">
-        <div className="relative flex items-center h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:border-white/[0.14] focus-within:border-white/[0.22] focus-within:bg-white/[0.05] transition-all px-2.5 sm:px-3">
-          <Search className="w-3.5 h-3.5 text-white/40 shrink-0 mr-2" />
+        <div
+          data-testid="topbar-search-box"
+          className="relative flex items-center h-9 rounded-[14px] glass-input px-3"
+        >
+          <Search className="w-3.5 h-3.5 text-white/50 shrink-0 mr-2" />
           <input
             ref={searchInputRef}
             type="text"
             role="searchbox"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Search topics, creators, hooks..."
+            placeholder="Search titles, creators or keywords"
             spellCheck={false}
-            className="w-full min-w-0 bg-transparent text-xs text-white placeholder:text-white/35 outline-none"
+            className="w-full min-w-0 bg-transparent text-xs text-white placeholder:text-white/40 outline-none focus:outline-none focus-visible:outline-none border-none shadow-none"
           />
 
           {query ? (
@@ -120,73 +121,84 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               type="button"
               onClick={() => onQueryChange('')}
               aria-label="Clear search"
-              className="p-1 rounded text-white/40 hover:text-white transition-colors shrink-0"
+              className="p-1 rounded-md text-white/55 hover:text-white transition-colors shrink-0 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-white/40 shrink-0">
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded-[6px] border border-white/15 bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/50 shrink-0">
               <span className="text-[9px]">⌘</span>K
             </kbd>
           )}
         </div>
       </div>
 
-      {/* Right: Actions (+ / - Zoom Stepper, Shuffle, Expanding Detail/Gallery Toggle) */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        
-        {/* Sleek Zoom In / Zoom Out Slider with 14px radius (multi-column grids apply sm+ only) */}
-        <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 rounded-[14px] border border-white/[0.08] bg-white/[0.03] px-2.5 h-9 select-none">
-          <button
-            type="button"
-            onClick={handleZoomOut}
-            disabled={columns >= 6}
-            className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white disabled:opacity-20 transition-colors cursor-pointer"
-            title="Zoom out (more columns)"
-            aria-label="Zoom out"
-          >
-            <ZoomOut className="w-3.5 h-3.5" />
-          </button>
+      {/* Right: Liquid Glass Action Controls (Exact 14px Corner Radius) */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 
-          <input
-            type="range"
-            min="2"
-            max="6"
-            step="1"
-            value={8 - columns}
-            onChange={(e) => onColumnsChange(8 - Number(e.target.value))}
-            className="zoom-range-slider w-16 sm:w-20 h-1 bg-white/10 accent-white rounded-lg cursor-pointer outline-none"
-            title={`${columns} columns`}
-            aria-label="Adjust zoom slider"
-          />
+        {/* Unified Zoom In / Zoom Out + Shuffle Control Capsule */}
+        <div
+          data-testid="topbar-zoom-control"
+          className="flex items-center gap-1.5 sm:gap-2 rounded-[14px] glass-control px-2 sm:px-2.5 h-9 select-none"
+        >
+          <div className="hidden sm:flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              disabled={columns >= 6}
+              className="w-5 h-5 flex items-center justify-center text-white/60 hover:text-white disabled:opacity-25 transition-colors cursor-pointer"
+              title="Zoom out (more columns)"
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
 
-          <button
-            type="button"
-            onClick={handleZoomIn}
-            disabled={columns <= 2}
-            className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white disabled:opacity-20 transition-colors cursor-pointer"
-            title="Zoom in (fewer columns)"
-            aria-label="Zoom in"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </button>
+            <input
+              type="range"
+              min="2"
+              max="6"
+              step="1"
+              value={8 - columns}
+              onChange={(e) => onColumnsChange(8 - Number(e.target.value))}
+              className="zoom-range-slider w-16 sm:w-20 h-1 bg-white/20 accent-white rounded-lg cursor-pointer outline-none"
+              title={`${columns} columns`}
+              aria-label="Adjust zoom slider"
+            />
+
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              disabled={columns <= 2}
+              className="w-5 h-5 flex items-center justify-center text-white/60 hover:text-white disabled:opacity-25 transition-colors cursor-pointer"
+              title="Zoom in (fewer columns)"
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {onShuffle && (
+            <>
+              <span
+                aria-hidden="true"
+                className="hidden sm:block w-px h-4 bg-white/15 mx-0.5 shrink-0"
+              />
+              <button
+                type="button"
+                data-testid="topbar-shuffle-btn"
+                onClick={onShuffle}
+                className="w-6 h-6 flex items-center justify-center rounded-[7px] text-white/75 hover:text-white hover:bg-white/[0.10] transition-colors cursor-pointer"
+                title="Shuffle Feed Order"
+                aria-label="Shuffle feed"
+              >
+                <Shuffle className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Shuffle Feed Order Button */}
-        {onShuffle && (
-          <button
-            type="button"
-            onClick={onShuffle}
-            className="h-9 w-9 rounded-[14px] border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-            title="Shuffle Feed Order"
-            aria-label="Shuffle feed"
-          >
-            <Shuffle className="w-3.5 h-3.5" />
-          </button>
-        )}
-
-        {/* Expanding Toggle (from expanding-toggle.html) */}
-        <div className="expanding-toggle">
+        {/* Expanding Liquid Glass Toggle — Exact 10px outer / 7px inner radius */}
+        <div data-testid="topbar-view-toggle" className="expanding-toggle">
           {/* Gallery Button (Thumbnail only) */}
           <button
             type="button"

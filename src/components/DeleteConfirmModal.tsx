@@ -59,7 +59,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 bg-black/70 backdrop-blur-xs"
+          className="fixed inset-0 bg-black/55 backdrop-blur-sm"
           onClick={onClose}
         />
 
@@ -69,7 +69,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           id="delete-confirm-dialog"
-          className="relative w-full max-w-md bg-[#12131a] border border-white/10 rounded-[16px] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 z-10 text-white"
+          className="relative w-full max-w-md glass-modal rounded-[18px] p-5 sm:p-6 flex flex-col gap-4 z-10 text-white"
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-3">

@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Check, X as XIcon, Trash2, Download, ImageOff } from 'lucide-react';
-import { ThumbnailItem } from '../lib/types';
+import { Pencil, Check, X as XIcon, Trash2, Download, ImageOff, Folder, Plus } from 'lucide-react';
+import { ThumbnailItem, CollectionBoard } from '../lib/types';
 import { getCachedYouTubeDetail, resolveThumbnailDisplayMeta } from '../lib/youtubeMetadataCache';
 import { formatShortViews } from '../lib/formatViews';
 import { sanitizeSafeHref, sanitizeSafeImageSrc } from '../lib/urlSafety';
+import { toggleThumbnailInCollection, saveCollection } from '../lib/storage';
+import { useAuth } from '../lib/authContext';
 
 interface ThumbnailModalProps {
   item: ThumbnailItem | null;
@@ -17,6 +19,8 @@ interface ThumbnailModalProps {
     item: ThumbnailItem,
     updates: { title: string; creator: string; viewsEstimate: string }
   ) => void;
+  collections?: CollectionBoard[];
+  onCollectionsChange?: (cols: CollectionBoard[]) => void;
 }
 
 // Relative time formatter
@@ -44,12 +48,17 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   onDelete,
   onEditTitle,
   onEditMetadata,
+  collections = [],
+  onCollectionsChange,
 }) => {
+  const { user } = useAuth();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [draftTitle, setDraftTitle] = useState('');
   const [draftCreator, setDraftCreator] = useState('');
   const [draftViews, setDraftViews] = useState('');
+  const [isAddingBoard, setIsAddingBoard] = useState(false);
+  const [newBoardName, setNewBoardName] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<'jpg' | 'png'>('jpg');
   const [isDownloading, setIsDownloading] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
@@ -61,6 +70,8 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
     setDraftTitle('');
     setDraftCreator('');
     setDraftViews('');
+    setIsAddingBoard(false);
+    setNewBoardName('');
     setImgFailed(false);
   }, [item]);
 
@@ -133,6 +144,30 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
     setIsEditingDetails(false);
   };
 
+  const handleToggleBoard = (boardId: string) => {
+    if (!item || !user) return;
+    const updated = toggleThumbnailInCollection(boardId, item.id);
+    onCollectionsChange?.(updated);
+  };
+
+  const handleCreateAndAssignBoard = () => {
+    const clean = newBoardName.trim();
+    if (!item || !user || !clean) return;
+    const newId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? `board-${crypto.randomUUID().slice(0, 8)}`
+        : `board-${Date.now()}`;
+    const updated = saveCollection({
+      id: newId,
+      name: clean,
+      thumbnailIds: [item.id],
+      createdAt: new Date().toISOString(),
+    });
+    onCollectionsChange?.(updated);
+    setNewBoardName('');
+    setIsAddingBoard(false);
+  };
+
   const previewFormattedViews = formatShortViews(draftViews);
 
   const handleDownload = async (format: 'jpg' | 'png' = downloadFormat) => {
@@ -176,13 +211,13 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-        {/* Backdrop - keeps original app aesthetic with dark backdrop and blur */}
+        {/* Backdrop - translucent dark veil so background breathes gently behind the glass dialog */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 bg-black/85 backdrop-blur-md"
+          className="fixed inset-0 bg-black/55 backdrop-blur-sm"
           onClick={onClose}
         />
 
@@ -197,7 +232,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 10 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-[960px] bg-[#0e0e10] border border-white/[0.07] rounded-[24px] p-3 shadow-[0_0_0_1px_rgba(255,255,255,0.07),0_44px_100px_-20px_rgba(0,0,0,0.95)] z-10 my-auto grid grid-cols-1 md:grid-cols-[1fr_300px] gap-4 sm:gap-[18px] text-[#ededef]"
+          className="relative w-full max-w-[960px] glass-modal rounded-[24px] p-3 z-10 my-auto grid grid-cols-1 md:grid-cols-[1fr_300px] gap-4 sm:gap-[18px] text-[#f3f6f8]"
         >
           {/* Left: Thumbnail Artwork Stage (.im)
               Aspect-ratio 16/9, inner radius = 12px
@@ -260,7 +295,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                 onClick={onClose}
                 title="Close (Esc)"
                 aria-label="Close"
-                className="w-[30px] h-[30px] rounded-full flex items-center justify-center bg-[#151518] hover:bg-[#1c1c20] border border-white/[0.07] text-[#8b8b93] hover:text-white transition-colors cursor-pointer shrink-0 ml-auto"
+                className="w-[30px] h-[30px] rounded-full flex items-center justify-center glass-control text-white/70 hover:text-white transition-colors cursor-pointer shrink-0 ml-auto"
               >
                 <svg className="w-[14px] h-[14px] stroke-current fill-none stroke-[1.8] stroke-linecap-round stroke-linejoin-round" viewBox="0 0 24 24">
                   <path d="M6 6l12 12M18 6 6 18" />
@@ -348,6 +383,75 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   />
                 </div>
 
+                {/* Boards selector inside Edit details */}
+                {user && (
+                  <div className="space-y-1.5 pt-1 border-t border-white/[0.08]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-white/50">Boards</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingBoard((prev) => !prev)}
+                        className="text-[11px] font-medium text-white/70 hover:text-white flex items-center gap-0.5 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>{isAddingBoard ? 'Cancel' : 'New Board'}</span>
+                      </button>
+                    </div>
+
+                    {isAddingBoard && (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={newBoardName}
+                          onChange={(e) => setNewBoardName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleCreateAndAssignBoard();
+                            }
+                          }}
+                          placeholder="Board name..."
+                          className="flex-1 rounded-[8px] border border-white/20 bg-white/[0.05] px-2 py-1 text-xs text-white placeholder:text-white/35 outline-none focus:border-white/40"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateAndAssignBoard}
+                          disabled={!newBoardName.trim()}
+                          className="px-2 py-1 rounded-[8px] bg-white text-black text-[11px] font-semibold disabled:opacity-40 cursor-pointer"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-0.5">
+                      {collections.length === 0 ? (
+                        <span className="text-[11px] text-white/40 italic">No boards yet</span>
+                      ) : (
+                        collections.map((board) => {
+                          const isIncluded = board.thumbnailIds.includes(item.id);
+                          return (
+                            <button
+                              key={board.id}
+                              type="button"
+                              onClick={() => handleToggleBoard(board.id)}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-[7px] text-[11px] font-medium transition-colors cursor-pointer ${
+                                isIncluded
+                                  ? 'bg-white text-black font-semibold'
+                                  : 'bg-white/[0.06] text-white/75 border border-white/10 hover:bg-white/[0.12] hover:text-white'
+                              }`}
+                            >
+                              <Folder className="w-3 h-3 shrink-0" />
+                              <span className="truncate max-w-[120px]">{board.name}</span>
+                              {isIncluded && <Check className="w-3 h-3 shrink-0" />}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="submit"
@@ -376,10 +480,10 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                     {displayCreator}
                   </b>
                   {(shortViews || displayTime) && (
-                    <small className="block text-[12px] text-[#5a5a62] leading-snug">
+                    <small className="block text-[12px] text-white/55 leading-snug">
                       {shortViews ? (
                         <>
-                          <em className="not-italic text-[#8b8b93] font-medium tabular-nums">{shortViews}</em> views
+                          <em className="not-italic text-white/85 font-medium tabular-nums">{shortViews}</em> views
                         </>
                       ) : null}
                       {shortViews && displayTime ? ' · ' : ''}
@@ -392,6 +496,23 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                 {item.niche && item.niche !== 'All' && (
                   <div className="mt-3 text-[11px] font-medium text-white/50">
                     {item.niche}
+                  </div>
+                )}
+
+                {/* Assigned Boards quick chips */}
+                {collections.some((b) => b.thumbnailIds.includes(item.id)) && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {collections
+                      .filter((b) => b.thumbnailIds.includes(item.id))
+                      .map((b) => (
+                        <span
+                          key={b.id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-white/[0.08] border border-white/12 text-[10.5px] font-medium text-white/80"
+                        >
+                          <Folder className="w-2.5 h-2.5 text-white/60" />
+                          <span className="truncate max-w-[140px]">{b.name}</span>
+                        </span>
+                      ))}
                   </div>
                 )}
               </>
@@ -431,7 +552,7 @@ export const ThumbnailModal: React.FC<ThumbnailModalProps> = ({
                   href={safeSourceHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 p-3 rounded-[12px] border border-white/[0.14] font-medium text-[12.5px] text-[#8b8b93] hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 p-3 rounded-[12px] glass-control font-medium text-[12.5px] text-white/80 hover:text-white transition-colors cursor-pointer"
                 >
                   <svg className="w-4 h-4 stroke-current fill-none stroke-[1.8] stroke-linecap-round stroke-linejoin-round shrink-0" viewBox="0 0 24 24">
                     <rect x="3" y="6" width="18" height="12" rx="3.5" />

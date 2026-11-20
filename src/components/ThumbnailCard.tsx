@@ -188,14 +188,16 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
         }
       }}
       suppressHydrationWarning
-      className={`group relative w-full cursor-pointer select-none rounded-[8px] border border-white/[0.08] bg-[#0c0d12] hover:bg-[#11131a] transition-all duration-200 ease-out hover:border-white/[0.20] hover:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.85)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] ${
-        showCardInfo ? 'p-1.5 sm:p-2 flex flex-col' : 'overflow-hidden'
-      }`}
+      className={`group relative w-full cursor-pointer select-none rounded-[14px] glass-card transition-all duration-200 ease-out ${
+        isBoardMenuOpen
+          ? 'z-40'
+          : 'hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]'
+      } ${showCardInfo ? 'p-2 flex flex-col' : ''}`}
     >
       {/* Thumbnail artwork stage (16:9 ratio) */}
       <div
-        className={`relative aspect-video w-full overflow-hidden bg-[#050608] ${
-          showCardInfo ? 'rounded-[5px]' : 'rounded-[7px]'
+        className={`relative aspect-video w-full overflow-hidden bg-black/50 ${
+          showCardInfo ? 'rounded-[9px]' : 'rounded-[13px]'
         }`}
       >
         {!imgFailed && imgSrc ? (
@@ -229,140 +231,6 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
         {/* Subtle hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
 
-        {/* Hover Save to Board Selector */}
-        <div className="absolute left-2 top-2 z-20" ref={boardMenuRef}>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsBoardMenuOpen((prev) => !prev);
-            }}
-            title={isSavedInAnyBoard ? 'Saved in Board' : 'Save to Board'}
-            aria-label="Save to Board"
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-medium transition-all duration-200 backdrop-blur-md shadow-md cursor-pointer ${
-              justSaved || isBoardMenuOpen
-                ? 'border-white/20 bg-black/85 text-white opacity-100'
-                : 'border-white/10 bg-black/70 text-white/80 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-black/90 hover:text-white active:scale-95'
-            }`}
-          >
-            <Bookmark className={`h-3 w-3 ${isSavedInAnyBoard ? 'fill-white text-white' : ''}`} />
-            <span>{justSaved ? 'Saved' : 'Board'}</span>
-          </button>
-
-          {/* Board Dropdown Menu */}
-          {isBoardMenuOpen && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="absolute left-0 top-8 z-30 w-52 rounded-xl border border-white/15 bg-[#0e1017]/95 backdrop-blur-xl p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
-            >
-              <div className="flex items-center justify-between px-1.5 pb-1.5 border-b border-white/[0.08] mb-1.5">
-                <span className="text-[11px] font-semibold text-white/90">Save to Board</span>
-                <button
-                  type="button"
-                  onClick={() => setIsBoardMenuOpen(false)}
-                  aria-label="Close board menu"
-                  className="p-0.5 rounded text-white/40 hover:text-white"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-
-              {!user ? (
-                <div className="px-2 py-2.5 text-center space-y-2">
-                  <p className="text-[11px] text-white/55">
-                    Sign in with Google to save thumbnails to your boards.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsBoardMenuOpen(false);
-                      signIn();
-                    }}
-                    className="w-full py-1.5 px-2.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors cursor-pointer"
-                  >
-                    Sign in with Google
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* Boards List */}
-                  <div className="max-h-40 overflow-y-auto space-y-0.5 pr-0.5">
-                    {activeCollections.length === 0 ? (
-                      <div className="px-2 py-2 text-[11px] text-white/40 text-center">
-                        No boards created yet
-                      </div>
-                    ) : (
-                      activeCollections.map((board) => {
-                        const isIncluded = board.thumbnailIds.includes(item.id);
-                        return (
-                          <button
-                            key={board.id}
-                            type="button"
-                            onClick={() => handleToggleBoard(board.id)}
-                            className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
-                              isIncluded
-                                ? 'bg-white/10 text-white'
-                                : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
-                            }`}
-                          >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <Folder className={`w-3.5 h-3.5 shrink-0 ${isIncluded ? 'text-white' : 'text-white/40'}`} />
-                              <span className="truncate">{board.name}</span>
-                            </div>
-                            {isIncluded && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {/* Quick New Board Form */}
-                  <div className="pt-1.5 mt-1 border-t border-white/[0.08]">
-                    {isCreatingBoard ? (
-                      <form onSubmit={handleCreateAndAddBoard} className="flex items-center gap-1">
-                        <input
-                          type="text"
-                          value={newBoardName}
-                          onChange={(e) => setNewBoardName(e.target.value)}
-                          placeholder="Board name..."
-                          autoFocus
-                          className="w-full rounded-md border border-white/15 bg-white/[0.06] px-2 py-1 text-xs text-white placeholder-white/40 focus:outline-none"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!newBoardName.trim()}
-                          className="p-1 rounded bg-white text-black disabled:opacity-40 hover:bg-white/90"
-                        >
-                          <Check className="w-3 h-3 stroke-[2.5]" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsCreatingBoard(false);
-                            setNewBoardName('');
-                          }}
-                          className="p-1 text-white/40 hover:text-white"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </form>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setIsCreatingBoard(true)}
-                        className="w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-3 h-3" />
-                        <span>Create new board</span>
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Delete (admin / creator only) */}
         {onDelete && (
           <button
@@ -389,6 +257,145 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
         )}
       </div>
 
+      {/* Hover Save to Board Selector (rendered outside overflow-hidden stage so popover is never clipped) */}
+      <div
+        className={`absolute z-30 ${showCardInfo ? 'left-4 top-4' : 'left-2 top-2'}`}
+        ref={boardMenuRef}
+      >
+        <button
+          type="button"
+          data-testid="card-board-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsBoardMenuOpen((prev) => !prev);
+          }}
+          title={isSavedInAnyBoard ? 'Saved in Board' : 'Save to Board'}
+          aria-label="Save to Board"
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-medium transition-all duration-200 backdrop-blur-xl shadow-md cursor-pointer ${
+            justSaved || isBoardMenuOpen
+              ? 'border-white/30 bg-black/75 text-white opacity-100'
+              : 'border-white/18 bg-black/60 text-white/90 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-black/80 hover:border-white/35 hover:text-white active:scale-95'
+          }`}
+        >
+          <Bookmark className={`h-3 w-3 ${isSavedInAnyBoard ? 'fill-white text-white' : ''}`} />
+          <span>{justSaved ? 'Saved' : 'Board'}</span>
+        </button>
+
+        {/* Board Dropdown Menu */}
+        {isBoardMenuOpen && (
+          <div
+            data-testid="card-board-popover"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute left-0 top-8 z-50 w-52 rounded-[14px] glass-popover p-2 animate-in fade-in zoom-in-95 duration-150"
+          >
+            <div className="flex items-center justify-between px-1.5 pb-1.5 border-b border-white/[0.08] mb-1.5">
+              <span className="text-[11px] font-semibold text-white/90">Save to Board</span>
+              <button
+                type="button"
+                onClick={() => setIsBoardMenuOpen(false)}
+                aria-label="Close board menu"
+                className="p-0.5 rounded text-white/40 hover:text-white cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+
+            {!user ? (
+              <div className="px-2 py-2.5 text-center space-y-2">
+                <p className="text-[11px] text-white/55">
+                  Sign in with Google to save thumbnails to your boards.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBoardMenuOpen(false);
+                    signIn();
+                  }}
+                  className="w-full py-1.5 px-2.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors cursor-pointer"
+                >
+                  Sign in with Google
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Boards List */}
+                <div className="max-h-40 overflow-y-auto space-y-0.5 pr-0.5">
+                  {activeCollections.length === 0 ? (
+                    <div className="px-2 py-2 text-[11px] text-white/40 text-center">
+                      No boards created yet
+                    </div>
+                  ) : (
+                    activeCollections.map((board) => {
+                      const isIncluded = board.thumbnailIds.includes(item.id);
+                      return (
+                        <button
+                          key={board.id}
+                          type="button"
+                          onClick={() => handleToggleBoard(board.id)}
+                          className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
+                            isIncluded
+                              ? 'bg-white/10 text-white'
+                              : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Folder className={`w-3.5 h-3.5 shrink-0 ${isIncluded ? 'text-white' : 'text-white/40'}`} />
+                            <span className="truncate">{board.name}</span>
+                          </div>
+                          {isIncluded && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Quick New Board Form */}
+                <div className="pt-1.5 mt-1 border-t border-white/[0.08]">
+                  {isCreatingBoard ? (
+                    <form onSubmit={handleCreateAndAddBoard} className="flex items-center gap-1">
+                      <input
+                        type="text"
+                        value={newBoardName}
+                        onChange={(e) => setNewBoardName(e.target.value)}
+                        placeholder="Board name..."
+                        autoFocus
+                        className="w-full rounded-md border border-white/15 bg-white/[0.06] px-2 py-1 text-xs text-white placeholder-white/40 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newBoardName.trim()}
+                        className="p-1 rounded bg-white text-black disabled:opacity-40 hover:bg-white/90 cursor-pointer"
+                      >
+                        <Check className="w-3 h-3 stroke-[2.5]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreatingBoard(false);
+                          setNewBoardName('');
+                        }}
+                        className="p-1 text-white/40 hover:text-white cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </form>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingBoard(true)}
+                      className="w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Create new board</span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Details / Metadata Footer (Image 2 style) */}
       {showCardInfo && (
         <div className="flex flex-col pt-2.5 pb-1 px-1" suppressHydrationWarning>
@@ -401,7 +408,7 @@ export const ThumbnailCard = React.memo<ThumbnailCardProps>(({
           </h4>
 
           {metaLine && (
-            <p className="mt-1 text-[11px] text-white/45 truncate font-normal">
+            <p className="mt-1 text-[11px] text-white/60 truncate font-normal">
               {metaLine}
             </p>
           )}

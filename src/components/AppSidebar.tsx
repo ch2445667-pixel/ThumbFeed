@@ -16,12 +16,17 @@ import {
   Settings,
   Upload,
   Camera,
-  Trash2
+  Trash2,
+  Layers,
+  User as UserIcon,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../lib/authContext';
+import { useAppearance } from '../lib/appearanceContext';
 import { deleteCurrentUserAccount } from '../lib/firebase';
 import { CollectionBoard } from '../lib/types';
 import { AppLogo } from './icons/AppLogo';
+import { GlassAppearanceControls } from './AppearanceSettingsPanel';
 import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 
 interface AppSidebarProps {
@@ -64,18 +69,21 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onCloseMobile,
 }) => {
   const { user, isAdmin, signingIn, signIn, signOut, getIdToken, error: authError } = useAuth();
+  const { resetAppearance } = useAppearance();
   const [mounted, setMounted] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [modalCategoryInput, setModalCategoryInput] = useState('');
-  
-  // Custom user profile state (editable pfp & name stored per signed-in user)
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
+  // Unified Settings Drawer state (combines Liquid Glass + Account/Profile/Legal)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'glass' | 'account'>('glass');
   const [customName, setCustomName] = useState('');
   const [customPhoto, setCustomPhoto] = useState('');
   const [editNameInput, setEditNameInput] = useState('');
   const [editPhotoInput, setEditPhotoInput] = useState('');
   const [avatarLoadError, setAvatarLoadError] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSavedMessage, setProfileSavedMessage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -88,7 +96,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
     if (!user) {
       setCustomName('');
       setCustomPhoto('');
-      setIsEditProfileOpen(false);
       try {
         localStorage.removeItem('thumbfeed_custom_profile');
       } catch {}
@@ -132,29 +139,30 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   }, [customPhoto, user?.photoURL]);
 
   React.useEffect(() => {
-    if (!isEditProfileOpen && !isCategoryModalOpen) return;
+    if (!isSettingsOpen && !isCategoryModalOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isDeletingAccount) {
-        setIsEditProfileOpen(false);
+        setIsSettingsOpen(false);
         setIsCategoryModalOpen(false);
         setShowDeleteConfirm(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEditProfileOpen, isCategoryModalOpen, isDeletingAccount]);
+  }, [isSettingsOpen, isCategoryModalOpen, isDeletingAccount]);
 
-  const handleOpenEditProfile = () => {
-    if (!user) {
-      signIn();
-      return;
-    }
+  const handleOpenSettings = (tab: 'glass' | 'account' = 'glass') => {
     setProfileError(null);
+    setProfileSavedMessage(null);
     setDeleteError(null);
     setShowDeleteConfirm(false);
-    setEditNameInput(customName || user?.displayName || 'User');
-    setEditPhotoInput(customPhoto || user?.photoURL || '');
-    setIsEditProfileOpen(true);
+    if (user) {
+      setEditNameInput(customName || user?.displayName || 'User');
+      setEditPhotoInput(customPhoto || user?.photoURL || '');
+    }
+    setSettingsTab(tab);
+    setIsSettingsOpen(true);
+    if (onCloseMobile) onCloseMobile();
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -193,7 +201,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       setProfileError('Network error saving profile.');
       return;
     }
-    setIsEditProfileOpen(false);
+    setProfileSavedMessage('Profile saved');
+    window.setTimeout(() => setProfileSavedMessage(null), 2400);
   };
 
   const handleDeleteAccount = async () => {
@@ -209,7 +218,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         localStorage.removeItem('thumbfeed_custom_profile');
       } catch {}
       setShowDeleteConfirm(false);
-      setIsEditProfileOpen(false);
+      setIsSettingsOpen(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
       setDeleteError(
@@ -254,23 +263,32 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
     setModalCategoryInput('');
   };
 
+  // Sort categories by thumbnail count descending (highest at top, lowest at bottom)
+  const sortedCategories = React.useMemo(() => {
+    return [...categories].sort((a, b) => {
+      const countDiff = (categoryCounts[b] ?? 0) - (categoryCounts[a] ?? 0);
+      if (countDiff !== 0) return countDiff;
+      return a.localeCompare(b);
+    });
+  }, [categories, categoryCounts]);
+
   return (
     <>
       {/* Mobile Backdrop */}
       {isMobileOpen && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm md:hidden animate-in fade-in duration-150"
+          className="fixed inset-0 z-40 bg-black/55 backdrop-blur-sm md:hidden animate-in fade-in duration-150"
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-50 md:z-40 flex flex-col bg-[#090a0d] border-r border-white/[0.07] transition-all duration-200 select-none ${
+        className={`fixed top-0 left-0 bottom-0 md:top-2.5 md:left-2.5 md:bottom-2.5 md:rounded-[20px] z-50 md:z-40 flex flex-col glass-sidebar transition-all duration-200 select-none overflow-hidden ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${isCollapsed ? 'md:w-[68px]' : 'md:w-[260px]'} w-[260px]`}
       >
         {/* Top Header / Brand Mark */}
-        <div className="h-14 flex items-center justify-between px-3.5 border-b border-white/[0.06]">
+        <div className="h-14 flex items-center justify-between px-3.5 border-b border-white/[0.10]">
           {isCollapsed ? (
             /* When collapsed, clicking the logo expands the sidebar */
             <button
@@ -319,14 +337,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
+                  data-testid="sidebar-explore-btn"
                   onClick={() => {
                     onSelectNiche('All');
                     if (onSelectBoard) onSelectBoard(null);
                   }}
-                  className={`flex-1 flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  className={`flex-1 flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${
                     selectedNiche === 'All' && !selectedBoardId
-                      ? 'bg-white/[0.10] text-white shadow-sm'
-                      : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                      ? 'glass-active text-white'
+                      : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.08]'
                   } ${isCollapsed ? 'justify-center' : ''}`}
                   title="Explore Feed"
                 >
@@ -407,10 +426,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                               onOpenMoodboard();
                             }
                           }}
-                          className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors group ${
+                          className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all group border ${
                             isSelected
-                              ? 'bg-white/[0.08] text-white font-medium'
-                              : 'text-white/65 hover:text-white hover:bg-white/[0.04]'
+                              ? 'glass-active text-white font-medium'
+                              : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.08]'
                           }`}
                           title={board.description || board.name}
                         >
@@ -449,38 +468,40 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               </div>
 
               {/* Scrollable Categories List */}
-              <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-1 pb-3 categories-scroll">
+              <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-1 pb-6 categories-scroll">
                 {/* 'All' Category */}
                 <button
                   type="button"
+                  data-testid="sidebar-all-category-btn"
                   onClick={() => {
                     onSelectNiche('All');
                     if (onSelectBoard) onSelectBoard(null);
                   }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all border ${
                     selectedNiche === 'All' && !selectedBoardId
-                      ? 'text-white bg-white/[0.08] font-medium'
-                      : 'text-white/65 hover:text-white hover:bg-white/[0.04]'
+                      ? 'bg-white/[0.09] border-white/[0.14] text-white font-medium'
+                      : 'border-transparent text-white/65 hover:text-white hover:bg-white/[0.07]'
                   }`}
                 >
                   <span className="truncate flex-1 text-left">All</span>
                   {totalThumbnailsCount > 0 && (
-                    <span className="text-[10px] font-mono tabular-nums text-white/30">
+                    <span className="text-[10px] font-mono tabular-nums text-white/45">
                       {totalThumbnailsCount}
                     </span>
                   )}
                 </button>
 
-                {categories.map((category) => {
+                {sortedCategories.map((category) => {
                   const isSelected = selectedNiche === category && !selectedBoardId;
                   const count = categoryCounts[category] ?? 0;
                   return (
                     <div
                       key={category}
-                      className={`group/item flex items-center justify-between rounded-md transition-colors ${
+                      data-testid="sidebar-category-row"
+                      className={`group/item relative flex items-center rounded-lg transition-all border ${
                         isSelected
-                          ? 'bg-white/[0.08] text-white font-medium'
-                          : 'text-white/65 hover:text-white hover:bg-white/[0.04]'
+                          ? 'bg-white/[0.11] border-white/[0.16] text-white font-medium'
+                          : 'border-transparent text-white/65 hover:text-white hover:bg-white/[0.07]'
                       }`}
                     >
                       <button
@@ -489,17 +510,24 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                           onSelectNiche(category);
                           if (onSelectBoard) onSelectBoard(null);
                         }}
-                        className="flex-1 flex items-center justify-between px-2.5 py-1.5 text-xs transition-colors truncate"
+                        className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs transition-colors min-w-0"
                       >
                         <span className="truncate flex-1 text-left">{category}</span>
                         {count > 0 && (
-                          <span className="text-[10px] font-mono tabular-nums text-white/30 group-hover/item:text-white/50">
+                          <span
+                            data-testid="sidebar-category-count"
+                            className={`text-[10px] font-mono tabular-nums text-white/40 shrink-0 transition-opacity ${
+                              onRemoveCategory
+                                ? 'group-hover/item:opacity-0 group-focus-within/item:opacity-0'
+                                : 'group-hover/item:text-white/60'
+                            }`}
+                          >
                             {count}
                           </span>
                         )}
                       </button>
 
-                      {/* Delete category button on hover */}
+                      {/* Delete category button overlaid on hover so count aligns flush right with All */}
                       {onRemoveCategory && (
                         <button
                           type="button"
@@ -507,7 +535,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                             e.stopPropagation();
                             onRemoveCategory(category);
                           }}
-                          className="opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 p-1 mr-1 text-white/30 hover:text-red-400 rounded transition-opacity"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 p-1 text-white/40 hover:text-red-400 rounded transition-opacity cursor-pointer"
                           title={`Delete ${category}`}
                           aria-label={`Delete ${category}`}
                         >
@@ -523,23 +551,23 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
         </div>
 
-        {/* Bottom Pinned Footer: Auth & Profile */}
-        <div className="shrink-0 border-t border-white/[0.06] p-2">
+        {/* Bottom Pinned Footer: Auth, Profile & Unified Settings Button */}
+        <div className="shrink-0 border-t border-white/[0.10] p-2.5">
           {mounted && user ? (() => {
             const effectiveName = customName || user.displayName || user.email?.split('@')[0] || 'User';
             const effectivePhoto = sanitizeSafeImageSrc(customPhoto || user.photoURL || '');
 
             return (
               <div
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors ${
-                  isCollapsed ? 'justify-center' : ''
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.07] transition-colors ${
+                  isCollapsed ? 'flex-col justify-center gap-1.5 px-0' : ''
                 }`}
               >
                 <button
                   type="button"
-                  onClick={handleOpenEditProfile}
+                  onClick={() => handleOpenSettings('account')}
                   className="relative group shrink-0 cursor-pointer"
-                  title="Edit profile"
+                  title="Profile & Account Settings"
                   aria-label="Edit profile avatar"
                 >
                   {effectivePhoto && !avatarLoadError ? (
@@ -548,10 +576,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                       alt={effectiveName}
                       referrerPolicy="no-referrer"
                       onError={() => setAvatarLoadError(true)}
-                      className="w-7 h-7 rounded-full object-cover ring-1 ring-white/20 group-hover:ring-white/50 transition-all"
+                      className="w-7 h-7 rounded-full object-cover ring-1 ring-white/25 group-hover:ring-white/60 transition-all"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-white/[0.12] flex items-center justify-center text-white text-[11px] font-bold ring-1 ring-white/20 group-hover:ring-white/50 transition-all">
+                    <div className="w-7 h-7 rounded-full bg-white/[0.14] flex items-center justify-center text-white text-[11px] font-bold ring-1 ring-white/25 group-hover:ring-white/60 transition-all">
                       {effectiveName[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
@@ -563,256 +591,407 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 {!isCollapsed && (
                   <button
                     type="button"
-                    onClick={handleOpenEditProfile}
+                    onClick={() => handleOpenSettings('account')}
                     className="flex-1 min-w-0 text-left cursor-pointer"
                     title="Profile & Account Settings"
                   >
-                    <div className="text-xs text-white truncate font-medium hover:text-white/80 transition-colors">
+                    <div className="text-xs text-white truncate font-medium hover:text-white/85 transition-colors">
                       {effectiveName}
                     </div>
                   </button>
                 )}
 
-                {!isCollapsed && (
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      type="button"
-                      onClick={handleOpenEditProfile}
-                      className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-                      title="Account & Profile Settings"
-                      aria-label="Account and profile settings"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                    </button>
+                <div className={`flex items-center gap-1 ${isCollapsed ? 'flex-col' : ''}`}>
+                  <button
+                    type="button"
+                    data-testid="sidebar-settings-btn"
+                    onClick={() => handleOpenSettings('glass')}
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                      isSettingsOpen
+                        ? 'glass-active text-white'
+                        : 'text-white/60 hover:text-white hover:bg-white/[0.10]'
+                    }`}
+                    title="Settings (Liquid Glass & Account)"
+                    aria-label="Settings"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
+                  {!isCollapsed && (
                     <button
                       type="button"
                       onClick={() => signOut()}
-                      className="p-1 rounded-md text-white/40 hover:text-red-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-white/55 hover:text-red-300 hover:bg-white/[0.10] transition-colors cursor-pointer"
                       title="Sign out"
                       aria-label="Sign out"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })() : (
-            <div className="space-y-1">
-              <button
-                type="button"
-                onClick={() => signIn()}
-                disabled={signingIn}
-                aria-label="Sign in with Google"
-                title="Sign in with Google"
-                className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-xs font-medium text-white transition-colors cursor-pointer disabled:opacity-50 ${
-                  isCollapsed ? 'justify-center px-1' : ''
-                }`}
-              >
-                <LogIn className="w-3.5 h-3.5 shrink-0 text-white/80" />
-                {!isCollapsed && <span>{signingIn ? 'Signing in...' : 'Sign in with Google'}</span>}
-              </button>
+            <div className="space-y-1.5">
+              <div className={`flex items-center gap-1.5 ${isCollapsed ? 'flex-col' : ''}`}>
+                <button
+                  type="button"
+                  data-testid="sidebar-signin-btn"
+                  onClick={() => signIn()}
+                  disabled={signingIn}
+                  aria-label="Sign in with Google"
+                  title="Sign in with Google"
+                  className={`flex-1 flex items-center justify-center gap-2 h-9 px-3 rounded-lg glass-control text-xs font-medium text-white transition-all cursor-pointer disabled:opacity-50 ${
+                    isCollapsed ? 'w-full px-0' : ''
+                  }`}
+                >
+                  <LogIn className="w-3.5 h-3.5 shrink-0 text-white/85" />
+                  {!isCollapsed && <span className="truncate">{signingIn ? 'Signing in...' : 'Sign in with Google'}</span>}
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="sidebar-settings-btn"
+                  onClick={() => handleOpenSettings('glass')}
+                  aria-label="Settings"
+                  title="Settings (Liquid Glass & Background)"
+                  className={`h-9 w-9 shrink-0 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                    isCollapsed ? 'w-full' : ''
+                  } ${
+                    isSettingsOpen
+                      ? 'glass-active text-white'
+                      : 'glass-control text-white/75 hover:text-white'
+                  }`}
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              </div>
               {authError && !isCollapsed && (
-                <p className="px-2 text-[10px] text-red-300 leading-snug">{authError}</p>
+                <p className="px-1.5 text-[10px] text-red-300 leading-snug">{authError}</p>
               )}
             </div>
           )}
         </div>
       </aside>
 
-      {/* Account & Settings Modal */}
-      {isEditProfileOpen && (
+      {/* Unified Floating Liquid Glass Settings Drawer (Liquid Glass + Account/Legal) */}
+      {isSettingsOpen && (
         <div
-          onClick={() => setIsEditProfileOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+          className="fixed inset-0 z-[70] flex justify-end"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Settings"
         >
+          {/* Light transparent dismiss layer so the user sees live liquid glass updates behind the drawer */}
+          <div
+            className="fixed inset-0 bg-black/20 transition-opacity"
+            onClick={() => setIsSettingsOpen(false)}
+          />
+
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4 animate-in zoom-in-95"
+            className="relative z-10 m-2 sm:m-3 w-[calc(100%-16px)] max-w-[400px] h-[calc(100%-16px)] sm:h-[calc(100%-24px)] rounded-[20px] glass-modal flex flex-col overflow-hidden text-white animate-in slide-in-from-top-1 duration-200"
           >
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white">Account &amp; Settings</h3>
-              <button
-                type="button"
-                onClick={() => setIsEditProfileOpen(false)}
-                aria-label="Close Edit Profile modal"
-                className="p-1 text-white/40 hover:text-white rounded"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              {/* Avatar Preview & Upload */}
-              <div className="flex items-center gap-3">
-                <div className="relative w-14 h-14 rounded-full overflow-hidden bg-white/[0.06] border border-white/10 shrink-0 flex items-center justify-center">
-                  {sanitizeSafeImageSrc(editPhotoInput) ? (
-                    <img
-                      src={sanitizeSafeImageSrc(editPhotoInput)}
-                      alt="Avatar Preview"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-base font-bold text-white/60">
-                      {(editNameInput || 'U')[0]?.toUpperCase()}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex-1 space-y-1">
-                  <label className="text-[11px] font-medium text-white/70 block">
-                    Profile Picture
-                  </label>
-                  <label className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white text-xs cursor-pointer transition-colors">
-                    <Upload className="w-3 h-3" />
-                    <span>Upload image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                  {editPhotoInput && (
-                    <button
-                      type="button"
-                      onClick={() => setEditPhotoInput('')}
-                      className="text-[10px] text-white/40 hover:text-red-400 block transition-colors"
-                    >
-                      Remove photo
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Photo URL Input */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-medium text-white/70 block">
-                  Or paste Image URL
-                </label>
-                <input
-                  type="url"
-                  value={editPhotoInput}
-                  onChange={(e) => setEditPhotoInput(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder-white/30 focus:border-white/25 focus:outline-none"
-                />
-              </div>
-
-              {/* Name Input */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-medium text-white/70 block">
-                  Display Name
-                </label>
-                <input
-                  type="text"
-                  value={editNameInput}
-                  onChange={(e) => setEditNameInput(e.target.value)}
-                  placeholder="Your Name"
-                  maxLength={80}
-                  required
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder-white/30 focus:border-white/25 focus:outline-none"
-                />
-              </div>
-
-              {profileError && (
-                <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-                  {profileError}
-                </p>
-              )}
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.06]">
-                <button
-                  type="button"
-                  onClick={() => setIsEditProfileOpen(false)}
-                  className="px-3 py-1.5 rounded-lg text-xs text-white/60 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-white text-black hover:bg-white/90 text-xs font-semibold transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-
-            {/* About, Privacy & Terms inside signed-in Settings */}
-            <div className="pt-3 border-t border-white/[0.08] space-y-2">
-              <span className="text-[11px] font-medium text-white/50 block">
-                App Information &amp; Legal
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                <Link
-                  href="/about"
-                  onClick={() => setIsEditProfileOpen(false)}
-                  className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-center text-xs text-white/75 hover:text-white transition-colors"
-                >
-                  About
-                </Link>
-                <Link
-                  href="/privacy"
-                  onClick={() => setIsEditProfileOpen(false)}
-                  className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-center text-xs text-white/75 hover:text-white transition-colors"
-                >
-                  Privacy
-                </Link>
-                <Link
-                  href="/terms"
-                  onClick={() => setIsEditProfileOpen(false)}
-                  className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-center text-xs text-white/75 hover:text-white transition-colors"
-                >
-                  Terms
-                </Link>
-              </div>
-            </div>
-
-            {/* Account Deletion (12.3) */}
-            <div className="pt-3 border-t border-white/[0.08] space-y-2.5">
-              {!showDeleteConfirm ? (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-white/45">
-                    Remove your account &amp; saved boards
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-[11px] font-medium transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>Delete account</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/25 space-y-2">
-                  <p className="text-[11px] text-red-200 leading-relaxed">
-                    This permanently deletes your Google-linked profile, saved boards, and preferences from ThumbFeed.
-                  </p>
-                  {deleteError && (
-                    <p className="text-[11px] text-red-300">{deleteError}</p>
-                  )}
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      disabled={isDeletingAccount}
-                      onClick={() => setShowDeleteConfirm(false)}
-                      className="px-2.5 py-1 rounded text-[11px] text-white/70 hover:text-white"
-                    >
-                      Keep account
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isDeletingAccount}
-                      onClick={handleDeleteAccount}
-                      className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-[11px] font-semibold cursor-pointer"
-                    >
-                      {isDeletingAccount ? 'Deleting...' : 'Permanently delete'}
-                    </button>
+            {/* Unified Header */}
+            <div className="shrink-0 px-5 pt-4 pb-3 border-b border-white/[0.10] space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-[10px] glass-control flex items-center justify-center text-white/90 shrink-0">
+                    <Settings className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-semibold tracking-tight text-white truncate">
+                      Settings
+                    </h2>
+                    <p className="text-[11px] text-white/55 truncate">
+                      Liquid Glass appearance &amp; account preferences
+                    </p>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(false)}
+                  aria-label="Close Settings"
+                  className="w-8 h-8 rounded-lg glass-control flex items-center justify-center text-white/65 hover:text-white transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Unified Segmented Tabs */}
+              <div
+                role="tablist"
+                aria-label="Settings sections"
+                className="grid grid-cols-2 gap-1 p-1 rounded-[10px] glass-input"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={settingsTab === 'glass'}
+                  onClick={() => setSettingsTab('glass')}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-[7px] text-xs font-medium transition-all cursor-pointer ${
+                    settingsTab === 'glass'
+                      ? 'glass-active text-white'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Liquid Glass</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={settingsTab === 'account'}
+                  onClick={() => setSettingsTab('account')}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-[7px] text-xs font-medium transition-all cursor-pointer ${
+                    settingsTab === 'account'
+                      ? 'glass-active text-white'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <UserIcon className="w-3.5 h-3.5" />
+                  <span>Account</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Tab Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 categories-scroll">
+              {settingsTab === 'glass' ? (
+                <GlassAppearanceControls isActive={isSettingsOpen && settingsTab === 'glass'} />
+              ) : user ? (
+                <div className="space-y-5">
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                    {/* Avatar Preview & Upload */}
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-14 h-14 rounded-full overflow-hidden bg-white/[0.06] border border-white/15 shrink-0 flex items-center justify-center">
+                        {sanitizeSafeImageSrc(editPhotoInput) ? (
+                          <img
+                            src={sanitizeSafeImageSrc(editPhotoInput)}
+                            alt="Avatar Preview"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-base font-bold text-white/60">
+                            {(editNameInput || 'U')[0]?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex-1 space-y-1">
+                        <label className="text-[11px] font-medium text-white/70 block">
+                          Profile Picture
+                        </label>
+                        <label className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass-control text-white text-xs cursor-pointer transition-colors">
+                          <Upload className="w-3 h-3" />
+                          <span>Upload image</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        {editPhotoInput && (
+                          <button
+                            type="button"
+                            onClick={() => setEditPhotoInput('')}
+                            className="text-[10px] text-white/45 hover:text-red-400 block transition-colors cursor-pointer"
+                          >
+                            Remove photo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Photo URL Input */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-medium text-white/70 block">
+                        Or paste Image URL
+                      </label>
+                      <input
+                        type="url"
+                        value={editPhotoInput}
+                        onChange={(e) => setEditPhotoInput(e.target.value)}
+                        placeholder="https://example.com/avatar.jpg"
+                        className="w-full rounded-[10px] glass-input px-3 py-2 text-xs text-white placeholder-white/35 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Name Input */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-medium text-white/70 block">
+                        Display Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editNameInput}
+                        onChange={(e) => setEditNameInput(e.target.value)}
+                        placeholder="Your Name"
+                        maxLength={80}
+                        required
+                        className="w-full rounded-[10px] glass-input px-3 py-2 text-xs text-white placeholder-white/35 focus:outline-none"
+                      />
+                    </div>
+
+                    {profileError && (
+                      <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                        {profileError}
+                      </p>
+                    )}
+
+                    {profileSavedMessage && (
+                      <p className="text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{profileSavedMessage}</span>
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="submit"
+                        className="px-4 py-1.5 rounded-lg bg-white text-black hover:bg-white/90 text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        Save profile
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* About, Privacy & Terms (shown when signed in with Google) */}
+                  <div className="pt-4 border-t border-white/[0.10] space-y-2.5">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-white/55 block">
+                      App Information &amp; Legal
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Link
+                        href="/about"
+                        onClick={() => setIsSettingsOpen(false)}
+                        className="px-2.5 py-2 rounded-lg glass-control text-center text-xs text-white/85 hover:text-white transition-colors"
+                      >
+                        About
+                      </Link>
+                      <Link
+                        href="/privacy"
+                        onClick={() => setIsSettingsOpen(false)}
+                        className="px-2.5 py-2 rounded-lg glass-control text-center text-xs text-white/85 hover:text-white transition-colors"
+                      >
+                        Privacy
+                      </Link>
+                      <Link
+                        href="/terms"
+                        onClick={() => setIsSettingsOpen(false)}
+                        className="px-2.5 py-2 rounded-lg glass-control text-center text-xs text-white/85 hover:text-white transition-colors"
+                      >
+                        Terms
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Account Deletion */}
+                  <div className="pt-4 border-t border-white/[0.10] space-y-2.5">
+                    {!showDeleteConfirm ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-white/50">
+                          Remove your account &amp; saved boards
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-[11px] font-medium transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Delete account</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/25 space-y-2">
+                        <p className="text-[11px] text-red-200 leading-relaxed">
+                          This permanently deletes your Google-linked profile, saved boards, and preferences from ThumbFeed.
+                        </p>
+                        {deleteError && (
+                          <p className="text-[11px] text-red-300">{deleteError}</p>
+                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            disabled={isDeletingAccount}
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="px-2.5 py-1 rounded-lg text-[11px] text-white/70 hover:text-white cursor-pointer"
+                          >
+                            Keep account
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isDeletingAccount}
+                            onClick={handleDeleteAccount}
+                            className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-[11px] font-semibold cursor-pointer"
+                          >
+                            {isDeletingAccount ? 'Deleting...' : 'Permanently delete'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 px-4 rounded-[14px] glass-card text-center space-y-3">
+                  <div className="w-10 h-10 rounded-lg glass-control mx-auto flex items-center justify-center text-white/80">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-white">Sign in to manage account</h3>
+                    <p className="text-xs text-white/55 leading-relaxed">
+                      Sign in with Google to edit your profile, sync saved boards across devices, and access account settings.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => signIn()}
+                    disabled={signingIn}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black hover:bg-white/90 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>{signingIn ? 'Signing in...' : 'Sign in with Google'}</span>
+                  </button>
+                </div>
               )}
+            </div>
+
+            {/* Unified Footer */}
+            <div className="shrink-0 flex items-center justify-between gap-2 px-5 py-3.5 border-t border-white/[0.10]">
+              {settingsTab === 'glass' ? (
+                <button
+                  type="button"
+                  onClick={resetAppearance}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white/65 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset defaults</span>
+                </button>
+              ) : user ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSettingsOpen(false);
+                    signOut();
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-300/80 hover:text-red-200 hover:bg-red-500/10 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign out</span>
+                </button>
+              ) : (
+                <span className="text-[11px] text-white/45">ThumbFeed</span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(false)}
+                className="px-4 py-1.5 rounded-lg bg-white text-black hover:bg-white/90 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
@@ -822,11 +1001,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       {isCategoryModalOpen && (
         <div
           onClick={() => setIsCategoryModalOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-150"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0e1017] p-5 shadow-2xl space-y-4 animate-in zoom-in-95"
+            className="w-full max-w-md rounded-[20px] glass-modal p-5 space-y-4 animate-in zoom-in-95"
           >
             <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <div className="flex items-center gap-2.5">

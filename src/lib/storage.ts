@@ -672,3 +672,64 @@ export function toggleThumbnailInCollection(collectionId: string, thumbId: strin
 
   return updated;
 }
+
+export function addThumbnailsToBoardsBatch(boardToThumbIds: Record<string, string[]>): CollectionBoard[] {
+  const entries = Object.entries(boardToThumbIds).filter(([, ids]) => ids.length > 0);
+  const collections = getStoredCollections();
+  if (entries.length === 0) return collections;
+
+  const additionMap = new Map<string, string[]>(
+    entries.map(([boardId, ids]) => [boardId, Array.from(new Set(ids.filter(Boolean)))])
+  );
+  const touchedBoards: CollectionBoard[] = [];
+
+  const updated = collections.map((c) => {
+    const incoming = additionMap.get(c.id);
+    if (!incoming || incoming.length === 0) return c;
+    const existing = new Set(c.thumbnailIds || []);
+    const toAdd = incoming.filter((id) => !existing.has(id));
+    if (toAdd.length === 0) return c;
+    const nextBoard = { ...c, thumbnailIds: [...(c.thumbnailIds || []), ...toAdd] };
+    touchedBoards.push(nextBoard);
+    return nextBoard;
+  });
+
+  if (touchedBoards.length === 0) return collections;
+
+  try {
+    localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
+  } catch {}
+  syncBoardsToServer(updated);
+  touchedBoards.forEach((b) => syncSingleCollectionToFirestore(b));
+  return updated;
+}
+
+export function setThumbnailBoards(thumbId: string, selectedBoardIds: string[]): CollectionBoard[] {
+  if (!thumbId) return getStoredCollections();
+  const desiredSet = new Set(selectedBoardIds.filter(Boolean));
+  const collections = getStoredCollections();
+  const touchedBoards: CollectionBoard[] = [];
+
+  const updated = collections.map((c) => {
+    const currentlyIn = (c.thumbnailIds || []).includes(thumbId);
+    const shouldBeIn = desiredSet.has(c.id);
+    if (currentlyIn === shouldBeIn) return c;
+    const nextBoard: CollectionBoard = {
+      ...c,
+      thumbnailIds: shouldBeIn
+        ? [...(c.thumbnailIds || []), thumbId]
+        : (c.thumbnailIds || []).filter((id) => id !== thumbId),
+    };
+    touchedBoards.push(nextBoard);
+    return nextBoard;
+  });
+
+  if (touchedBoards.length === 0) return collections;
+
+  try {
+    localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(updated));
+  } catch {}
+  syncBoardsToServer(updated);
+  touchedBoards.forEach((b) => syncSingleCollectionToFirestore(b));
+  return updated;
+}

@@ -515,7 +515,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#090a0d] text-white flex select-none overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-white flex select-none overflow-x-clip md:p-2.5">
       
       {/* Sleek Sidebar */}
       <AppSidebar
@@ -547,10 +547,10 @@ export default function HomePage() {
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
-      {/* Main Content Pane */}
+      {/* Floating Right Main Workspace Glass Pane */}
       <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ${
-          isSidebarCollapsed ? 'md:ml-[68px]' : 'md:ml-[260px]'
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-200 md:min-h-[calc(100vh-20px)] md:rounded-[20px] md:glass-workspace overflow-x-clip ${
+          isSidebarCollapsed ? 'md:ml-[78px]' : 'md:ml-[270px]'
         }`}
       >
         {/* Sleek Obsidian Header */}
@@ -581,12 +581,12 @@ export default function HomePage() {
 
           {/* Empty State */}
           {displayedItems.length === 0 && !gallery.isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center max-w-sm mx-auto">
-              <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-white/30 mb-4">
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center max-w-sm mx-auto my-8 rounded-[20px] glass-card">
+              <div className="w-12 h-12 rounded-xl glass-control flex items-center justify-center text-white/55 mb-4">
                 <Compass className="w-6 h-6" />
               </div>
-              <h3 className="text-sm font-medium text-white/80">No thumbnails found</h3>
-              <p className="text-xs text-white/40 mt-1">
+              <h3 className="text-sm font-medium text-white/90">No thumbnails found</h3>
+              <p className="text-xs text-white/55 mt-1">
                 {selectedBoardId
                   ? 'This board is empty. Inspect thumbnails in the feed to save them here.'
                   : filters.searchQuery
@@ -599,7 +599,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setSelectedBoardId(null)}
-                    className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-medium text-white transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg glass-control text-xs font-medium text-white transition-colors cursor-pointer"
                   >
                     View All Feed
                   </button>
@@ -607,7 +607,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setFilters(prev => ({ ...prev, searchQuery: '', selectedNiche: 'All' }))}
-                    className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-medium text-white transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg glass-control text-xs font-medium text-white transition-colors cursor-pointer"
                   >
                     Clear Filters
                   </button>
@@ -615,7 +615,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setIsAddOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition-colors shadow-sm cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Add Thumbnails</span>
@@ -649,7 +649,7 @@ export default function HomePage() {
                     type="button"
                     onClick={() => gallery.fetchNextPage()}
                     disabled={gallery.isFetchingNextPage}
-                    className="px-4 py-2 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 text-xs font-medium text-white/80 transition-all disabled:opacity-50 active:scale-[0.98]"
+                    className="px-4 py-2 rounded-[14px] glass-control text-xs font-medium text-white/85 hover:text-white transition-all disabled:opacity-50 active:scale-[0.98] cursor-pointer"
                   >
                     {gallery.isFetchingNextPage ? 'Loading…' : 'Load more'}
                   </button>
@@ -689,6 +689,7 @@ export default function HomePage() {
           onAddThumbnail={handleAddThumbnail}
           onAddMultipleThumbnails={handleAddMultipleThumbnails}
           collections={collections}
+          onCollectionsChange={setCollections}
         />
       )}
 
@@ -698,6 +699,8 @@ export default function HomePage() {
         onClose={() => setSelectedItem(null)}
         onDelete={isAdmin ? handleDeleteThumbnail : undefined}
         onEditMetadata={isAdmin ? handleEditMetadata : undefined}
+        collections={collections}
+        onCollectionsChange={setCollections}
       />
 
       {/* Delete Confirmation Modal */}
@@ -713,14 +716,14 @@ export default function HomePage() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-[#151821] border border-white/15 text-white text-xs shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-2"
+          className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-full glass-popover text-white text-xs flex items-center gap-3 animate-in slide-in-from-bottom-2"
         >
           <span>{toastMessage}</span>
           <button
             type="button"
             onClick={() => setToastMessage(null)}
             aria-label="Dismiss notification"
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-white/50 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>

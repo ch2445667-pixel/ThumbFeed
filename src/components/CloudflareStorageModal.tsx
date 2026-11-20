@@ -147,12 +147,12 @@ export const CloudflareStorageModal: React.FC<CloudflareStorageModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-blur"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-blur"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-lg rounded-2xl bg-[#0F1117] border border-white/10 p-6 shadow-2xl text-white">
+      <div className="relative w-full max-w-lg rounded-2xl glass-modal p-6 text-white">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-white/10">

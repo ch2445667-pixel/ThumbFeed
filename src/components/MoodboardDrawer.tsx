@@ -79,20 +79,20 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-200">
       
       {/* Click outside backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-xs" onClick={onClose} />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-[#0e1017] border-l border-white/[0.08] flex flex-col shadow-2xl">
+        <div className="w-screen max-w-md glass-modal border-y-0 border-r-0 flex flex-col shadow-2xl">
           
           {/* Drawer Header */}
-          <div className="p-5 border-b border-white/[0.08] flex items-center justify-between bg-[#0b0c10]">
+          <div className="p-5 border-b border-white/[0.10] flex items-center justify-between bg-white/[0.02]">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-white/[0.05] border border-white/10 text-white">
+              <div className="p-2 rounded-lg glass-control text-white">
                 <Bookmark className="w-4 h-4" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-white">Your Moodboards</h3>
-                <p className="text-[11px] text-white/50">Save and organize inspiration boards</p>
+                <p className="text-[11px] text-white/55">Save and organize inspiration boards</p>
               </div>
             </div>
 
@@ -100,14 +100,14 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close Moodboards"
-              className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="p-1.5 rounded-full glass-control text-white/60 hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Collection Selector & New Board Button */}
-          <div className="p-4 bg-[#090a0d] border-b border-white/[0.06] space-y-3">
+          <div className="p-4 bg-black/15 border-b border-white/[0.08] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono font-medium text-white/40 uppercase tracking-wider">Active Board</span>
               <button
@@ -162,7 +162,7 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
 
             {/* Create New Board Form */}
             {showNewBoardInput && (
-              <form onSubmit={handleCreateBoard} className="p-3 bg-[#13151f] border border-white/10 rounded-lg space-y-2 animate-in slide-in-from-top-2">
+              <form onSubmit={handleCreateBoard} className="p-3 glass-control rounded-xl space-y-2 animate-in slide-in-from-top-2">
                 <input
                   type="text"
                   placeholder="Board Name (e.g., High-CTR Hooks)"
@@ -269,7 +269,7 @@ export const MoodboardDrawer: React.FC<MoodboardDrawerProps> = ({
 
           {/* Drawer Footer Actions */}
           {itemsInActive.length > 0 && (
-            <div className="p-4 border-t border-white/[0.08] bg-[#0b0c10] flex gap-2">
+            <div className="p-4 border-t border-white/[0.10] bg-white/[0.02] flex gap-2">
               <button
                 onClick={handleExportReferences}
                 className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold text-black bg-white hover:bg-white/90 flex items-center justify-center gap-2 transition-colors shadow-sm"

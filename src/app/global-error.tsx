@@ -26,8 +26,8 @@ export default function GlobalError({
 
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#090a0d] text-white flex items-center justify-center p-6 antialiased">
-        <div className="max-w-sm w-full rounded-2xl border border-white/10 bg-[#0f1117] p-6 text-center space-y-4 shadow-2xl">
+      <body className="min-h-screen bg-gradient-to-b from-[#171717] via-[#080808] to-black text-white flex items-center justify-center p-6 antialiased">
+        <div className="max-w-sm w-full rounded-2xl border border-white/[0.10] bg-gradient-to-b from-[#212121] via-[#111111] to-black p-6 text-center space-y-4 shadow-2xl">
           <h2 className="text-sm font-semibold text-white">Application error</h2>
           <p className="text-xs text-white/55">
             A root layout error occurred. Reloading will restore the latest assets.

@@ -18,14 +18,14 @@ import {
 } from './icons/AppIcons';
 import { ThumbnailItem, NicheCategory, CollectionBoard } from '../lib/types';
 import { convertToJpg, getYoutubeJpgUrl } from '../lib/imageOptimizer';
-import { Cloud, ArrowLeft, Bookmark } from 'lucide-react';
+import { Cloud, ArrowLeft, Bookmark, Folder } from 'lucide-react';
 import { CloudflareStorageModal } from './CloudflareStorageModal';
 import {
   getAllCategories,
   addCustomCategory,
   subscribeCategories
 } from '../lib/categories';
-import { extractDedupeKeys, addThumbnailsToBoard } from '../lib/storage';
+import { extractDedupeKeys, addThumbnailsToBoard, saveCollection, getStoredCollections } from '../lib/storage';
 import { sanitizeSafeImageSrc } from '../lib/urlSafety';
 import { formatShortViews } from '../lib/formatViews';
 import { useAuth } from '../lib/authContext';
@@ -64,6 +64,7 @@ interface AddModalProps {
   onAddMultipleThumbnails?: (items: ThumbnailItem[]) => void;
   initialMediaKind?: 'thumbnail' | 'poster';
   collections?: CollectionBoard[];
+  onCollectionsChange?: (cols: CollectionBoard[]) => void;
 }
 
 type AddTabMode = 'upload' | 'youtube' | 'pinterest';
@@ -77,6 +78,7 @@ interface QueuedImageItem {
   creator: string;
   niche: NicheCategory;
   tags: string[];
+  boardIds: string[];
   isOptimizing?: boolean;
 }
 
@@ -89,6 +91,7 @@ interface BatchExtractedItem {
   imageUrl: string;
   niche: NicheCategory;
   tags: string[];
+  boardIds: string[];
   views?: string;
   publishedTime?: string;
   selected?: boolean;
@@ -591,20 +594,214 @@ const ItemCategoryMultiSelect: React.FC<ItemCategoryMultiSelectProps> = ({
   );
 };
 
+interface ItemBoardMultiSelectProps {
+  selectedBoardIds: string[];
+  collections: CollectionBoard[];
+  onChange: (boardIds: string[]) => void;
+  onCreateBoard?: (name: string) => CollectionBoard | null;
+}
+
+const ItemBoardMultiSelect: React.FC<ItemBoardMultiSelectProps> = ({
+  selectedBoardIds,
+  collections,
+  onChange,
+  onCreateBoard,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newBoardInput, setNewBoardInput] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setIsAddingNew(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutside);
+      return () => document.removeEventListener('mousedown', handleOutside);
+    }
+  }, [isOpen]);
+
+  const handleToggle = (boardId: string) => {
+    const exists = selectedBoardIds.includes(boardId);
+    if (exists) {
+      onChange(selectedBoardIds.filter((id) => id !== boardId));
+    } else {
+      onChange([...selectedBoardIds, boardId]);
+    }
+  };
+
+  const handleRemove = (e: React.MouseEvent, boardId: string) => {
+    e.stopPropagation();
+    onChange(selectedBoardIds.filter((id) => id !== boardId));
+  };
+
+  const handleCreateNew = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newBoardInput.trim();
+    if (!clean || !onCreateBoard) return;
+    const created = onCreateBoard(clean);
+    if (created && !selectedBoardIds.includes(created.id)) {
+      onChange([...selectedBoardIds, created.id]);
+    }
+    setNewBoardInput('');
+    setIsAddingNew(false);
+  };
+
+  const selectedBoards = selectedBoardIds
+    .map((id) => collections.find((b) => b.id === id))
+    .filter((b): b is CollectionBoard => Boolean(b));
+
+  const filtered = collections.filter((b) =>
+    b.name.toLowerCase().includes(search.toLowerCase().trim())
+  );
+
+  return (
+    <div ref={containerRef} className="relative flex flex-wrap items-center gap-1.5 w-full">
+      {/* Active board chips */}
+      {selectedBoards.map((board) => (
+        <span
+          key={board.id}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-[11px] font-semibold bg-white/15 text-white border border-white/25 whitespace-nowrap"
+        >
+          <Folder className="w-2.5 h-2.5 text-white/80 shrink-0" />
+          <span className="max-w-[110px] truncate">{board.name}</span>
+          <button
+            type="button"
+            onClick={(e) => handleRemove(e, board.id)}
+            className="text-white/70 hover:text-white cursor-pointer leading-none text-xs ml-0.5"
+            title={`Remove from ${board.name}`}
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      {selectedBoards.length === 0 && (
+        <span className="text-[11px] text-white/40 italic mr-1">No board</span>
+      )}
+
+      {/* Button to open board multi-select popover */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="px-2 py-0.5 rounded-[6px] text-[11px] font-semibold bg-white/[0.06] hover:bg-white/[0.12] text-white/85 border border-white/10 flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
+      >
+        <IconPlus className="w-3 h-3" />
+        <span>Board</span>
+      </button>
+
+      {/* Popover Dropdown */}
+      {isOpen && (
+        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-[#151821] border border-white/15 rounded-[12px] shadow-2xl p-2.5 space-y-2 text-white">
+          <div className="flex items-center justify-between pb-1.5 border-b border-white/10 text-xs">
+            <span className="font-semibold text-white text-[11px]">Select Boards</span>
+            {onCreateBoard && (
+              <button
+                type="button"
+                onClick={() => setIsAddingNew(!isAddingNew)}
+                className="text-[11px] font-semibold text-white/80 hover:text-white hover:underline cursor-pointer"
+              >
+                {isAddingNew ? 'Cancel' : '+ New Board'}
+              </button>
+            )}
+          </div>
+
+          {isAddingNew && onCreateBoard && (
+            <form onSubmit={handleCreateNew} className="flex items-center gap-1.5 p-1.5 bg-[#090a0d] border border-white/10 rounded-[8px]">
+              <input
+                type="text"
+                value={newBoardInput}
+                onChange={(e) => setNewBoardInput(e.target.value)}
+                placeholder="Board name..."
+                className="flex-1 bg-transparent text-xs text-white placeholder:text-white/35 focus:outline-none"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={!newBoardInput.trim()}
+                className="px-2 py-0.5 rounded-[6px] text-[10px] font-bold bg-white text-black disabled:opacity-40 cursor-pointer"
+              >
+                Add
+              </button>
+            </form>
+          )}
+
+          <div className="relative">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search boards..."
+              className="w-full px-2.5 py-1 bg-[#090a0d] border border-white/10 rounded-[8px] text-xs text-white placeholder:text-white/35 focus:outline-none focus:border-white/25"
+            />
+          </div>
+
+          <div className="max-h-40 overflow-y-auto space-y-1 custom-scrollbar pr-0.5">
+            {filtered.map((board) => {
+              const isSelected = selectedBoardIds.includes(board.id);
+              return (
+                <button
+                  key={board.id}
+                  type="button"
+                  onClick={() => handleToggle(board.id)}
+                  className={`w-full flex items-center justify-between gap-2 px-2 py-1 rounded-[7px] text-xs font-medium cursor-pointer transition-colors text-left ${
+                    isSelected
+                      ? 'bg-white/15 text-white font-semibold'
+                      : 'hover:bg-white/[0.06] text-white/80'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <Folder className="w-3.5 h-3.5 shrink-0 text-white/55" />
+                    <span className="truncate">{board.name}</span>
+                  </span>
+                  {isSelected && (
+                    <span className="w-3.5 h-3.5 rounded flex items-center justify-center bg-white text-black text-[10px] font-bold shrink-0">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            {filtered.length === 0 && (
+              <div className="text-center py-2 text-[11px] text-white/40">
+                {collections.length === 0 ? 'No boards created yet' : 'No matching board found'}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AddModal: React.FC<AddModalProps> = ({
   isOpen,
   onClose,
   onAddThumbnail,
   onAddMultipleThumbnails,
   initialMediaKind = 'thumbnail',
-  collections = []
+  collections = [],
+  onCollectionsChange,
 }) => {
-  const { getIdToken } = useAuth();
+  const { user, getIdToken } = useAuth();
   const [activeTab, setActiveTab] = useState<AddTabMode>('upload');
   const [mediaKind, setMediaKind] = useState<AddMediaKind>('thumbnail');
   const unitWord = 'Thumbnail';
-  const [selectedBoardId, setSelectedBoardId] = useState<string>('');
+  const [localCollections, setLocalCollections] = useState<CollectionBoard[]>(collections);
+  const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>([]);
+  const [isAddingBoardInPanel, setIsAddingBoardInPanel] = useState(false);
+  const [newBoardPanelName, setNewBoardPanelName] = useState('');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    setLocalCollections(collections);
+  }, [collections]);
+
+  const activeCollections = localCollections;
 
   // Selected Categories per section (supports multiple categories, defaults to none)
   const [uploadCategories, setUploadCategories] = useState<string[]>([]);
@@ -702,7 +899,9 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadCategories([]);
       setYoutubeCategories([]);
       setPinterestCategories([]);
-      setSelectedBoardId('');
+      setSelectedBoardIds([]);
+      setIsAddingBoardInPanel(false);
+      setNewBoardPanelName('');
       setMediaKind(initialMediaKind);
       setActiveTab('upload');
       setIsUploadingToCloud(false);
@@ -728,13 +927,14 @@ export const AddModal: React.FC<AddModalProps> = ({
         title: cleanTitle || `Curated ${unitWord}`,
         creator: isPoster ? 'Cinema' : 'You',
         niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-        tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : [])
+        tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
+        boardIds: [...selectedBoardIds],
       };
     } catch (err) {
       console.warn('Error converting image:', err);
       return null;
     }
-  }, [uploadCategories, unitWord, mediaKind]);
+  }, [uploadCategories, selectedBoardIds, unitWord, mediaKind]);
 
   // Handle multiple files selected via browse or drop
   const handleMultipleFiles = useCallback(async (files: FileList | File[]) => {
@@ -827,7 +1027,8 @@ export const AddModal: React.FC<AddModalProps> = ({
               title: `Pasted ${unitWord} ${prev.length + 1}`,
               creator: isPoster ? 'Cinema' : 'You',
               niche: (chosenCategories[0] || (isPoster ? 'Cinema' : '')) as NicheCategory,
-              tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : [])
+              tags: chosenCategories.length > 0 ? chosenCategories : (isPoster ? ['Movie Poster', 'Cinema'] : []),
+              boardIds: [...selectedBoardIds],
             }
           ]);
         } finally {
@@ -835,7 +1036,7 @@ export const AddModal: React.FC<AddModalProps> = ({
         }
       }
     }
-  }, [isOpen, activeTab, processImageFile, queuedImages.length, uploadCategories, unitWord, mediaKind]);
+  }, [isOpen, activeTab, processImageFile, queuedImages.length, uploadCategories, selectedBoardIds, unitWord, mediaKind]);
 
   // Attach global paste listener
   useEffect(() => {
@@ -1017,6 +1218,59 @@ export const AddModal: React.FC<AddModalProps> = ({
     }));
   };
 
+  // Create a new board inline from either the bulk panel or an individual thumbnail card
+  const handleCreateBoardInline = (name: string): CollectionBoard | null => {
+    const clean = name.trim();
+    if (!clean || !user) return null;
+    const newId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? `board-${crypto.randomUUID().slice(0, 8)}`
+        : `board-${Date.now()}`;
+    const newBoard: CollectionBoard = {
+      id: newId,
+      name: clean,
+      thumbnailIds: [],
+      createdAt: new Date().toISOString(),
+    };
+    const updated = saveCollection(newBoard);
+    setLocalCollections(updated);
+    onCollectionsChange?.(updated);
+    return newBoard;
+  };
+
+  // Toggle a board across ALL staged items in the active tab (mirroring bulk category selection)
+  const handleToggleBoardForAll = (boardId: string) => {
+    const exists = selectedBoardIds.includes(boardId);
+    const nextBoards = exists
+      ? selectedBoardIds.filter((id) => id !== boardId)
+      : [...selectedBoardIds, boardId];
+    setSelectedBoardIds(nextBoards);
+
+    const applyBoardToggle = <T extends { boardIds?: string[] }>(items: T[]): T[] =>
+      items.map((item) => {
+        const current = item.boardIds || [];
+        const hasBoard = current.includes(boardId);
+        const nextItemBoards = exists
+          ? current.filter((id) => id !== boardId)
+          : hasBoard
+            ? current
+            : [...current, boardId];
+        return { ...item, boardIds: nextItemBoards };
+      });
+
+    if (activeTab === 'upload') setQueuedImages((prev) => applyBoardToggle(prev));
+    if (activeTab === 'youtube') setYoutubeItems((prev) => applyBoardToggle(prev));
+    if (activeTab === 'pinterest') setPinterestItems((prev) => applyBoardToggle(prev));
+  };
+
+  // Clear boards across ALL staged items in the active tab ("Feed only")
+  const handleClearBoardsForAll = () => {
+    setSelectedBoardIds([]);
+    if (activeTab === 'upload') setQueuedImages((prev) => prev.map((img) => ({ ...img, boardIds: [] })));
+    if (activeTab === 'youtube') setYoutubeItems((prev) => prev.map((item) => ({ ...item, boardIds: [] })));
+    if (activeTab === 'pinterest') setPinterestItems((prev) => prev.map((item) => ({ ...item, boardIds: [] })));
+  };
+
   // Upload Queued Images to Cloudflare R2 and Save
   const handleUploadQueuedImages = async () => {
     if (queuedImages.length === 0) return;
@@ -1170,9 +1424,25 @@ export const AddModal: React.FC<AddModalProps> = ({
     }
 
     if (finalItems.length > 0) {
-      if (selectedBoardId) {
-        addThumbnailsToBoard(selectedBoardId, finalItems.map(item => item.id));
+      // Save each thumbnail to all boards specifically assigned to that thumbnail
+      const boardAssignments = new Map<string, string[]>();
+      finalItems.forEach((finalItem, idx) => {
+        const itemBoardIds = queuedImages[idx]?.boardIds || [];
+        itemBoardIds.forEach((boardId) => {
+          const list = boardAssignments.get(boardId) || [];
+          list.push(finalItem.id);
+          boardAssignments.set(boardId, list);
+        });
+      });
+      if (boardAssignments.size > 0) {
+        boardAssignments.forEach((ids, boardId) => {
+          addThumbnailsToBoard(boardId, ids);
+        });
+        const refreshed = getStoredCollections();
+        setLocalCollections(refreshed);
+        onCollectionsChange?.(refreshed);
       }
+
       if (onAddMultipleThumbnails) {
         onAddMultipleThumbnails(finalItems);
       } else {
@@ -1266,6 +1536,7 @@ export const AddModal: React.FC<AddModalProps> = ({
               imageUrl: imgUrl,
               niche: (chosenCategories[0] || '') as NicheCategory,
               tags: [...chosenCategories],
+              boardIds: [...selectedBoardIds],
               views,
               publishedTime,
               selected: true
@@ -1324,6 +1595,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             imageUrl: it.imageUrl || (resolvedVid ? getYoutubeJpgUrl(resolvedVid) : ''),
             niche: (chosenCategories[0] || '') as NicheCategory,
             tags: [...chosenCategories],
+            boardIds: [...selectedBoardIds],
             views: it.views || '',
             publishedTime: it.publishedTime || '',
             selected: true
@@ -1385,6 +1657,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           imageUrl: pin.imageUrl,
           niche: (chosenCategories[0] || '') as NicheCategory,
           tags: [...chosenCategories],
+          boardIds: [...selectedBoardIds],
           selected: true
         });
       });
@@ -1577,9 +1850,25 @@ export const AddModal: React.FC<AddModalProps> = ({
       setUploadStatusText('');
     }
 
-    if (selectedBoardId) {
-      addThumbnailsToBoard(selectedBoardId, finalThumbnails.map(t => t.id));
+    // Save each extracted thumbnail to all boards specifically assigned to it
+    const boardAssignments = new Map<string, string[]>();
+    finalThumbnails.forEach((thumb, idx) => {
+      const itemBoardIds = uniqueItems[idx]?.boardIds || [];
+      itemBoardIds.forEach((boardId) => {
+        const list = boardAssignments.get(boardId) || [];
+        list.push(thumb.id);
+        boardAssignments.set(boardId, list);
+      });
+    });
+    if (boardAssignments.size > 0) {
+      boardAssignments.forEach((ids, boardId) => {
+        addThumbnailsToBoard(boardId, ids);
+      });
+      const refreshed = getStoredCollections();
+      setLocalCollections(refreshed);
+      onCollectionsChange?.(refreshed);
     }
+
     if (onAddMultipleThumbnails) {
       onAddMultipleThumbnails(finalThumbnails);
     } else {
@@ -1605,9 +1894,25 @@ export const AddModal: React.FC<AddModalProps> = ({
         ? selectedYoutubeCount
         : selectedPinterestCount;
 
-  const activeBoardName = selectedBoardId
-    ? collections.find(b => b.id === selectedBoardId)?.name || 'Selected Board'
-    : 'Feed only';
+  // Compute summary of boards assigned across active staged items
+  const activeStageBoardIds = (() => {
+    const ids = new Set<string>();
+    const list =
+      activeTab === 'upload'
+        ? queuedImages
+        : activeTab === 'youtube'
+          ? youtubeItems.filter((i) => i.selected !== false)
+          : pinterestItems.filter((i) => i.selected !== false);
+    list.forEach((it) => (it.boardIds || []).forEach((id) => ids.add(id)));
+    return Array.from(ids);
+  })();
+
+  const activeBoardName =
+    activeStageBoardIds.length === 0
+      ? 'Feed only'
+      : activeStageBoardIds.length === 1
+        ? activeCollections.find((b) => b.id === activeStageBoardIds[0])?.name || '1 board'
+        : `${activeStageBoardIds.length} boards`;
 
   const handleBackFromReview = () => {
     if (isUploadingToCloud) return;
@@ -1617,39 +1922,87 @@ export const AddModal: React.FC<AddModalProps> = ({
     if (activeTab === 'pinterest') setPinterestItems([]);
   };
 
+  const handleAddBoardFromPanel = (e: React.FormEvent) => {
+    e.preventDefault();
+    const created = handleCreateBoardInline(newBoardPanelName);
+    if (created) {
+      handleToggleBoardForAll(created.id);
+      setNewBoardPanelName('');
+      setIsAddingBoardInPanel(false);
+    }
+  };
+
   const renderBoardPanel = () => (
     <div className="p-4 bg-[#151821] border border-white/[0.08] rounded-[14px] space-y-3 text-white">
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="font-semibold text-white/90 text-[11px] flex items-center gap-1.5">
           <Bookmark className="w-3.5 h-3.5 text-white/60 shrink-0" />
-          <span>Save to Board</span>
+          <span>Apply boards to all ({activeReviewCount})</span>
         </span>
-        <span className="text-[11px] text-white/50 truncate max-w-[160px]">
-          {activeBoardName}
-        </span>
+        {user && !isAddingBoardInPanel && (
+          <button
+            type="button"
+            onClick={() => setIsAddingBoardInPanel(true)}
+            className="text-[11px] font-semibold text-white/70 hover:text-white flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+          >
+            <IconPlus className="w-3 h-3" />
+            <span>New Board</span>
+          </button>
+        )}
       </div>
+
+      {isAddingBoardInPanel && (
+        <form onSubmit={handleAddBoardFromPanel} className="flex items-center gap-2 p-2 bg-[#0e0e10] border border-white/10 rounded-[10px]">
+          <input
+            type="text"
+            value={newBoardPanelName}
+            onChange={(e) => setNewBoardPanelName(e.target.value)}
+            placeholder="Board name..."
+            className="flex-1 bg-transparent text-xs text-white placeholder-white/30 focus:outline-none"
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={!newBoardPanelName.trim()}
+            className="px-2.5 py-1 rounded-[8px] bg-white hover:bg-white/90 disabled:opacity-40 text-black font-semibold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+          >
+            <IconCheck className="w-3 h-3" />
+            <span>Add</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsAddingBoardInPanel(false);
+              setNewBoardPanelName('');
+            }}
+            className="p-1 text-white/40 hover:text-white cursor-pointer"
+          >
+            <IconClose className="w-3.5 h-3.5" />
+          </button>
+        </form>
+      )}
 
       <div className="flex flex-wrap items-center gap-1.5">
         <button
           type="button"
-          onClick={() => setSelectedBoardId('')}
+          onClick={handleClearBoardsForAll}
           className={`px-2.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
-            !selectedBoardId
+            activeStageBoardIds.length === 0
               ? 'bg-white text-black font-bold shadow-xs'
               : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 border border-white/10'
           }`}
         >
-          <span>{!selectedBoardId ? '✓ ' : ''}</span>
+          <span>{activeStageBoardIds.length === 0 ? '✓ ' : ''}</span>
           <span>Feed only</span>
         </button>
 
-        {collections.map((board) => {
-          const isSelected = selectedBoardId === board.id;
+        {activeCollections.map((board) => {
+          const isSelected = selectedBoardIds.includes(board.id);
           return (
             <button
               key={board.id}
               type="button"
-              onClick={() => setSelectedBoardId(board.id)}
+              onClick={() => handleToggleBoardForAll(board.id)}
               className={`px-2.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
                 isSelected
                   ? 'bg-white text-black font-bold shadow-xs'
@@ -1663,9 +2016,9 @@ export const AddModal: React.FC<AddModalProps> = ({
         })}
       </div>
 
-      {collections.length === 0 && (
+      {activeCollections.length === 0 && (
         <p className="text-[11px] text-white/40">
-          No boards yet — items will be saved directly to your main Feed.
+          No boards yet — create one above or save directly to your main Feed.
         </p>
       )}
     </div>
@@ -1676,7 +2029,7 @@ export const AddModal: React.FC<AddModalProps> = ({
       <div
         id="add-modal-overlay"
         className={`fixed inset-0 z-50 flex ${
-          isReviewStage ? 'items-stretch justify-stretch p-0 bg-[#090a0d]' : 'items-center justify-center p-3 sm:p-5 bg-black/45 backdrop-blur-md'
+          isReviewStage ? 'items-stretch justify-stretch p-0 bg-black/45 backdrop-blur-md' : 'items-center justify-center p-3 sm:p-5 bg-black/45 backdrop-blur-sm'
         } animate-fade-blur`}
       >
       {/* Click outside to close (input modal only) */}
@@ -1695,19 +2048,18 @@ export const AddModal: React.FC<AddModalProps> = ({
         className="hidden"
       />
 
-      {/* Main Container: compact blurred card for URL/dropzone, full-screen studio workspace for confirmation/tags/boards */}
+      {/* Main Container: compact blurred glass card for URL/dropzone, full-screen glass studio workspace for confirmation/tags/boards */}
       <div
         id="add-modal-content"
         className={
           isReviewStage
-            ? 'relative w-full h-full bg-[#090a0d] z-10 flex flex-col overflow-hidden text-white'
-            : 'relative w-full max-w-[540px] bg-[#0e0e10]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[14px] p-3 sm:p-4 shadow-[0_44px_100px_-20px_rgba(0,0,0,0.95)] overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in text-white'
+            ? 'relative w-full h-full glass-modal border-0 rounded-none z-10 flex flex-col overflow-hidden text-white'
+            : 'relative w-full max-w-[540px] glass-modal rounded-[20px] p-3 sm:p-4 overflow-hidden z-10 max-h-[92vh] flex flex-col animate-blur-in text-white'
         }
-        style={isReviewStage ? undefined : { backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)' }}
       >
         {/* Top Bar */}
         {isReviewStage ? (
-          <header className="h-14 sm:h-16 px-4 sm:px-6 border-b border-white/[0.08] bg-[#090a0d] flex items-center justify-between gap-4 shrink-0">
+          <header className="h-14 sm:h-16 px-4 sm:px-6 glass-header flex items-center justify-between gap-4 shrink-0">
             {/* Left: Back + Review Title + R2 status */}
             <div className="flex items-center gap-3 min-w-0">
               <button
@@ -2129,7 +2481,7 @@ export const AddModal: React.FC<AddModalProps> = ({
           /* ============================================================= */
           <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden animate-in fade-in duration-200">
             {/* LEFT / MAIN MEDIA REVIEW GRID */}
-            <div className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 bg-[#090a0d] custom-scrollbar">
+            <div className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 bg-black/15 custom-scrollbar">
               {/* Upload Review */}
               {activeTab === 'upload' && queuedImages.length > 0 && (
                 <div className="space-y-5">
@@ -2216,7 +2568,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                             className="w-full px-2.5 py-1 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-[11px] text-white/80 placeholder:text-white/30 focus:outline-none focus:border-white/25"
                           />
 
-                          <div className="pt-0.5">
+                          <div className="pt-0.5 space-y-2">
                             <ItemCategoryMultiSelect
                               selectedCategories={img.tags || []}
                               availableCategories={availableCategories}
@@ -2228,6 +2580,18 @@ export const AddModal: React.FC<AddModalProps> = ({
                                 } : p));
                               }}
                               onCategoryCreated={handleCategoryCreated}
+                            />
+
+                            <ItemBoardMultiSelect
+                              selectedBoardIds={img.boardIds || []}
+                              collections={activeCollections}
+                              onChange={(boardIds) => {
+                                setQueuedImages(prev => prev.map((p, i) => i === index ? {
+                                  ...p,
+                                  boardIds
+                                } : p));
+                              }}
+                              onCreateBoard={user ? handleCreateBoardInline : undefined}
                             />
                           </div>
                         </div>
@@ -2358,7 +2722,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                               )}
                             </div>
 
-                            <div className="pt-0.5">
+                            <div className="pt-0.5 space-y-2">
                               <ItemCategoryMultiSelect
                                 selectedCategories={item.tags || []}
                                 availableCategories={availableCategories}
@@ -2370,6 +2734,18 @@ export const AddModal: React.FC<AddModalProps> = ({
                                   } : p));
                                 }}
                                 onCategoryCreated={handleCategoryCreated}
+                              />
+
+                              <ItemBoardMultiSelect
+                                selectedBoardIds={item.boardIds || []}
+                                collections={activeCollections}
+                                onChange={(boardIds) => {
+                                  setYoutubeItems(prev => prev.map((p, i) => i === index ? {
+                                    ...p,
+                                    boardIds
+                                  } : p));
+                                }}
+                                onCreateBoard={user ? handleCreateBoardInline : undefined}
                               />
                             </div>
                           </div>
@@ -2493,7 +2869,7 @@ export const AddModal: React.FC<AddModalProps> = ({
                               className="w-full px-2.5 py-1 bg-[#090a0d] border border-white/[0.08] rounded-[8px] text-[11px] text-white/85 placeholder:text-white/30 focus:outline-none focus:border-white/25"
                             />
 
-                            <div className="pt-0.5">
+                            <div className="pt-0.5 space-y-2">
                               <ItemCategoryMultiSelect
                                 selectedCategories={item.tags || []}
                                 availableCategories={availableCategories}
@@ -2506,6 +2882,18 @@ export const AddModal: React.FC<AddModalProps> = ({
                                 }}
                                 onCategoryCreated={handleCategoryCreated}
                               />
+
+                              <ItemBoardMultiSelect
+                                selectedBoardIds={item.boardIds || []}
+                                collections={activeCollections}
+                                onChange={(boardIds) => {
+                                  setPinterestItems(prev => prev.map((p, i) => i === index ? {
+                                    ...p,
+                                    boardIds
+                                  } : p));
+                                }}
+                                onCreateBoard={user ? handleCreateBoardInline : undefined}
+                              />
                             </div>
                           </div>
                         </div>
@@ -2517,7 +2905,7 @@ export const AddModal: React.FC<AddModalProps> = ({
             </div>
 
             {/* RIGHT SIDEBAR: TAGS/CATEGORIES, BOARDS & UPLOAD CONFIRMATION */}
-            <aside className="w-full lg:w-[360px] xl:w-[400px] shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.08] bg-[#0f1117] flex flex-col max-h-[46vh] lg:max-h-none">
+            <aside className="w-full lg:w-[360px] xl:w-[400px] shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.10] bg-black/25 backdrop-blur-xl flex flex-col max-h-[46vh] lg:max-h-none">
               <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar">
                 {activeTab === 'upload' && (
                   <UnifiedCategoryBar
@@ -2563,7 +2951,7 @@ export const AddModal: React.FC<AddModalProps> = ({
               </div>
 
               {/* Sticky Confirmation Footer */}
-              <div className="p-4 sm:p-5 border-t border-white/[0.08] bg-[#0f1117] shrink-0 space-y-3">
+              <div className="p-4 sm:p-5 border-t border-white/[0.10] bg-black/20 shrink-0 space-y-3">
                 <div className="flex items-center justify-between text-xs text-white/60">
                   <span className="tabular">{activeReviewCount} {activeReviewCount === 1 ? 'item' : 'items'} selected</span>
                   <span className="truncate max-w-[180px]">{activeBoardName}</span>
